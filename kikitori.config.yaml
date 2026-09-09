@@ -1,0 +1,125 @@
+# Default configuration for kikitori-bench
+
+# LLM-as-a-judge configuration
+judge:
+  provider: codex             # "codex" (Codex App Server)
+  model: gpt-5.6-luna         # Judge model ID for Codex App Server
+  endpoint: ws://127.0.0.1:4500
+  temperature: 0.0
+  concurrency: 3
+  timeoutMs: 600000           # per-turn ceiling
+  retries: 2                  # extra attempts when a turn stalls
+  # USD per 1M tokens for the judge model (as of 2026-07-30).
+  # cachedInputPerMTok assumes the usual 10% cached-input discount.
+  pricing:
+    inputPerMTok: 0.20
+    cachedInputPerMTok: 0.02
+    outputPerMTok: 1.20
+
+# Category weights for aggregate overall score (must sum to 1.0)
+weights:
+  proper_noun_f1: 0.30         # deterministic F1 over proper nouns and numbers
+  proposition_quality: 0.70    # F-beta of proposition recall and precision
+
+# Scoring knobs
+scoring:
+  # F-beta weighting of recall against precision.
+  # 1.0 = an omission and a fabrication count the same.
+  # Below 1 weights precision (fabrication is worse); above 1 weights recall.
+  fBeta: 1.0
+
+# Built-in and custom ASR model settings
+models:
+  xai-grok:
+    type: xai
+    model: grok-stt
+    displayName: "xAI Grok STT"
+    options:
+      language: ja
+    pricing:
+      perAudioHour: 0.10      # batch STT
+  gemini-flash:
+    type: gemini
+    model: gemini-3.8-flash
+    displayName: "Gemini 3.8 Flash"
+    # Omitted options fall back to the provider default and are still recorded
+    # in the run manifest as "provider default".
+    # options:
+    #   thinkingBudget: 0     # 0 disables thinking (cheaper, lower latency)
+    #   temperature: 0
+    #   prompt: "Transcribe the audio verbatim in Japanese. Output only the transcript."
+    pricing:
+      inputPerMTok: 0.75      # promotional rate through 2026-12-31
+      outputPerMTok: 3.75
+      estimateAudioTokensPerSecond: 25
+      estimateOutputTokensPerMinute: 175
+  gemini-flash-nothink:
+    type: gemini
+    model: gemini-3.8-flash
+    displayName: "Gemini 3.8 Flash (no thinking)"
+    options:
+      thinkingBudget: 0        # nested under generationConfig.thinkingConfig
+    pricing:
+      inputPerMTok: 0.75
+      outputPerMTok: 3.75
+      estimateAudioTokensPerSecond: 25
+      estimateOutputTokensPerMinute: 175
+  gemini-transcribe:
+    type: gemini
+    model: gemini-3.5-transcribe
+    displayName: "Gemini 3.5 Transcribe"
+    # options:
+    #   thinkingBudget: 0
+    #   prompt: "Transcribe the audio verbatim in Japanese. Output only the transcript."
+    pricing:
+      audioInputPerMTok: 2.00
+      outputPerMTok: 12.00
+      estimateAudioTokensPerSecond: 25
+      estimateOutputTokensPerMinute: 175
+  groq-whisper:
+    type: groq
+    model: whisper-large-v3
+    displayName: "Groq Whisper large-v3"
+    options:
+      language: ja
+      responseFormat: json
+      # temperature: 0
+      # prompt: "..."        # vocabulary biasing hint
+    pricing:
+      perAudioHour: 0.111
+      minBillableSeconds: 10  # Groq bills a 10s minimum per request
+  meta-muse:
+    type: meta
+    model: muse-voice-transcribe-1.0
+    displayName: "Meta Muse Voice Transcribe"
+    options:
+      mode: DIARIZATION      # DIARIZATION | ENDPOINTING | PUSH_TO_TALK
+      audioEncoding: WAV
+      languageBias:
+        - Japanese
+      # keywords:            # domain vocabulary biasing
+      #   - Kubernetes
+    pricing:
+      perAudioHour: 0.18
+  whisper-1:
+    type: whisper
+    model: whisper-1
+    displayName: "OpenAI Whisper"
+    options:
+      language: ja
+    pricing:
+      perAudioHour: 0.36
+  # Example of a custom HTTP ASR endpoint:
+  # my-custom-model:
+  #   type: custom-http
+  #   endpoint: http://127.0.0.1:8000/transcribe
+  #   displayName: "In-House ASR Service"
+  # Example of a custom command ASR adapter:
+  # my-local-model:
+  #   type: custom-command
+  #   command: "whisper {audio_path} --output_format txt --output_dir /tmp"
+  #   displayName: "Local Whisper CLI"
+
+# Local Web UI review server
+review:
+  port: 3000

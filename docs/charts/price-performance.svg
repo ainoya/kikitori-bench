@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 536" role="img" aria-label="Score against ASR cost per hour of audio (USD)" id="cost-chart">
+  <title>Japanese voice-journal ASR: price versus score</title>
+  <style>
+  .surface { fill: #fcfcfb; }
+  .grid line { stroke: #e6e5e0; stroke-width: 1; }
+  .axis text, .axis-title, .group-label { fill: #52514e; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif; }
+  .axis text { font-size: 11px; }
+  .axis-title, .group-label { font-size: 12px; }
+  .frontier { fill: none; stroke: #2a78d6; stroke-width: 2; stroke-dasharray: 5 4; opacity: .85; }
+  .hit { fill: transparent; }
+  .mark .dot { stroke: #2a78d6; stroke-width: 2; }
+  .mark.on .dot { fill: #2a78d6; }
+  .mark.off .dot { fill: #fcfcfb; }
+  .point-label { fill: #0b0b0b; font-size: 12px; font-weight: 500; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif; }
+  .bar rect { fill: #2a78d6; }
+  .bar.s2 rect { fill: #eb6834; }
+  .bar.s3 rect { fill: #1baf7a; }
+  .bar.s4 rect { fill: #eda100; }
+  .chart-title { fill: #0b0b0b; font-size: 15px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif; }
+  .chart-subtitle, .chart-footnote { fill: #78776f; font-size: 11px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif; }
+  .legend-text { fill: #52514e; font-size: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; }
+    .grid line { stroke: #333330; }
+    .axis text, .axis-title, .group-label, .legend-text { fill: #c3c2b7; }
+    .frontier, .mark .dot { stroke: #3987e5; }
+    .mark.on .dot { fill: #3987e5; }
+    .mark.off .dot { fill: #1a1a19; }
+    .point-label, .chart-title { fill: #ffffff; }
+    .chart-subtitle, .chart-footnote { fill: #96958c; }
+    .bar rect { fill: #3987e5; }
+    .bar.s2 rect { fill: #d95926; }
+    .bar.s3 rect { fill: #199e70; }
+    .bar.s4 rect { fill: #c98500; }
+  }
+</style>
+  <rect class="surface" x="0" y="0" width="100%" height="100%"/>
+  <text class="chart-title" x="20" y="26">Japanese voice-journal ASR: price versus score</text>
+  <text class="chart-subtitle" x="20" y="44">122 samples · 185 min of audio per model · judge gpt-5.6-luna</text>
+  <g transform="translate(0 52)">
+    <g class="grid">
+      <line x1="66" y1="368.0" x2="706" y2="368.0"></line>
+      <line x1="66" y1="284.5" x2="706" y2="284.5"></line>
+      <line x1="66" y1="201.0" x2="706" y2="201.0"></line>
+      <line x1="66" y1="117.5" x2="706" y2="117.5"></line>
+      <line x1="66" y1="34.0" x2="706" y2="34.0"></line>
+    </g>
+    <g class="axis">
+      <text x="66.0" y="388" text-anchor="middle">$0.00</text>
+      <text x="226.0" y="388" text-anchor="middle">$0.10</text>
+      <text x="386.0" y="388" text-anchor="middle">$0.20</text>
+      <text x="546.0" y="388" text-anchor="middle">$0.30</text>
+      <text x="706.0" y="388" text-anchor="middle">$0.40</text>
+      <text x="54" y="372.0" text-anchor="end">0%</text>
+      <text x="54" y="288.5" text-anchor="end">25%</text>
+      <text x="54" y="205.0" text-anchor="end">50%</text>
+      <text x="54" y="121.5" text-anchor="end">75%</text>
+      <text x="54" y="38.0" text-anchor="end">100%</text>
+      <text class="axis-title" x="386.0" y="414" text-anchor="middle">ASR cost per hour of audio (USD)</text>
+      <text class="axis-title" transform="translate(16 201.0) rotate(-90)" text-anchor="middle">Overall score</text>
+    </g>
+    <path class="frontier" d="M216.0,128.5 L486.0,128.5 L486.0,117.2"></path>
+      <g class="mark on" tabindex="0">
+        <title>Gemini 3.8 Flash
+Score: 75.1%
+Cost: $0.2625 / audio hour  ·  run: $0.8115
+Latency: 6766 ms | RTF: 0.07x</title>
+        <circle class="hit" cx="486.0" cy="117.2" r="18"></circle>
+        <circle class="dot" cx="486.0" cy="117.2" r="7"></circle>
+        <text class="point-label" x="486.0" y="87.2" text-anchor="middle">Gemini 3.8 Flash</text>
+      </g>
+      <g class="mark on" tabindex="0">
+        <title>Gemini 3.8 Flash (no thinking)
+Score: 71.7%
+Cost: $0.0938 / audio hour  ·  run: $0.2898
+Latency: 2967 ms | RTF: 0.03x</title>
+        <circle class="hit" cx="216.0" cy="128.5" r="18"></circle>
+        <circle class="dot" cx="216.0" cy="128.5" r="7"></circle>
+        <text class="point-label" x="216.0" y="98.5" text-anchor="middle">Gemini 3.8 Flash (no thinking)</text>
+      </g>
+      <g class="mark off" tabindex="0">
+        <title>Gemini 3.5 Transcribe
+Score: 66.3%
+Cost: $0.3016 (est.) / audio hour  ·  run: $0.9324
+Latency: 2265 ms | RTF: 0.03x</title>
+        <circle class="hit" cx="548.6" cy="146.6" r="18"></circle>
+        <circle class="dot" cx="548.6" cy="146.6" r="7"></circle>
+        <text class="point-label" x="548.6" y="168.6" text-anchor="middle">Gemini 3.5 Transcribe</text>
+      </g>
+      <g class="mark off" tabindex="0">
+        <title>Meta Muse Voice Transcribe
+Score: 66.2%
+Cost: $0.1800 / audio hour  ·  run: $0.5564
+Latency: 14178 ms | RTF: 0.15x</title>
+        <circle class="hit" cx="354.0" cy="146.9" r="18"></circle>
+        <circle class="dot" cx="354.0" cy="146.9" r="7"></circle>
+        <text class="point-label" x="354.0" y="168.9" text-anchor="middle">Meta Muse Voice Transcribe</text>
+      </g>
+      <g class="mark off" tabindex="0">
+        <title>Groq Whisper large-v3
+Score: 63.9%
+Cost: $0.1113 / audio hour  ·  run: $0.3202
+Latency: 2173 ms | RTF: 0.03x</title>
+        <circle class="hit" cx="244.1" cy="154.6" r="18"></circle>
+        <circle class="dot" cx="244.1" cy="154.6" r="7"></circle>
+        <text class="point-label" x="244.1" y="192.6" text-anchor="middle">Groq Whisper large-v3</text>
+      </g>
+      <g class="mark off" tabindex="0">
+        <title>xAI Grok STT
+Score: 48.0%
+Cost: $0.1000 / audio hour  ·  run: $0.3091
+Latency: 1077 ms | RTF: 0.01x</title>
+        <circle class="hit" cx="226.0" cy="207.7" r="18"></circle>
+        <circle class="dot" cx="226.0" cy="207.7" r="7"></circle>
+        <text class="point-label" x="226.0" y="229.7" text-anchor="middle">xAI Grok STT</text>
+      </g>
+  <g class="mark on"><circle class="dot" cx="71" cy="441" r="5"/></g><text class="legend-text" x="83" y="445">On the Pareto frontier</text>
+  <g class="mark off"><circle class="dot" cx="255.2" cy="441" r="5"/></g><text class="legend-text" x="267.2" y="445">Dominated</text>
+</g>
+  <text class="chart-footnote" x="20" y="527">2026-09-09 · github.com/ainoya/kikitori-bench @ 888247c+local changes</text>
+</svg>

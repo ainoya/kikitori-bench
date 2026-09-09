@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 506" role="img" aria-label="Score by evaluation axis for each model">
+  <title>Japanese voice-journal ASR: score by evaluation axis</title>
+  <style>
+  .surface { fill: #fcfcfb; }
+  .grid line { stroke: #e6e5e0; stroke-width: 1; }
+  .axis text, .axis-title, .group-label { fill: #52514e; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif; }
+  .axis text { font-size: 11px; }
+  .axis-title, .group-label { font-size: 12px; }
+  .frontier { fill: none; stroke: #2a78d6; stroke-width: 2; stroke-dasharray: 5 4; opacity: .85; }
+  .hit { fill: transparent; }
+  .mark .dot { stroke: #2a78d6; stroke-width: 2; }
+  .mark.on .dot { fill: #2a78d6; }
+  .mark.off .dot { fill: #fcfcfb; }
+  .point-label { fill: #0b0b0b; font-size: 12px; font-weight: 500; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif; }
+  .bar rect { fill: #2a78d6; }
+  .bar.s2 rect { fill: #eb6834; }
+  .bar.s3 rect { fill: #1baf7a; }
+  .bar.s4 rect { fill: #eda100; }
+  .chart-title { fill: #0b0b0b; font-size: 15px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif; }
+  .chart-subtitle, .chart-footnote { fill: #78776f; font-size: 11px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif; }
+  .legend-text { fill: #52514e; font-size: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; }
+    .grid line { stroke: #333330; }
+    .axis text, .axis-title, .group-label, .legend-text { fill: #c3c2b7; }
+    .frontier, .mark .dot { stroke: #3987e5; }
+    .mark.on .dot { fill: #3987e5; }
+    .mark.off .dot { fill: #1a1a19; }
+    .point-label, .chart-title { fill: #ffffff; }
+    .chart-subtitle, .chart-footnote { fill: #96958c; }
+    .bar rect { fill: #3987e5; }
+    .bar.s2 rect { fill: #d95926; }
+    .bar.s3 rect { fill: #199e70; }
+    .bar.s4 rect { fill: #c98500; }
+  }
+</style>
+  <rect class="surface" x="0" y="0" width="100%" height="100%"/>
+  <text class="chart-title" x="20" y="26">Japanese voice-journal ASR: score by evaluation axis</text>
+  <text class="chart-subtitle" x="20" y="44">122 samples · 185 min of audio per model · judge gpt-5.6-luna</text>
+  <g transform="translate(0 52)">
+    <g class="grid">
+      <line x1="56" y1="326.0" x2="736" y2="326.0"></line>
+      <line x1="56" y1="250.5" x2="736" y2="250.5"></line>
+      <line x1="56" y1="175.0" x2="736" y2="175.0"></line>
+      <line x1="56" y1="99.5" x2="736" y2="99.5"></line>
+      <line x1="56" y1="24.0" x2="736" y2="24.0"></line>
+    </g>
+    <g class="axis">
+      <text x="44" y="330.0" text-anchor="end">0%</text>
+      <text x="44" y="254.5" text-anchor="end">25%</text>
+      <text x="44" y="179.0" text-anchor="end">50%</text>
+      <text x="44" y="103.5" text-anchor="end">75%</text>
+      <text x="44" y="28.0" text-anchor="end">100%</text>
+    </g>
+      <g class="group">
+        <g class="bar s1" tabindex="0">
+          <title>Gemini 3.8 Flash
+Proper nouns (weight 0.3): 65.9%</title>
+          <rect x="68.5" y="127.0" width="20.6" height="199.0" rx="4"></rect>
+          <rect class="foot" x="68.5" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s2" tabindex="0">
+          <title>Gemini 3.8 Flash
+Recall: 86.2%</title>
+          <rect x="91.1" y="65.7" width="20.6" height="260.3" rx="4"></rect>
+          <rect class="foot" x="91.1" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s3" tabindex="0">
+          <title>Gemini 3.8 Flash
+Precision: 79.1%</title>
+          <rect x="113.7" y="87.1" width="20.6" height="238.9" rx="4"></rect>
+          <rect class="foot" x="113.7" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s4" tabindex="0">
+          <title>Gemini 3.8 Flash
+F1: 81.1%</title>
+          <rect x="136.3" y="81.1" width="20.6" height="244.9" rx="4"></rect>
+          <rect class="foot" x="136.3" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <text class="group-label" x="112.7" y="346" text-anchor="middle">Gemini 3.8<tspan x="112.7" dy="14">Flash</tspan></text>
+      </g>
+      <g class="group">
+        <g class="bar s1" tabindex="0">
+          <title>Gemini 3.8 Flash (no thinking)
+Proper nouns (weight 0.3): 56.0%</title>
+          <rect x="181.8" y="156.9" width="20.6" height="169.1" rx="4"></rect>
+          <rect class="foot" x="181.8" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s2" tabindex="0">
+          <title>Gemini 3.8 Flash (no thinking)
+Recall: 84.6%</title>
+          <rect x="204.4" y="70.5" width="20.6" height="255.5" rx="4"></rect>
+          <rect class="foot" x="204.4" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s3" tabindex="0">
+          <title>Gemini 3.8 Flash (no thinking)
+Precision: 80.8%</title>
+          <rect x="227.0" y="82.0" width="20.6" height="244.0" rx="4"></rect>
+          <rect class="foot" x="227.0" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s4" tabindex="0">
+          <title>Gemini 3.8 Flash (no thinking)
+F1: 80.8%</title>
+          <rect x="249.6" y="82.0" width="20.6" height="244.0" rx="4"></rect>
+          <rect class="foot" x="249.6" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <text class="group-label" x="226.0" y="346" text-anchor="middle">Gemini 3.8 Flash<tspan x="226.0" dy="14">(no thinking)</tspan></text>
+      </g>
+      <g class="group">
+        <g class="bar s1" tabindex="0">
+          <title>Gemini 3.5 Transcribe
+Proper nouns (weight 0.3): 52.8%</title>
+          <rect x="295.1" y="166.5" width="20.6" height="159.5" rx="4"></rect>
+          <rect class="foot" x="295.1" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s2" tabindex="0">
+          <title>Gemini 3.5 Transcribe
+Recall: 77.2%</title>
+          <rect x="317.7" y="92.9" width="20.6" height="233.1" rx="4"></rect>
+          <rect class="foot" x="317.7" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s3" tabindex="0">
+          <title>Gemini 3.5 Transcribe
+Precision: 74.0%</title>
+          <rect x="340.3" y="102.5" width="20.6" height="223.5" rx="4"></rect>
+          <rect class="foot" x="340.3" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s4" tabindex="0">
+          <title>Gemini 3.5 Transcribe
+F1: 74.7%</title>
+          <rect x="362.9" y="100.4" width="20.6" height="225.6" rx="4"></rect>
+          <rect class="foot" x="362.9" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <text class="group-label" x="339.3" y="346" text-anchor="middle">Gemini 3.5<tspan x="339.3" dy="14">Transcribe</tspan></text>
+      </g>
+      <g class="group">
+        <g class="bar s1" tabindex="0">
+          <title>Meta Muse Voice Transcribe
+Proper nouns (weight 0.3): 39.9%</title>
+          <rect x="408.5" y="205.5" width="20.6" height="120.5" rx="4"></rect>
+          <rect class="foot" x="408.5" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s2" tabindex="0">
+          <title>Meta Muse Voice Transcribe
+Recall: 81.7%</title>
+          <rect x="431.1" y="79.3" width="20.6" height="246.7" rx="4"></rect>
+          <rect class="foot" x="431.1" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s3" tabindex="0">
+          <title>Meta Muse Voice Transcribe
+Precision: 80.6%</title>
+          <rect x="453.7" y="82.6" width="20.6" height="243.4" rx="4"></rect>
+          <rect class="foot" x="453.7" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s4" tabindex="0">
+          <title>Meta Muse Voice Transcribe
+F1: 79.2%</title>
+          <rect x="476.3" y="86.8" width="20.6" height="239.2" rx="4"></rect>
+          <rect class="foot" x="476.3" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <text class="group-label" x="452.7" y="346" text-anchor="middle">Meta Muse<tspan x="452.7" dy="14">Voice Transcribe</tspan></text>
+      </g>
+      <g class="group">
+        <g class="bar s1" tabindex="0">
+          <title>Groq Whisper large-v3
+Proper nouns (weight 0.3): 47.4%</title>
+          <rect x="521.8" y="182.9" width="20.6" height="143.1" rx="4"></rect>
+          <rect class="foot" x="521.8" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s2" tabindex="0">
+          <title>Groq Whisper large-v3
+Recall: 78.6%</title>
+          <rect x="544.4" y="88.6" width="20.6" height="237.4" rx="4"></rect>
+          <rect class="foot" x="544.4" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s3" tabindex="0">
+          <title>Groq Whisper large-v3
+Precision: 73.8%</title>
+          <rect x="567.0" y="103.1" width="20.6" height="222.9" rx="4"></rect>
+          <rect class="foot" x="567.0" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s4" tabindex="0">
+          <title>Groq Whisper large-v3
+F1: 74.7%</title>
+          <rect x="589.6" y="100.4" width="20.6" height="225.6" rx="4"></rect>
+          <rect class="foot" x="589.6" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <text class="group-label" x="566.0" y="346" text-anchor="middle">Groq Whisper<tspan x="566.0" dy="14">large-v3</tspan></text>
+      </g>
+      <g class="group">
+        <g class="bar s1" tabindex="0">
+          <title>xAI Grok STT
+Proper nouns (weight 0.3): 23.9%</title>
+          <rect x="635.1" y="253.8" width="20.6" height="72.2" rx="4"></rect>
+          <rect class="foot" x="635.1" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s2" tabindex="0">
+          <title>xAI Grok STT
+Recall: 61.8%</title>
+          <rect x="657.7" y="139.4" width="20.6" height="186.6" rx="4"></rect>
+          <rect class="foot" x="657.7" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s3" tabindex="0">
+          <title>xAI Grok STT
+Precision: 65.2%</title>
+          <rect x="680.3" y="129.1" width="20.6" height="196.9" rx="4"></rect>
+          <rect class="foot" x="680.3" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <g class="bar s4" tabindex="0">
+          <title>xAI Grok STT
+F1: 60.4%</title>
+          <rect x="702.9" y="143.6" width="20.6" height="182.4" rx="4"></rect>
+          <rect class="foot" x="702.9" y="322.0" width="20.6" height="4"></rect>
+        </g>
+        <text class="group-label" x="679.3" y="346" text-anchor="middle">xAI Grok<tspan x="679.3" dy="14">STT</tspan></text>
+      </g>
+  <g class="bar s1"><rect x="66" y="406" width="11" height="11" rx="2"/></g><text class="legend-text" x="83" y="415">Proper nouns</text>
+  <g class="bar s2"><rect x="184.2" y="406" width="11" height="11" rx="2"/></g><text class="legend-text" x="201.2" y="415">Recall</text>
+  <g class="bar s3"><rect x="262.79999999999995" y="406" width="11" height="11" rx="2"/></g><text class="legend-text" x="279.79999999999995" y="415">Precision</text>
+  <g class="bar s4"><rect x="361.19999999999993" y="406" width="11" height="11" rx="2"/></g><text class="legend-text" x="378.19999999999993" y="415">F1</text>
+</g>
+  <text class="chart-footnote" x="20" y="497">2026-09-09 · github.com/ainoya/kikitori-bench @ 888247c+local changes</text>
+</svg>

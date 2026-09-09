@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+*.env
+
+# Private benchmark data.
+# Datasets hold the recordings AND their transcripts, so the whole directory
+# stays local - only the synthetic demo dataset is committed, as a template for
+# the file format.
+datasets/*
+!datasets/demo/
+datasets/demo/audio/*
+!datasets/demo/audio/.gitkeep
+*.bak-*
+# Optional per-dataset vocabulary hints (private, like the dataset itself)
+datasets/**/domain-keywords.txt
+
+# Run artefacts and reports quote the ground truth and every hypothesis
+# verbatim, so they are private for the same reason.
+runs/
+reports/
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,18 @@
+name: demo
+description: Demo private dataset
+createdAt: 2026-09-07T07:04:20.910Z
+updatedAt: 2026-09-07T07:04:28.205Z
+items:
+  - id: sample_01
+    audioPath: audio/sample_01.wav
+    groundTruth: "本日は機械学習基盤におけるKubernetesクラスタの運用と、Grafanaを用いた監視メトリクスについて説明します。"
+    expectedTerms:
+      - "Kubernetes"
+      - "Grafana"
+      - "機械学習基盤"
+    keyPoints:
+      - "Kubernetesクラスタの運用について説明している"
+      - "Grafanaを用いた監視メトリクスについて説明している"
+    verified: true
+    createdAt: 2026-09-07T07:04:28.205Z
+    updatedAt: 2026-09-07T07:04:28.205Z
