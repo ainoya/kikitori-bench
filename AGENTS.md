@@ -44,9 +44,10 @@ repository, change visibility, or push to a public remote on their behalf.
   binaries. Without that patch the Effect rules silently disappear, so never
   skip lifecycle scripts, and keep `@effect/tsgo`, `oxlint` and
   `oxlint-tsgolint` pinned to the exact versions the patch supports.
-- In `tsc` output the Effect diagnostics are advisory: suggestions are hidden
-  and warnings do not change the exit code, so a warning is a hint rather
-  than a failure. `pnpm lint` is the gate that fails.
+- In `tsc` output, Effect suggestions are hidden - the editor still surfaces
+  them - while Effect warnings and errors fail the typecheck like any type
+  error. The tree is warning-free today; keep it that way rather than muting a
+  rule to get a change through.
 - `oxfmt` owns formatting for `src/**` and `scripts/**` TypeScript only;
   Markdown, YAML, JSON and the review UI's HTML are left alone on purpose.
 - Editors: point them at the workspace TypeScript (`node_modules/typescript`)

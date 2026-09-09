@@ -45,6 +45,12 @@ export class DraftingError extends Data.TaggedError("DraftingError")<{
   readonly cause?: unknown;
 }> {}
 
+export class ReviewServerError extends Data.TaggedError("ReviewServerError")<{
+  readonly port: number;
+  readonly message: string;
+  readonly cause?: unknown;
+}> {}
+
 export class ValidationError extends Data.TaggedError("ValidationError")<{
   readonly message: string;
   readonly details?: unknown;

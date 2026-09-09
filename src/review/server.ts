@@ -3,6 +3,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Effect } from "effect";
+import { ReviewServerError } from "../errors.js";
 import { DatasetRepo } from "../services/DatasetRepo.js";
 import { Drafter } from "../services/Drafter.js";
 import { getAudioMimeType } from "../utils/audio.js";
@@ -208,7 +209,12 @@ export const startReviewServer = (options: ReviewServerOptions) =>
           });
           server.on("error", reject);
         }),
-      catch: (err) => new Error(`Failed to start review server: ${String(err)}`),
+      catch: (cause) =>
+        new ReviewServerError({
+          port,
+          message: `Failed to start review server on port ${port}`,
+          cause,
+        }),
     });
 
     // Keep server running until interrupted

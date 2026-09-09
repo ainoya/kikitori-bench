@@ -24,8 +24,7 @@
     "plugins": [
       {
         "name": "@effect/language-service",
-        "includeSuggestionsInTsc": false,
-        "ignoreEffectWarningsInTscExitCode": true
+        "includeSuggestionsInTsc": false
       }
     ]
   },
