@@ -117,5 +117,5 @@ Latency: 1077 ms | RTF: 0.01x</title>
   <g class="mark on"><circle class="dot" cx="71" cy="441" r="5"/></g><text class="legend-text" x="83" y="445">On the Pareto frontier</text>
   <g class="mark off"><circle class="dot" cx="255.2" cy="441" r="5"/></g><text class="legend-text" x="267.2" y="445">Dominated</text>
 </g>
-  <text class="chart-footnote" x="20" y="527">2026-09-09 · github.com/ainoya/kikitori-bench @ e95b8c6</text>
+  <text class="chart-footnote" x="20" y="527">2026-09-09 · github.com/ainoya/kikitori-bench @ e74b6b5+local changes</text>
 </svg>

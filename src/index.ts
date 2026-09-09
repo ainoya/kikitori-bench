@@ -814,7 +814,7 @@ program
   .command("publish <runId>")
   .description("Write an aggregate-only summary and standalone SVG charts for publication")
   .option("-o, --out <dir>", "Output directory", "docs")
-  .option("--lang <lang>", "Report language (en or ja)")
+  .option("--lang <lang>", "Report language (default: en, independent of $LANG)")
   .action(async (runId: string, opts: { out: string; lang?: string }) => {
     await runEffect(
       Effect.gen(function* () {
@@ -827,7 +827,10 @@ program
         const written = publishRun({
           report,
           outDir: path.resolve(process.cwd(), opts.out),
-          ...(parseLocale(opts.lang) ? { locale: parseLocale(opts.lang)! } : {})
+          // Published output must not depend on the locale of whoever runs this:
+          // the repository is English, so English is the default here even when
+          // the shell's LANG would otherwise select Japanese.
+          locale: parseLocale(opts.lang) ?? "en"
         });
         console.log("📤 Published aggregate results (no sample text, no ids):");
         for (const file of written) console.log(`   ${path.relative(process.cwd(), file)}`);
