@@ -9,7 +9,7 @@ export const EvaluationAxisSchema = Schema.Literal(
   "proper_noun_f1",
   "proposition_recall",
   "proposition_precision",
-  "proposition_f1"
+  "proposition_f1",
 );
 
 export type EvaluationAxis = typeof EvaluationAxisSchema.Type;
@@ -21,7 +21,7 @@ export type EvaluationAxis = typeof EvaluationAxisSchema.Type;
  */
 export const CategoryWeightsSchema = Schema.Struct({
   proper_noun_f1: Schema.Number,
-  proposition_quality: Schema.Number
+  proposition_quality: Schema.Number,
 });
 
 export type CategoryWeights = typeof CategoryWeightsSchema.Type;
@@ -56,7 +56,7 @@ export const AsrModelOptionsSchema = Schema.Struct({
   /** Meta Muse languageBias, e.g. ["Japanese"]. */
   languageBias: Schema.optional(Schema.Array(Schema.String)),
   /** Keyword / vocabulary biasing list. */
-  keywords: Schema.optional(Schema.Array(Schema.String))
+  keywords: Schema.optional(Schema.Array(Schema.String)),
 });
 
 export type AsrModelOptions = typeof AsrModelOptionsSchema.Type;
@@ -71,7 +71,7 @@ export const ModelPricingSchema = Schema.Struct({
   minBillableSeconds: Schema.optional(Schema.Number),
   /** Fallback ratios used to estimate cost when the API returns no token counts. */
   estimateAudioTokensPerSecond: Schema.optional(Schema.Number),
-  estimateOutputTokensPerMinute: Schema.optional(Schema.Number)
+  estimateOutputTokensPerMinute: Schema.optional(Schema.Number),
 });
 
 export type ModelPricing = typeof ModelPricingSchema.Type;
@@ -87,20 +87,29 @@ export const JudgeConfigSchema = Schema.Struct({
   timeoutMs: Schema.optional(Schema.Number),
   /** Extra attempts for a judge turn that times out or drops its connection. */
   retries: Schema.optional(Schema.Number),
-  pricing: Schema.optional(ModelPricingSchema)
+  pricing: Schema.optional(ModelPricingSchema),
 });
 
 export type JudgeConfig = typeof JudgeConfigSchema.Type;
 
 export const AsrModelConfigSchema = Schema.Struct({
-  type: Schema.Literal("xai", "gemini", "whisper", "groq", "meta", "custom-http", "custom-command", "mock"),
+  type: Schema.Literal(
+    "xai",
+    "gemini",
+    "whisper",
+    "groq",
+    "meta",
+    "custom-http",
+    "custom-command",
+    "mock",
+  ),
   model: Schema.optional(Schema.String),
   displayName: Schema.optional(Schema.String),
   endpoint: Schema.optional(Schema.String),
   command: Schema.optional(Schema.String),
   apiKey: Schema.optional(Schema.String),
   options: Schema.optional(AsrModelOptionsSchema),
-  pricing: Schema.optional(ModelPricingSchema)
+  pricing: Schema.optional(ModelPricingSchema),
 });
 
 export type AsrModelConfig = typeof AsrModelConfigSchema.Type;
@@ -111,13 +120,13 @@ export const ScoringConfigSchema = Schema.Struct({
    * 1 treats an omission and a fabrication as equally bad; below 1 weights
    * precision (fabrication is worse), above 1 weights recall.
    */
-  fBeta: Schema.optional(Schema.Number)
+  fBeta: Schema.optional(Schema.Number),
 });
 
 export type ScoringConfig = typeof ScoringConfigSchema.Type;
 
 export const ReviewConfigSchema = Schema.Struct({
-  port: Schema.Number
+  port: Schema.Number,
 });
 
 export type ReviewConfig = typeof ReviewConfigSchema.Type;
@@ -127,7 +136,7 @@ export const AppConfigSchema = Schema.Struct({
   weights: CategoryWeightsSchema,
   models: Schema.Record({ key: Schema.String, value: AsrModelConfigSchema }),
   scoring: Schema.optional(ScoringConfigSchema),
-  review: ReviewConfigSchema
+  review: ReviewConfigSchema,
 });
 
 export type AppConfig = typeof AppConfigSchema.Type;

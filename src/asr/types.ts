@@ -11,7 +11,7 @@ export interface AsrAdapter {
   readonly parameters: Readonly<Record<string, unknown>>;
   transcribe(
     audioFullPath: string,
-    sampleId: string
+    sampleId: string,
   ): Effect.Effect<
     { hypothesis: string; latencyMs: number; usage?: TokenUsage },
     AsrExecutionError

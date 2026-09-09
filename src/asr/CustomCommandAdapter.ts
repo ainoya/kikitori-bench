@@ -12,7 +12,7 @@ export class CustomCommandAdapter implements AsrAdapter {
   constructor(
     public readonly modelId: string,
     public readonly displayName: string,
-    private readonly commandTemplate: string
+    private readonly commandTemplate: string,
   ) {}
 
   get parameters(): Readonly<Record<string, unknown>> {
@@ -36,8 +36,8 @@ export class CustomCommandAdapter implements AsrAdapter {
             modelId: this.modelId,
             sampleId,
             message: `Custom command failed [${command}]: ${String(err)}`,
-            cause: err
-          })
+            cause: err,
+          }),
       });
 
       const latencyMs = Date.now() - startTime;

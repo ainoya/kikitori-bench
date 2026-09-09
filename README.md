@@ -156,7 +156,9 @@ mise trust
 # Install tools (Node v26, pnpm)
 mise install
 
-# Install dependencies
+# Install dependencies (the `prepare` script patches the local TypeScript and
+# oxlint binaries so the Effect language service is active, and installs the
+# lefthook Git hooks)
 pnpm install
 
 # Run strict type checking
@@ -385,9 +387,25 @@ pnpm check:leaks
 # Type check (strict TypeScript + Effect)
 pnpm typecheck
 
+# Lint (oxlint, including the type-aware Effect rules)
+pnpm lint
+pnpm lint:fix
+
+# Format (oxfmt)
+pnpm format
+pnpm format:check
+
+# Type check, lint and format check in one go
+pnpm check
+
 # Build distribution bundle
 pnpm build
 
 # Run CLI help
 pnpm kikitori --help
 ```
+
+The `pre-commit` hook (lefthook) runs the same checks against what you are about
+to commit: it formats the staged TypeScript and re-stages it, then runs `lint`,
+`typecheck` and `check:leaks`. `pnpm install` installs it; if the hook ever goes
+missing, `pnpm exec lefthook install` puts it back.

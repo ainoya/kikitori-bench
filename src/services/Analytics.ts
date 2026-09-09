@@ -5,7 +5,7 @@ import type {
   ModelAnalytics,
   PairwiseComparison,
   RunAnalytics,
-  SampleEvaluation
+  SampleEvaluation,
 } from "../schemas/judge.js";
 import { CHECKED_AXES } from "../judge/scoring.js";
 import { bootstrapMean, bootstrapPairedDiff, mcnemarExact, percentile } from "../utils/stats.js";
@@ -31,7 +31,7 @@ const axisPassed = (evaluation: SampleEvaluation, axis: EvaluationAxis): boolean
 export const buildRunAnalytics = (
   evaluations: readonly SampleEvaluation[],
   _items: readonly DatasetItem[],
-  config: AppConfig
+  config: AppConfig,
 ): RunAnalytics => {
   const modelIds = Array.from(new Set(evaluations.map((e) => e.modelId)));
   const sampleIds = Array.from(new Set(evaluations.map((e) => e.sampleId)));
@@ -48,7 +48,7 @@ export const buildRunAnalytics = (
     const evals = [...perSample.values()];
     const interval = bootstrapMean(
       evals.map((e) => e.overallScore),
-      BOOTSTRAP_ITERATIONS
+      BOOTSTRAP_ITERATIONS,
     );
     const latencies = evals.map((e) => e.latencyMs ?? 0);
 
@@ -73,7 +73,7 @@ export const buildRunAnalytics = (
       emptyOutputs: evals.filter((e) => e.hypothesis.trim().length === 0).length,
       termsMatched,
       termsTotal,
-      termRecallPercent: termsTotal > 0 ? round1((termsMatched / termsTotal) * 100) : 0
+      termRecallPercent: termsTotal > 0 ? round1((termsMatched / termsTotal) * 100) : 0,
     };
   });
 
@@ -98,7 +98,7 @@ export const buildRunAnalytics = (
     const shared = sampleIds.filter((id) => aEvals.has(id) && bEvals.has(id));
 
     const paired = shared.map(
-      (id) => [aEvals.get(id)!.overallScore, bEvals.get(id)!.overallScore] as const
+      (id) => [aEvals.get(id)!.overallScore, bEvals.get(id)!.overallScore] as const,
     );
     const diff = bootstrapPairedDiff(paired, BOOTSTRAP_ITERATIONS);
     const adjusted = bootstrapPairedDiff(paired, BOOTSTRAP_ITERATIONS, adjustedAlpha);
@@ -122,7 +122,7 @@ export const buildRunAnalytics = (
         bOnly,
         bothPass,
         bothFail,
-        pValue: Math.round(mcnemarExact(aOnly, bOnly) * 1000) / 1000
+        pValue: Math.round(mcnemarExact(aOnly, bOnly) * 1000) / 1000,
       };
     });
 
@@ -136,7 +136,7 @@ export const buildRunAnalytics = (
       adjustedCiHigh: adjusted.high,
       significant: diff.low > 0 || diff.high < 0,
       significantAdjusted: adjusted.low > 0 || adjusted.high < 0,
-      axes
+      axes,
     });
   }
 
@@ -160,8 +160,13 @@ export const buildRunAnalytics = (
       .filter((e): e is SampleEvaluation => e !== undefined);
     if (seen.length === 0) continue;
     const missedEverywhere = seen
-      .map((e) => new Set(e.checks.filter((c) => c.id.startsWith("proper_missed_")).map((c) => c.id)))
-      .reduce((acc, s) => new Set([...acc].filter((x) => s.has(x))), new Set(seen[0]!.checks.filter((c) => c.id.startsWith("proper_missed_")).map((c) => c.id)));
+      .map(
+        (e) => new Set(e.checks.filter((c) => c.id.startsWith("proper_missed_")).map((c) => c.id)),
+      )
+      .reduce(
+        (acc, s) => new Set([...acc].filter((x) => s.has(x))),
+        new Set(seen[0]!.checks.filter((c) => c.id.startsWith("proper_missed_")).map((c) => c.id)),
+      );
     for (const id2 of missedEverywhere) termsMissedByAll.push(id2.replace("proper_missed_", ""));
   }
 
@@ -183,7 +188,7 @@ export const buildRunAnalytics = (
       axis,
       allPass,
       allFail,
-      discriminating: sampleIds.length - allPass - allFail
+      discriminating: sampleIds.length - allPass - allFail,
     };
   });
 
@@ -197,7 +202,7 @@ export const buildRunAnalytics = (
       allModelsPass,
       discriminating: sampleIds.length - allModelsFail.length - allModelsPass.length,
       termsMissedByAll: Array.from(new Set(termsMissedByAll)),
-      axisDiscrimination
-    }
+      axisDiscrimination,
+    },
   };
 };

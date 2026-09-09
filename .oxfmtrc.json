@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [
+    "dist/",
+    "datasets/",
+    "runs/",
+    "reports/",
+    "**/*.md",
+    "**/*.html",
+    "**/*.json",
+    "**/*.yaml",
+    "**/*.yml"
+  ]
+}

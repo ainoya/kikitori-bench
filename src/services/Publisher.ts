@@ -57,7 +57,7 @@ export const chartProvenance = (): ChartProvenance => {
   return {
     date: new Date().toISOString().slice(0, 10),
     repository,
-    commit: `${commit}${dirty}`
+    commit: `${commit}${dirty}`,
   };
 };
 
@@ -80,7 +80,7 @@ export const publishRun = (options: PublishOptions): string[] => {
   const chartFiles: Array<[string, string]> = [
     ["price-performance.svg", charts.costSvg],
     ["speed-performance.svg", charts.speedSvg],
-    ["score-breakdown.svg", charts.breakdownSvg]
+    ["score-breakdown.svg", charts.breakdownSvg],
   ];
   for (const [name, svg] of chartFiles) {
     const file = path.join(chartDir, name);
@@ -102,30 +102,34 @@ export const publishRun = (options: PublishOptions): string[] => {
     "Transcription engines compared on unscripted Japanese voice-journal audio - " +
       "mostly single-speaker dictation, with some conversational passages. " +
       "Aggregate results only: the corpus behind these numbers is private and is not part of " +
-      "this repository."
+      "this repository.",
   );
   lines.push("");
-  lines.push(`- **Samples**: ${conditions?.sampleCount ?? "-"}${
-    conditions?.maxDurationSec !== undefined
-      ? ` (each under ${Math.round(conditions.maxDurationSec / 60)} minutes, so every provider sees the same set)`
-      : ""
-  }`);
+  lines.push(
+    `- **Samples**: ${conditions?.sampleCount ?? "-"}${
+      conditions?.maxDurationSec !== undefined
+        ? ` (each under ${Math.round(conditions.maxDurationSec / 60)} minutes, so every provider sees the same set)`
+        : ""
+    }`,
+  );
   lines.push(`- **Audio per model**: ${fmtDuration(audioSeconds)}`);
-  lines.push(`- **Judge**: \`${report.judgeModel}\`, temperature \`${conditions?.judge.temperature ?? "default"}\``);
+  lines.push(
+    `- **Judge**: \`${report.judgeModel}\`, temperature \`${conditions?.judge.temperature ?? "default"}\``,
+  );
   lines.push(
     `- **Score**: ${axes
       .filter((axis) => axis === "proper_noun_f1" || axis === "proposition_f1")
       .map((axis) => i18n.axes[axis])
       .join(" and ")}, weighted ${Object.entries(conditions?.weights ?? {})
       .map(([k, v]) => `${k} ${v}`)
-      .join(", ")}`
+      .join(", ")}`,
   );
   lines.push("");
 
   lines.push("## Leaderboard");
   lines.push("");
   lines.push(
-    `| # | ${i18n.model} | ${i18n.overall} | ${i18n.ciColumn} | ${axes.map((a) => i18n.axes[a]).join(" | ")} | ${i18n.rtf} | ${i18n.latencyPercentiles} |`
+    `| # | ${i18n.model} | ${i18n.overall} | ${i18n.ciColumn} | ${axes.map((a) => i18n.axes[a]).join(" | ")} | ${i18n.rtf} | ${i18n.latencyPercentiles} |`,
   );
   lines.push(`| :--- | :--- | :---: |${" :---: |".repeat(axes.length + 3)}`);
   report.leaderboard.forEach((entry, idx) => {
@@ -135,7 +139,7 @@ export const publishRun = (options: PublishOptions): string[] => {
         stats ? `[${stats.ciLow.toFixed(1)}, ${stats.ciHigh.toFixed(1)}]` : "-"
       } | ${axes.map((a) => `${(entry.categoryScores[a] ?? 0).toFixed(1)}%`).join(" | ")} | ${
         entry.averageRtf?.toFixed(2) ?? "-"
-      }x | ${stats ? `${stats.latencyP50Ms} / ${stats.latencyP95Ms} ms` : "-"} |`
+      }x | ${stats ? `${stats.latencyP50Ms} / ${stats.latencyP95Ms} ms` : "-"} |`,
     );
   });
   lines.push("");
@@ -149,7 +153,9 @@ export const publishRun = (options: PublishOptions): string[] => {
   if (analytics) {
     lines.push(`## ${i18n.pairwiseSection}`);
     lines.push("");
-    lines.push(`| ${i18n.model} A | ${i18n.model} B | Δ | ${i18n.ciColumn} | ${i18n.adjustedCi} | ${i18n.verdict} |`);
+    lines.push(
+      `| ${i18n.model} A | ${i18n.model} B | Δ | ${i18n.ciColumn} | ${i18n.adjustedCi} | ${i18n.verdict} |`,
+    );
     lines.push("| :--- | :--- | :---: | :---: | :---: | :---: |");
     const nameOf = (id: string) =>
       analytics.models.find((m) => m.modelId === id)?.displayName ?? id;
@@ -158,7 +164,7 @@ export const publishRun = (options: PublishOptions): string[] => {
       lines.push(
         `| ${nameOf(cmp.a)} | ${nameOf(cmp.b)} | ${sign(cmp.meanDiff)}pp | [${sign(cmp.ciLow)}, ${sign(cmp.ciHigh)}] | [${sign(cmp.adjustedCiLow)}, ${sign(cmp.adjustedCiHigh)}] | ${
           cmp.significantAdjusted ? "✅" : cmp.significant ? "🔸" : "➖"
-        } |`
+        } |`,
       );
     }
     lines.push("");
@@ -167,8 +173,10 @@ export const publishRun = (options: PublishOptions): string[] => {
     lines.push(
       `Discriminating samples: **${analytics.items.discriminating} / ${analytics.items.totalSamples}**` +
         analytics.items.axisDiscrimination
-          .map((ax) => ` · ${i18n.axes[ax.axis]} ${ax.discriminating}/${analytics.items.totalSamples}`)
-          .join("")
+          .map(
+            (ax) => ` · ${i18n.axes[ax.axis]} ${ax.discriminating}/${analytics.items.totalSamples}`,
+          )
+          .join(""),
     );
     lines.push("");
   }
@@ -177,7 +185,7 @@ export const publishRun = (options: PublishOptions): string[] => {
     lines.push(`## ${i18n.usageSection}`);
     lines.push("");
     lines.push(
-      `| ${i18n.model} | ASR in | ASR out | ${i18n.asrCost} | Judge in | Judge out | ${i18n.judgeCost} | ${i18n.totalCost} |`
+      `| ${i18n.model} | ASR in | ASR out | ${i18n.asrCost} | Judge in | Judge out | ${i18n.judgeCost} | ${i18n.totalCost} |`,
     );
     lines.push("| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |");
     for (const m of summary.perModel) {
@@ -185,14 +193,14 @@ export const publishRun = (options: PublishOptions): string[] => {
         `| **${m.displayName}** | ${fmtInt(m.asrUsage.inputTokens)} | ${fmtInt(m.asrUsage.outputTokens)} | ${
           m.asrCostEstimated ? "~" : ""
         }${fmtUsd(m.asrCostUsd)} | ${fmtInt(m.judgeUsage.inputTokens)} | ${fmtInt(m.judgeUsage.outputTokens)} | ${fmtUsd(
-          m.judgeCostUsd
-        )} | ${fmtUsd(m.totalCostUsd)} |`
+          m.judgeCostUsd,
+        )} | ${fmtUsd(m.totalCostUsd)} |`,
       );
     }
     lines.push(
       `| **${i18n.costTotalsRow}** | | | **${fmtUsd(summary.totalAsrCostUsd)}** | | | **${fmtUsd(
-        summary.totalJudgeCostUsd
-      )}** | **${fmtUsd(summary.totalCostUsd)}** |`
+        summary.totalJudgeCostUsd,
+      )}** | **${fmtUsd(summary.totalCostUsd)}** |`,
     );
     lines.push("");
   }
@@ -204,7 +212,10 @@ export const publishRun = (options: PublishOptions): string[] => {
     lines.push("| :--- | :--- | :--- |");
     for (const cond of conditions.models) {
       const params = Object.entries(cond.parameters)
-        .map(([key, value]) => `\`${key}\`: ${Array.isArray(value) ? value.join(", ") : String(value)}`)
+        .map(
+          ([key, value]) =>
+            `\`${key}\`: ${Array.isArray(value) ? value.join(", ") : String(value)}`,
+        )
         .join("<br>");
       lines.push(`| **${cond.displayName}** | ${cond.provider} | ${params} |`);
     }
@@ -213,7 +224,7 @@ export const publishRun = (options: PublishOptions): string[] => {
 
   lines.push(
     `_Generated by \`kikitori publish\` from run \`${report.runId}\` on ${source.date}, ` +
-      `at ${source.repository} @ \`${source.commit}\`._`
+      `at ${source.repository} @ \`${source.commit}\`._`,
   );
   lines.push("");
 

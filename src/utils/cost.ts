@@ -1,10 +1,6 @@
 import type { AppConfig, ModelPricing } from "../schemas/config.js";
 import type { TokenUsage } from "../schemas/asr.js";
-import type {
-  ModelUsageSummary,
-  RunUsageSummary,
-  SampleEvaluation
-} from "../schemas/judge.js";
+import type { ModelUsageSummary, RunUsageSummary, SampleEvaluation } from "../schemas/judge.js";
 
 const PER_MILLION = 1_000_000;
 
@@ -28,7 +24,7 @@ export const computeAsrCost = (
   audioDurationMs: number | undefined,
   pricing: ModelPricing | undefined,
   /** Whether the request produced a transcript; an empty one bills no output. */
-  producedOutput = true
+  producedOutput = true,
 ): CostBreakdown | undefined => {
   if (!pricing) return undefined;
 
@@ -59,8 +55,7 @@ export const computeAsrCost = (
     const effectiveUsage: TokenUsage = canEstimateOutput
       ? {
           ...usage,
-          outputTokens:
-            (audioDurationMs / 60_000) * (pricing.estimateOutputTokensPerMinute ?? 0)
+          outputTokens: (audioDurationMs / 60_000) * (pricing.estimateOutputTokensPerMinute ?? 0),
         }
       : usage;
 
@@ -77,7 +72,7 @@ export const computeAsrCost = (
     const seconds = audioDurationMs / 1000;
     const estimated: TokenUsage = {
       audioInputTokens: seconds * pricing.estimateAudioTokensPerSecond,
-      outputTokens: (seconds / 60) * outputRatio
+      outputTokens: (seconds / 60) * outputRatio,
     };
     return { costUsd: round6(tokenCost(estimated, pricing)), estimated: true };
   }
@@ -88,7 +83,7 @@ export const computeAsrCost = (
 /** Cost of a single judge turn, always token-billed. */
 export const computeJudgeCost = (
   usage: TokenUsage | undefined,
-  pricing: ModelPricing | undefined
+  pricing: ModelPricing | undefined,
 ): CostBreakdown | undefined => {
   if (!pricing || !usage) return undefined;
   if (
@@ -136,7 +131,7 @@ export const sumUsage = (entries: ReadonlyArray<TokenUsage | undefined>): TokenU
     "outputTokens",
     "reasoningOutputTokens",
     "totalTokens",
-    "billedAudioSeconds"
+    "billedAudioSeconds",
   ] as const;
 
   for (const entry of entries) {
@@ -158,7 +153,7 @@ export const sumUsage = (entries: ReadonlyArray<TokenUsage | undefined>): TokenU
 export const buildRunUsageSummary = (
   evaluations: readonly SampleEvaluation[],
   config: AppConfig,
-  judgeModel: string
+  judgeModel: string,
 ): RunUsageSummary => {
   const modelIds = Array.from(new Set(evaluations.map((e) => e.modelId)));
   const perModel: ModelUsageSummary[] = [];
@@ -169,7 +164,7 @@ export const buildRunUsageSummary = (
     const judgePricing = config.judge.pricing;
 
     const asrCosts = modelEvals.map((e) =>
-      computeAsrCost(e.asrUsage, e.audioDurationMs, asrPricing, e.hypothesis.trim().length > 0)
+      computeAsrCost(e.asrUsage, e.audioDurationMs, asrPricing, e.hypothesis.trim().length > 0),
     );
     const judgeCosts = modelEvals.map((e) => computeJudgeCost(e.judgeUsage, judgePricing));
 
@@ -181,15 +176,14 @@ export const buildRunUsageSummary = (
       displayName: config.models[modelId]?.displayName ?? modelId,
       sampleCount: modelEvals.length,
       audioSeconds:
-        Math.round(
-          (modelEvals.reduce((acc, e) => acc + (e.audioDurationMs ?? 0), 0) / 1000) * 10
-        ) / 10,
+        Math.round((modelEvals.reduce((acc, e) => acc + (e.audioDurationMs ?? 0), 0) / 1000) * 10) /
+        10,
       asrUsage: sumUsage(modelEvals.map((e) => e.asrUsage)),
       asrCostUsd,
       asrCostEstimated: asrCosts.some((c) => c?.estimated === true),
       judgeUsage: sumUsage(modelEvals.map((e) => e.judgeUsage)),
       judgeCostUsd,
-      totalCostUsd: addOptional(asrCostUsd, judgeCostUsd)
+      totalCostUsd: addOptional(asrCostUsd, judgeCostUsd),
     });
   }
 
@@ -201,7 +195,7 @@ export const buildRunUsageSummary = (
     perModel,
     totalAsrCostUsd,
     totalJudgeCostUsd,
-    totalCostUsd: addOptional(totalAsrCostUsd, totalJudgeCostUsd)
+    totalCostUsd: addOptional(totalAsrCostUsd, totalJudgeCostUsd),
   };
 };
 

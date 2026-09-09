@@ -48,9 +48,7 @@ export const getTokenizer = (): Promise<Tokenizer> => {
   tokenizerPromise ??= new Promise<Tokenizer>((resolve, reject) => {
     kuromoji
       .builder({ dicPath: dictionaryPath() })
-      .build((err: Error | null, tokenizer: Tokenizer) =>
-        err ? reject(err) : resolve(tokenizer)
-      );
+      .build((err: Error | null, tokenizer: Tokenizer) => (err ? reject(err) : resolve(tokenizer)));
   });
   return tokenizerPromise;
 };
@@ -81,7 +79,10 @@ export const extractProperNouns = (tokenizer: Tokenizer, text: string): string[]
 };
 
 /** Multiset overlap: a name said twice and transcribed once is half credit. */
-const overlap = (a: readonly string[], b: readonly string[]): { hit: number; missing: string[] } => {
+const overlap = (
+  a: readonly string[],
+  b: readonly string[],
+): { hit: number; missing: string[] } => {
   const bag = new Map<string, number>();
   for (const x of b) bag.set(x, (bag.get(x) ?? 0) + 1);
   let hit = 0;
@@ -103,7 +104,7 @@ const round1 = (n: number) => Math.round(n * 1000) / 10;
 export const scoreProperNouns = (
   tokenizer: Tokenizer,
   groundTruth: string,
-  hypothesis: string
+  hypothesis: string,
 ): LexicalScore => {
   const reference = extractProperNouns(tokenizer, groundTruth);
   const hypothesisTokens = extractProperNouns(tokenizer, hypothesis);
@@ -122,6 +123,6 @@ export const scoreProperNouns = (
     referenceTokens: reference,
     hypothesisTokens,
     missed: forward.missing,
-    fabricated: backward.missing
+    fabricated: backward.missing,
   };
 };

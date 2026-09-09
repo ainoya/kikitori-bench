@@ -95,7 +95,7 @@ export interface ChartMeta {
  */
 const standalone = (svg: string, meta: ChartMeta): string => {
   const match = /<svg viewBox="0 0 (\d+(?:\.\d+)?) (\d+(?:\.\d+)?)"([^>]*)>([\s\S]*)<\/svg>/.exec(
-    svg
+    svg,
   );
   if (!match) return svg;
   const [, widthText, heightText, attrs, inner] = match;
@@ -114,7 +114,7 @@ const standalone = (svg: string, meta: ChartMeta): string => {
     `  <g transform="translate(0 ${headroom})">${inner}</g>`,
     `  <text class="chart-footnote" x="20" y="${height - 9}">${meta.footnote}</text>`,
     `</svg>`,
-    ""
+    "",
   ].join("\n");
 };
 
@@ -135,314 +135,341 @@ export interface ChartProvenance {
 }
 
 export const buildCharts = (report: BenchmarkReport, provenance: ChartProvenance): RunCharts => {
-const summaries = new Map<string, ModelUsageSummary>(
-  (report.usageSummary?.perModel ?? []).map((m) => [m.modelId, m])
-);
-
-const AXIS_LABELS: Record<string, string> = {
-  proper_noun_f1: "Proper nouns",
-  proposition_recall: "Recall",
-  proposition_precision: "Precision",
-  proposition_f1: "F1",
-  // Runs scored under earlier versions of the metric:
-  terminology_accuracy: "Term recall",
-  proposition_coverage: "Proposition coverage",
-  proposition_fidelity: "Proposition fidelity",
-  no_hallucination: "No hallucination",
-  meaning_completeness: "Meaning",
-  no_hallucination_or_distortion: "No distortion",
-  no_critical_omission: "No omission"
-};
-
-interface Axis {
-  key: string;
-  label: string;
-  weight: number | undefined;
-}
-
-// The axis set is whatever the run was scored with, so old runs still render.
-const weights = report.conditions?.weights as Record<string, number> | undefined;
-const AXES: Axis[] = Object.keys(report.leaderboard[0]?.categoryScores ?? {}).map((key) => ({
-  key,
-  label: AXIS_LABELS[key] ?? key.replace(/_/g, " "),
-  weight: weights?.[key]
-}));
-
-interface Point {
-  modelId: string;
-  name: string;
-  score: number;
-  categoryScores: Record<string, number>;
-  costPerHour: number | undefined;
-  asrCostUsd: number | undefined;
-  judgeCostUsd: number | undefined;
-  estimated: boolean;
-  latencyMs: number;
-  rtf: number | undefined;
-  audioHours: number;
-}
-
-const points: Point[] = report.leaderboard.map((entry) => {
-  const usage = summaries.get(entry.modelId);
-  const audioHours = (usage?.audioSeconds ?? 0) / 3600;
-  const asrCostUsd = usage?.asrCostUsd;
-  return {
-    modelId: entry.modelId,
-    name: entry.displayName,
-    score: entry.overallScore,
-    categoryScores: entry.categoryScores,
-    costPerHour: asrCostUsd !== undefined && audioHours > 0 ? asrCostUsd / audioHours : undefined,
-    asrCostUsd,
-    judgeCostUsd: usage?.judgeCostUsd,
-    estimated: usage?.asrCostEstimated === true,
-    latencyMs: entry.averageLatencyMs,
-    rtf: entry.averageRtf,
-    audioHours
-  };
-});
-
-const esc = (s: unknown): string => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const fmtUsd = (v: number | undefined): string => (v === undefined ? "-" : `$${v < 1 ? v.toFixed(4) : v.toFixed(2)}`);
-
-// Round an axis up to a readable step (1, 2, 2.5 or 5 x 10^k).
-const niceStep = (rawMax: number, targetTicks: number): number => {
-  const rough = rawMax / targetTicks;
-  const mag = 10 ** Math.floor(Math.log10(rough));
-  return [1, 2, 2.5, 5, 10].map((m) => m * mag).find((step) => step >= rough) ?? 10 * mag;
-};
-const ticksTo = (max: number, step: number): number[] =>
-  Array.from({ length: Math.round(max / step) + 1 }, (_, i) => i * step);
-
-/**
- * Ids of the non-dominated points: nothing else is both cheaper/faster and at
- * least as accurate. Returned as a set because a point sits on one chart's
- * frontier and not necessarily on the other's.
- */
-const frontierIds = (list: Point[], xOf: (p: Point) => number): Set<string> =>
-  new Set(
-    list
-      .filter(
-        (p) =>
-          !list.some(
-            (q) =>
-              q !== p &&
-              xOf(q) <= xOf(p) &&
-              q.score >= p.score &&
-              (xOf(q) < xOf(p) || q.score > p.score)
-          )
-      )
-      .map((p) => p.modelId)
+  const summaries = new Map<string, ModelUsageSummary>(
+    (report.usageSummary?.perModel ?? []).map((m) => [m.modelId, m]),
   );
 
-const W = 760;
-const H = 430;
-
-/** Scatter of score against a lower-is-better measure, with the Pareto staircase. */
-interface ScatterOptions {
-  id: string;
-  xOf: (p: Point) => number | undefined;
-  xFormat: (v: number) => string;
-  xTitle: string;
-  tipLine: (p: Point) => string;
-}
-
-const scatter = ({ id, xOf, xFormat, xTitle, tipLine }: ScatterOptions) => {
-  const data = points.filter((p) => xOf(p) !== undefined && xOf(p) !== null);
-  // Narrowed once here: everything below runs on points that do have a value.
-  const at = (p: Point): number => xOf(p) ?? 0;
-  const onFrontier = frontierIds(data, at);
-  const M = { top: 34, right: 54, bottom: 62, left: 66 };
-  const plotW = W - M.left - M.right;
-  const plotH = H - M.top - M.bottom;
-
-  const maxX = Math.max(...data.map(at));
-  const xStep = niceStep(maxX * 1.15, 4);
-  const xMax = Math.ceil((maxX * 1.12) / xStep) * xStep;
-  const maxScore = Math.max(...data.map((p) => p.score));
-  const yStep = niceStep(Math.min(100, maxScore + 8), 4);
-  const yMax = Math.min(100, Math.ceil((maxScore + 6) / yStep) * yStep);
-
-  const x = (v: number) => M.left + (v / xMax) * plotW;
-  const y = (v: number) => M.top + plotH - (v / yMax) * plotH;
-
-  const frontier = data.filter((p) => onFrontier.has(p.modelId)).sort((a, b) => at(a) - at(b));
-  const stepPath = frontier
-    .flatMap((p, i) => {
-      const next = frontier[i + 1];
-      const seg = [`${i === 0 ? "M" : "L"}${x(at(p)).toFixed(1)},${y(p.score).toFixed(1)}`];
-      if (next) seg.push(`L${x(at(next)).toFixed(1)},${y(p.score).toFixed(1)}`);
-      return seg;
-    })
-    .join(" ");
-
-  // Direct labels sit above the dot and step further away until they clear both
-  // the labels already placed and every dot: models with near-identical RTF sit
-  // on top of each other, and a label printed across a mark is worse than one
-  // placed further out.
-  const placed: Array<{ y: number; left: number; right: number }> = [];
-  const dots = data.map((p) => ({
-    y: y(p.score),
-    left: x(at(p)) - 10,
-    right: x(at(p)) + 10
-  }));
-  const CHAR_W = 6.6;
-  const OFFSETS = [-14, 22, -30, 38, -46, 54, -62, 70, -78, 86];
-
-  const placeLabel = (p: Point) => {
-    const cx = x(at(p));
-    const cy = y(p.score);
-    const half = (p.name.length * CHAR_W) / 2;
-    let anchor = "middle";
-    let lx = cx;
-    if (cx - half < M.left) {
-      anchor = "start";
-      lx = cx - 6;
-    } else if (cx + half > M.left + plotW) {
-      anchor = "end";
-      lx = cx + 6;
-    }
-    const left = anchor === "start" ? lx : anchor === "end" ? lx - half * 2 : cx - half;
-    const right = left + half * 2;
-    const overlapsX = (box: { left: number; right: number }) =>
-      right > box.left - 6 && left < box.right + 6;
-    const free = (candidate: number) =>
-      // A 12px label centred on its baseline still touches a mark ~13px away.
-      !placed.some((q) => Math.abs(q.y - candidate) < 14 && overlapsX(q)) &&
-      !dots.some((d) => Math.abs(d.y - candidate) < 15 && overlapsX(d));
-
-    const candidates = OFFSETS.map((d) => cy + d);
-    // When every slot is taken - a cluster of models with near-identical values -
-    // fall back to the position that is furthest from the labels already placed,
-    // rather than to the last slot, which is where labels used to land on top of
-    // each other.
-    const ly =
-      candidates.find(free) ??
-      candidates.reduce((best, candidate) => {
-        const clearance = (v: number) =>
-          Math.min(
-            ...placed.filter(overlapsX).map((q) => Math.abs(q.y - v)),
-            Number.POSITIVE_INFINITY
-          );
-        return clearance(candidate) > clearance(best) ? candidate : best;
-      }, candidates[0]!);
-    placed.push({ y: ly, left, right });
-    return { lx, ly, anchor };
+  const AXIS_LABELS: Record<string, string> = {
+    proper_noun_f1: "Proper nouns",
+    proposition_recall: "Recall",
+    proposition_precision: "Precision",
+    proposition_f1: "F1",
+    // Runs scored under earlier versions of the metric:
+    terminology_accuracy: "Term recall",
+    proposition_coverage: "Proposition coverage",
+    proposition_fidelity: "Proposition fidelity",
+    no_hallucination: "No hallucination",
+    meaning_completeness: "Meaning",
+    no_hallucination_or_distortion: "No distortion",
+    no_critical_omission: "No omission",
   };
 
-  const marks = [...data]
-    .sort((a, b) => b.score - a.score)
-    .map((p) => {
+  interface Axis {
+    key: string;
+    label: string;
+    weight: number | undefined;
+  }
+
+  // The axis set is whatever the run was scored with, so old runs still render.
+  const weights = report.conditions?.weights as Record<string, number> | undefined;
+  const AXES: Axis[] = Object.keys(report.leaderboard[0]?.categoryScores ?? {}).map((key) => ({
+    key,
+    label: AXIS_LABELS[key] ?? key.replace(/_/g, " "),
+    weight: weights?.[key],
+  }));
+
+  interface Point {
+    modelId: string;
+    name: string;
+    score: number;
+    categoryScores: Record<string, number>;
+    costPerHour: number | undefined;
+    asrCostUsd: number | undefined;
+    judgeCostUsd: number | undefined;
+    estimated: boolean;
+    latencyMs: number;
+    rtf: number | undefined;
+    audioHours: number;
+  }
+
+  const points: Point[] = report.leaderboard.map((entry) => {
+    const usage = summaries.get(entry.modelId);
+    const audioHours = (usage?.audioSeconds ?? 0) / 3600;
+    const asrCostUsd = usage?.asrCostUsd;
+    return {
+      modelId: entry.modelId,
+      name: entry.displayName,
+      score: entry.overallScore,
+      categoryScores: entry.categoryScores,
+      costPerHour: asrCostUsd !== undefined && audioHours > 0 ? asrCostUsd / audioHours : undefined,
+      asrCostUsd,
+      judgeCostUsd: usage?.judgeCostUsd,
+      estimated: usage?.asrCostEstimated === true,
+      latencyMs: entry.averageLatencyMs,
+      rtf: entry.averageRtf,
+      audioHours,
+    };
+  });
+
+  const esc = (s: unknown): string =>
+    String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const fmtUsd = (v: number | undefined): string =>
+    v === undefined ? "-" : `$${v < 1 ? v.toFixed(4) : v.toFixed(2)}`;
+
+  // Round an axis up to a readable step (1, 2, 2.5 or 5 x 10^k).
+  const niceStep = (rawMax: number, targetTicks: number): number => {
+    const rough = rawMax / targetTicks;
+    const mag = 10 ** Math.floor(Math.log10(rough));
+    return [1, 2, 2.5, 5, 10].map((m) => m * mag).find((step) => step >= rough) ?? 10 * mag;
+  };
+  const ticksTo = (max: number, step: number): number[] =>
+    Array.from({ length: Math.round(max / step) + 1 }, (_, i) => i * step);
+
+  /**
+   * Ids of the non-dominated points: nothing else is both cheaper/faster and at
+   * least as accurate. Returned as a set because a point sits on one chart's
+   * frontier and not necessarily on the other's.
+   */
+  const frontierIds = (list: Point[], xOf: (p: Point) => number): Set<string> =>
+    new Set(
+      list
+        .filter(
+          (p) =>
+            !list.some(
+              (q) =>
+                q !== p &&
+                xOf(q) <= xOf(p) &&
+                q.score >= p.score &&
+                (xOf(q) < xOf(p) || q.score > p.score),
+            ),
+        )
+        .map((p) => p.modelId),
+    );
+
+  const W = 760;
+  const H = 430;
+
+  /** Scatter of score against a lower-is-better measure, with the Pareto staircase. */
+  interface ScatterOptions {
+    id: string;
+    xOf: (p: Point) => number | undefined;
+    xFormat: (v: number) => string;
+    xTitle: string;
+    tipLine: (p: Point) => string;
+  }
+
+  const scatter = ({ id, xOf, xFormat, xTitle, tipLine }: ScatterOptions) => {
+    const data = points.filter((p) => xOf(p) !== undefined && xOf(p) !== null);
+    // Narrowed once here: everything below runs on points that do have a value.
+    const at = (p: Point): number => xOf(p) ?? 0;
+    const onFrontier = frontierIds(data, at);
+    const M = { top: 34, right: 54, bottom: 62, left: 66 };
+    const plotW = W - M.left - M.right;
+    const plotH = H - M.top - M.bottom;
+
+    const maxX = Math.max(...data.map(at));
+    const xStep = niceStep(maxX * 1.15, 4);
+    const xMax = Math.ceil((maxX * 1.12) / xStep) * xStep;
+    const maxScore = Math.max(...data.map((p) => p.score));
+    const yStep = niceStep(Math.min(100, maxScore + 8), 4);
+    const yMax = Math.min(100, Math.ceil((maxScore + 6) / yStep) * yStep);
+
+    const x = (v: number) => M.left + (v / xMax) * plotW;
+    const y = (v: number) => M.top + plotH - (v / yMax) * plotH;
+
+    const frontier = data.filter((p) => onFrontier.has(p.modelId)).sort((a, b) => at(a) - at(b));
+    const stepPath = frontier
+      .flatMap((p, i) => {
+        const next = frontier[i + 1];
+        const seg = [`${i === 0 ? "M" : "L"}${x(at(p)).toFixed(1)},${y(p.score).toFixed(1)}`];
+        if (next) seg.push(`L${x(at(next)).toFixed(1)},${y(p.score).toFixed(1)}`);
+        return seg;
+      })
+      .join(" ");
+
+    // Direct labels sit above the dot and step further away until they clear both
+    // the labels already placed and every dot: models with near-identical RTF sit
+    // on top of each other, and a label printed across a mark is worse than one
+    // placed further out.
+    const placed: Array<{ y: number; left: number; right: number }> = [];
+    const dots = data.map((p) => ({
+      y: y(p.score),
+      left: x(at(p)) - 10,
+      right: x(at(p)) + 10,
+    }));
+    const CHAR_W = 6.6;
+    const OFFSETS = [-14, 22, -30, 38, -46, 54, -62, 70, -78, 86];
+
+    const placeLabel = (p: Point) => {
       const cx = x(at(p));
       const cy = y(p.score);
-      const label = placeLabel(p);
-      const tip = [
-        p.name,
-        `Score: ${p.score.toFixed(1)}%`,
-        tipLine(p),
-        `Latency: ${p.latencyMs} ms | RTF: ${p.rtf?.toFixed(2) ?? "-"}x`
-      ].join("\n");
-      return `      <g class="mark ${onFrontier.has(p.modelId) ? "on" : "off"}" tabindex="0">
+      const half = (p.name.length * CHAR_W) / 2;
+      let anchor = "middle";
+      let lx = cx;
+      if (cx - half < M.left) {
+        anchor = "start";
+        lx = cx - 6;
+      } else if (cx + half > M.left + plotW) {
+        anchor = "end";
+        lx = cx + 6;
+      }
+      const left = anchor === "start" ? lx : anchor === "end" ? lx - half * 2 : cx - half;
+      const right = left + half * 2;
+      const overlapsX = (box: { left: number; right: number }) =>
+        right > box.left - 6 && left < box.right + 6;
+      const free = (candidate: number) =>
+        // A 12px label centred on its baseline still touches a mark ~13px away.
+        !placed.some((q) => Math.abs(q.y - candidate) < 14 && overlapsX(q)) &&
+        !dots.some((d) => Math.abs(d.y - candidate) < 15 && overlapsX(d));
+
+      const candidates = OFFSETS.map((d) => cy + d);
+      // When every slot is taken - a cluster of models with near-identical values -
+      // fall back to the position that is furthest from the labels already placed,
+      // rather than to the last slot, which is where labels used to land on top of
+      // each other.
+      const ly =
+        candidates.find(free) ??
+        candidates.reduce((best, candidate) => {
+          const clearance = (v: number) =>
+            Math.min(
+              ...placed.filter(overlapsX).map((q) => Math.abs(q.y - v)),
+              Number.POSITIVE_INFINITY,
+            );
+          return clearance(candidate) > clearance(best) ? candidate : best;
+        }, candidates[0]!);
+      placed.push({ y: ly, left, right });
+      return { lx, ly, anchor };
+    };
+
+    const marks = [...data]
+      .sort((a, b) => b.score - a.score)
+      .map((p) => {
+        const cx = x(at(p));
+        const cy = y(p.score);
+        const label = placeLabel(p);
+        const tip = [
+          p.name,
+          `Score: ${p.score.toFixed(1)}%`,
+          tipLine(p),
+          `Latency: ${p.latencyMs} ms | RTF: ${p.rtf?.toFixed(2) ?? "-"}x`,
+        ].join("\n");
+        return `      <g class="mark ${onFrontier.has(p.modelId) ? "on" : "off"}" tabindex="0">
         <title>${esc(tip)}</title>
         <circle class="hit" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="18"></circle>
         <circle class="dot" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="7"></circle>
         <text class="point-label" x="${label.lx.toFixed(1)}" y="${label.ly.toFixed(1)}" text-anchor="${label.anchor}">${esc(p.name)}</text>
       </g>`;
-    })
-    .join("\n");
+      })
+      .join("\n");
 
-  return {
-    data,
-    onFrontier,
-    svg: `  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Score against ${esc(xTitle)}" id="${id}">
+    return {
+      data,
+      onFrontier,
+      svg: `  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Score against ${esc(xTitle)}" id="${id}">
     <g class="grid">
-${ticksTo(yMax, yStep).map((t) => `      <line x1="${M.left}" y1="${y(t).toFixed(1)}" x2="${M.left + plotW}" y2="${y(t).toFixed(1)}"></line>`).join("\n")}
+${ticksTo(yMax, yStep)
+  .map(
+    (t) =>
+      `      <line x1="${M.left}" y1="${y(t).toFixed(1)}" x2="${M.left + plotW}" y2="${y(t).toFixed(1)}"></line>`,
+  )
+  .join("\n")}
     </g>
     <g class="axis">
-${ticksTo(xMax, xStep).map((t) => `      <text x="${x(t).toFixed(1)}" y="${M.top + plotH + 20}" text-anchor="middle">${xFormat(t)}</text>`).join("\n")}
-${ticksTo(yMax, yStep).map((t) => `      <text x="${M.left - 12}" y="${(y(t) + 4).toFixed(1)}" text-anchor="end">${t.toFixed(0)}%</text>`).join("\n")}
+${ticksTo(xMax, xStep)
+  .map(
+    (t) =>
+      `      <text x="${x(t).toFixed(1)}" y="${M.top + plotH + 20}" text-anchor="middle">${xFormat(t)}</text>`,
+  )
+  .join("\n")}
+${ticksTo(yMax, yStep)
+  .map(
+    (t) =>
+      `      <text x="${M.left - 12}" y="${(y(t) + 4).toFixed(1)}" text-anchor="end">${t.toFixed(0)}%</text>`,
+  )
+  .join("\n")}
       <text class="axis-title" x="${(M.left + plotW / 2).toFixed(1)}" y="${H - 16}" text-anchor="middle">${esc(xTitle)}</text>
       <text class="axis-title" transform="translate(16 ${(M.top + plotH / 2).toFixed(1)}) rotate(-90)" text-anchor="middle">Overall score</text>
     </g>
     <path class="frontier" d="${stepPath}"></path>
 ${marks}
-  </svg>`
+  </svg>`,
+    };
   };
-};
 
-/** Grouped bars: one group per model, one bar per evaluation axis. */
-const breakdownBars = () => {
-  const BH = 400;
-  const M = { top: 24, right: 24, bottom: 74, left: 56 };
-  const plotW = W - M.left - M.right;
-  const plotH = BH - M.top - M.bottom;
-  const yMax = 100;
-  const yStep = 25;
-  const y = (v: number) => M.top + plotH - (v / yMax) * plotH;
+  /** Grouped bars: one group per model, one bar per evaluation axis. */
+  const breakdownBars = () => {
+    const BH = 400;
+    const M = { top: 24, right: 24, bottom: 74, left: 56 };
+    const plotW = W - M.left - M.right;
+    const plotH = BH - M.top - M.bottom;
+    const yMax = 100;
+    const yStep = 25;
+    const y = (v: number) => M.top + plotH - (v / yMax) * plotH;
 
-  const groupW = plotW / points.length;
-  const barGap = 2;
-  const barW = (groupW * 0.78 - barGap * (AXES.length - 1)) / AXES.length;
+    const groupW = plotW / points.length;
+    const barGap = 2;
+    const barW = (groupW * 0.78 - barGap * (AXES.length - 1)) / AXES.length;
 
-  const groups = points
-    .map((p, gi) => {
-      const gx = M.left + groupW * gi + groupW * 0.11;
-      const bars = AXES.map((axis, ai) => {
-        const v = p.categoryScores[axis.key] ?? 0;
-        const bx = gx + ai * (barW + barGap);
-        const by = y(v);
-        const h = Math.max(M.top + plotH - by, 1);
-        return `        <g class="bar s${ai + 1}" tabindex="0">
+    const groups = points
+      .map((p, gi) => {
+        const gx = M.left + groupW * gi + groupW * 0.11;
+        const bars = AXES.map((axis, ai) => {
+          const v = p.categoryScores[axis.key] ?? 0;
+          const bx = gx + ai * (barW + barGap);
+          const by = y(v);
+          const h = Math.max(M.top + plotH - by, 1);
+          return `        <g class="bar s${ai + 1}" tabindex="0">
           <title>${esc(`${p.name}\n${axis.label}${axis.weight === undefined ? "" : ` (weight ${axis.weight})`}: ${v.toFixed(1)}%`)}</title>
           <rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="4"></rect>
           <rect class="foot" x="${bx.toFixed(1)}" y="${(M.top + plotH - 4).toFixed(1)}" width="${barW.toFixed(1)}" height="4"></rect>
         </g>`;
-      }).join("\n");
+        }).join("\n");
 
-      // Wrap long model names onto two lines under the group.
-      const words = p.name.split(" ");
-      const mid = Math.ceil(words.length / 2);
-      const l1 = words.length > 2 ? words.slice(0, mid).join(" ") : p.name;
-      const l2 = words.length > 2 ? words.slice(mid).join(" ") : "";
-      const cx = M.left + groupW * gi + groupW / 2;
-      return `      <g class="group">
+        // Wrap long model names onto two lines under the group.
+        const words = p.name.split(" ");
+        const mid = Math.ceil(words.length / 2);
+        const l1 = words.length > 2 ? words.slice(0, mid).join(" ") : p.name;
+        const l2 = words.length > 2 ? words.slice(mid).join(" ") : "";
+        const cx = M.left + groupW * gi + groupW / 2;
+        return `      <g class="group">
 ${bars}
         <text class="group-label" x="${cx.toFixed(1)}" y="${M.top + plotH + 20}" text-anchor="middle">${esc(l1)}<tspan x="${cx.toFixed(1)}" dy="14">${esc(l2)}</tspan></text>
       </g>`;
-    })
-    .join("\n");
+      })
+      .join("\n");
 
-  return `  <svg viewBox="0 0 ${W} ${BH}" role="img" aria-label="Score by evaluation axis for each model">
+    return `  <svg viewBox="0 0 ${W} ${BH}" role="img" aria-label="Score by evaluation axis for each model">
     <g class="grid">
-${ticksTo(yMax, yStep).map((t) => `      <line x1="${M.left}" y1="${y(t).toFixed(1)}" x2="${M.left + plotW}" y2="${y(t).toFixed(1)}"></line>`).join("\n")}
+${ticksTo(yMax, yStep)
+  .map(
+    (t) =>
+      `      <line x1="${M.left}" y1="${y(t).toFixed(1)}" x2="${M.left + plotW}" y2="${y(t).toFixed(1)}"></line>`,
+  )
+  .join("\n")}
     </g>
     <g class="axis">
-${ticksTo(yMax, yStep).map((t) => `      <text x="${M.left - 12}" y="${(y(t) + 4).toFixed(1)}" text-anchor="end">${t}%</text>`).join("\n")}
+${ticksTo(yMax, yStep)
+  .map(
+    (t) =>
+      `      <text x="${M.left - 12}" y="${(y(t) + 4).toFixed(1)}" text-anchor="end">${t}%</text>`,
+  )
+  .join("\n")}
     </g>
 ${groups}
   </svg>`;
-};
+  };
 
-const costChart = scatter({
-  id: "cost-chart",
-  xOf: (p) => p.costPerHour,
-  xFormat: (t) => `$${t.toFixed(2)}`,
-  xTitle: "ASR cost per hour of audio (USD)",
-  tipLine: (p) =>
-    `Cost: ${fmtUsd(p.costPerHour)}${p.estimated ? " (est.)" : ""} / audio hour  ·  run: ${fmtUsd(p.asrCostUsd)}`
-});
-const speedChart = scatter({
-  id: "speed-chart",
-  xOf: (p) => p.rtf,
-  xFormat: (t) => `${t.toFixed(2)}x`,
-  xTitle: "RTF - processing time ÷ audio length (lower is faster)",
-  tipLine: (p) => `RTF: ${p.rtf?.toFixed(3) ?? "-"}x  ·  avg latency ${p.latencyMs} ms`
-});
+  const costChart = scatter({
+    id: "cost-chart",
+    xOf: (p) => p.costPerHour,
+    xFormat: (t) => `$${t.toFixed(2)}`,
+    xTitle: "ASR cost per hour of audio (USD)",
+    tipLine: (p) =>
+      `Cost: ${fmtUsd(p.costPerHour)}${p.estimated ? " (est.)" : ""} / audio hour  ·  run: ${fmtUsd(p.asrCostUsd)}`,
+  });
+  const speedChart = scatter({
+    id: "speed-chart",
+    xOf: (p) => p.rtf,
+    xFormat: (t) => `${t.toFixed(2)}x`,
+    xTitle: "RTF - processing time ÷ audio length (lower is faster)",
+    tipLine: (p) => `RTF: ${p.rtf?.toFixed(3) ?? "-"}x  ·  avg latency ${p.latencyMs} ms`,
+  });
 
-const rows = points
-  .map((p) => {
-    const onCost = costChart.onFrontier.has(p.modelId);
-    const onSpeed = speedChart.onFrontier.has(p.modelId);
-    return `        <tr>
+  const rows = points
+    .map((p) => {
+      const onCost = costChart.onFrontier.has(p.modelId);
+      const onSpeed = speedChart.onFrontier.has(p.modelId);
+      return `        <tr>
           <td>${esc(p.name)}</td>
           <td>${p.score.toFixed(1)}%</td>
 ${AXES.map((a) => `          <td>${(p.categoryScores[a.key] ?? 0).toFixed(1)}%</td>`).join("\n")}
@@ -450,14 +477,14 @@ ${AXES.map((a) => `          <td>${(p.categoryScores[a.key] ?? 0).toFixed(1)}%</
           <td>${p.rtf?.toFixed(2) ?? "-"}x</td>
           <td>${onCost ? "✔" : ""}${onCost && onSpeed ? " " : ""}${onSpeed ? "⚡" : ""}</td>
         </tr>`;
-  })
-  .join("\n");
+    })
+    .join("\n");
 
-const audioMin = points[0]?.audioHours ? (points[0].audioHours * 60).toFixed(0) : "?";
-const sampleCount =
-  report.conditions?.sampleCount ?? new Set(report.evaluations.map((e) => e.sampleId)).size;
+  const audioMin = points[0]?.audioHours ? (points[0].audioHours * 60).toFixed(0) : "?";
+  const sampleCount =
+    report.conditions?.sampleCount ?? new Set(report.evaluations.map((e) => e.sampleId)).size;
 
-const html = `<!doctype html>
+  const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -611,12 +638,12 @@ ${rows}
 
   const frontierLegend: LegendItem[] = [
     { shape: "dot-on", label: "On the Pareto frontier" },
-    { shape: "dot-off", label: "Dominated" }
+    { shape: "dot-off", label: "Dominated" },
   ];
   const axisLegend: LegendItem[] = AXES.map((axis, i) => ({
     shape: "swatch" as const,
     label: axis.label,
-    className: `s${i + 1}`
+    className: `s${i + 1}`,
   }));
 
   const subtitle = `${sampleCount} samples · ${audioMin} min of audio per model · judge ${esc(report.judgeModel)}`;
@@ -626,18 +653,18 @@ ${rows}
     costSvg: standalone(withLegend(costChart.svg, frontierLegend), {
       title: "Japanese voice-journal ASR: price versus score",
       subtitle,
-      footnote
+      footnote,
     }),
     speedSvg: standalone(withLegend(speedChart.svg, frontierLegend), {
       title: "Japanese voice-journal ASR: speed versus score",
       subtitle,
-      footnote
+      footnote,
     }),
     breakdownSvg: standalone(withLegend(breakdownBars(), axisLegend), {
       title: "Japanese voice-journal ASR: score by evaluation axis",
       subtitle,
-      footnote
+      footnote,
     }),
-    html
+    html,
   };
 };

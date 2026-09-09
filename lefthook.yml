@@ -1,0 +1,39 @@
+# Git hooks. Run `pnpm install` once to install them (see the `prepare` script).
+#
+# The commit gate mirrors `pnpm check`, plus the privacy gate from AGENTS.md:
+# `check:leaks` inspects what is *staged*, so it must run last, after the
+# formatter has re-staged anything it rewrote.
+$schema: ./node_modules/lefthook/schema.json
+
+pre-commit:
+  parallel: false
+  skip:
+    - merge
+    - rebase
+  jobs:
+    - name: format
+      glob:
+        - "src/**/*.ts"
+        - "scripts/**/*.ts"
+      run: pnpm exec oxfmt {staged_files}
+      stage_fixed: true
+
+    - name: lint
+      glob:
+        - "src/**/*.ts"
+        - "scripts/**/*.ts"
+        - ".oxlintrc.json"
+      run: pnpm lint
+      fail_text: "oxlint found problems - fix them or run `pnpm lint:fix`"
+
+    - name: typecheck
+      glob:
+        - "src/**/*.ts"
+        - "scripts/**/*.ts"
+        - "tsconfig*.json"
+      run: pnpm typecheck
+
+    # No glob: the corpus must never leak, whatever the commit touches.
+    - name: check-leaks
+      run: pnpm check:leaks
+      fail_text: "private material is staged - see AGENTS.md before committing"

@@ -11,7 +11,7 @@ export class CustomHttpAdapter implements AsrAdapter {
     public readonly modelId: string,
     public readonly displayName: string,
     private readonly endpointUrl: string,
-    private readonly apiKey?: string
+    private readonly apiKey?: string,
   ) {}
 
   get parameters(): Readonly<Record<string, unknown>> {
@@ -40,7 +40,7 @@ export class CustomHttpAdapter implements AsrAdapter {
           const res = await fetch(this.endpointUrl, {
             method: "POST",
             headers,
-            body: formData
+            body: formData,
           });
           if (!res.ok) {
             const text = await res.text();
@@ -57,8 +57,8 @@ export class CustomHttpAdapter implements AsrAdapter {
             modelId: this.modelId,
             sampleId,
             message: `Failed to call custom HTTP endpoint ${this.endpointUrl}: ${String(err)}`,
-            cause: err
-          })
+            cause: err,
+          }),
       });
 
       const latencyMs = Date.now() - startTime;

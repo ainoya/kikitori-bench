@@ -3,6 +3,17 @@ import { Effect } from "effect";
 import { JudgeConnectionError, JudgeEvaluationError } from "../errors.js";
 import type { TokenUsage } from "../schemas/asr.js";
 
+/**
+ * Codex frames arrive as text, a Buffer, or a list of Buffers depending on how
+ * the server chunks them; normalise all of those to the JSON text we parse.
+ */
+const frameToText = (data: WebSocket.Data): string => {
+  if (typeof data === "string") return data;
+  if (Array.isArray(data)) return Buffer.concat(data).toString("utf8");
+  if (Buffer.isBuffer(data)) return data.toString("utf8");
+  return Buffer.from(data).toString("utf8");
+};
+
 interface CodexTokenUsageBreakdown {
   inputTokens?: number;
   cachedInputTokens?: number;
@@ -26,14 +37,14 @@ export interface CodexGenerateResult {
 
 export interface CodexClient {
   generate(
-    params: CodexGenerateParams
+    params: CodexGenerateParams,
   ): Effect.Effect<CodexGenerateResult, JudgeConnectionError | JudgeEvaluationError>;
 }
 
 export class WebSocketCodexClient implements CodexClient {
   constructor(
     private readonly endpoint: string,
-    private readonly timeoutMs = 600_000
+    private readonly timeoutMs = 600_000,
   ) {}
 
   generate(params: CodexGenerateParams) {
@@ -59,8 +70,8 @@ export class WebSocketCodexClient implements CodexClient {
                 socket.close();
                 reject(
                   new Error(
-                    `Codex App Server timeout after ${Math.round(this.timeoutMs / 1000)}s at ${this.endpoint}. Ensure server is running with 'codex app-server --listen ${this.endpoint}'`
-                  )
+                    `Codex App Server timeout after ${Math.round(this.timeoutMs / 1000)}s at ${this.endpoint}. Ensure server is running with 'codex app-server --listen ${this.endpoint}'`,
+                  ),
                 );
               }
             }, this.timeoutMs);
@@ -73,16 +84,16 @@ export class WebSocketCodexClient implements CodexClient {
                   id: 1,
                   method: "initialize",
                   params: {
-                    clientInfo: { name: "kikitori-bench", version: "0.1.0" }
-                  }
-                })
+                    clientInfo: { name: "kikitori-bench", version: "0.1.0" },
+                  },
+                }),
               );
             });
 
             socket.on("message", (data: WebSocket.Data) => {
               if (resolved) return;
               try {
-                const msg = JSON.parse(data.toString()) as {
+                const msg = JSON.parse(frameToText(data)) as {
                   id?: number;
                   method?: string;
                   result?: {
@@ -142,9 +153,9 @@ export class WebSocketCodexClient implements CodexClient {
                       method: "thread/start",
                       params: {
                         model: modelId,
-                        ephemeral: true
-                      }
-                    })
+                        ephemeral: true,
+                      },
+                    }),
                   );
                   return;
                 }
@@ -167,9 +178,9 @@ export class WebSocketCodexClient implements CodexClient {
                       method: "turn/start",
                       params: {
                         threadId,
-                        input: [{ type: "text", text: params.prompt }]
-                      }
-                    })
+                        input: [{ type: "text", text: params.prompt }],
+                      },
+                    }),
                   );
                   return;
                 }
@@ -183,7 +194,7 @@ export class WebSocketCodexClient implements CodexClient {
                       cachedInputTokens: breakdown.cachedInputTokens,
                       outputTokens: breakdown.outputTokens,
                       reasoningOutputTokens: breakdown.reasoningOutputTokens,
-                      totalTokens: breakdown.totalTokens
+                      totalTokens: breakdown.totalTokens,
                     };
                   }
                 }
@@ -212,10 +223,14 @@ export class WebSocketCodexClient implements CodexClient {
                   if (finalAnswerText.trim()) {
                     resolve({ text: finalAnswerText.trim(), usage });
                   } else {
-                    reject(new Error("Turn completed but no agent message was returned by Codex App Server"));
+                    reject(
+                      new Error(
+                        "Turn completed but no agent message was returned by Codex App Server",
+                      ),
+                    );
                   }
                 }
-              } catch (parseErr) {
+              } catch {
                 // Ignore transient frame parse errors
               }
             });
@@ -226,8 +241,8 @@ export class WebSocketCodexClient implements CodexClient {
               clearTimeout(timeout);
               reject(
                 new Error(
-                  `Cannot connect to Codex App Server at ${this.endpoint}: ${err.message}. Is 'codex app-server --listen ${this.endpoint}' running?`
-                )
+                  `Cannot connect to Codex App Server at ${this.endpoint}: ${err.message}. Is 'codex app-server --listen ${this.endpoint}' running?`,
+                ),
               );
             });
           }),
@@ -235,8 +250,8 @@ export class WebSocketCodexClient implements CodexClient {
           new JudgeConnectionError({
             endpoint: this.endpoint,
             message: String(err),
-            cause: err
-          })
+            cause: err,
+          }),
       });
 
       return result;
@@ -250,7 +265,7 @@ export class WebSocketCodexClient implements CodexClient {
  */
 export const isFatalJudgeError = (error: { message?: string }): boolean =>
   /usageLimitExceeded|usage limit|unauthorized|invalid_api_key|not logged in/i.test(
-    error.message ?? ""
+    error.message ?? "",
   );
 
 /**
@@ -266,10 +281,10 @@ export class MockCodexClient implements CodexClient {
           {
             index: 1,
             verdict: "present",
-            reason: "[Mock Judge] The proposition is conveyed."
-          }
+            reason: "[Mock Judge] The proposition is conveyed.",
+          },
         ],
-        insertions: []
+        insertions: [],
       });
       return {
         text,
@@ -278,8 +293,8 @@ export class MockCodexClient implements CodexClient {
           cachedInputTokens: 0,
           outputTokens: 0,
           reasoningOutputTokens: 0,
-          totalTokens: 0
-        }
+          totalTokens: 0,
+        },
       };
     });
   }

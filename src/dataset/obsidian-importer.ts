@@ -21,12 +21,52 @@ export interface ImportResult {
 }
 
 const STOPWORDS = new Set([
-  "これ", "それ", "あれ", "どれ", "ここ", "そこ", "あそこ", "どこ",
-  "私", "僕", "俺", "自分", "あなた", "やつ", "こと", "もの", "ため",
-  "感じ", "ところ", "今", "今日", "昨日", "明日", "今回", "前回",
-  "そう", "どう", "こう", "なんか", "ちょっと", "まあ", "やっぱり",
-  "たくさん", "いろいろ", "いっぱい", "かなり", "だいぶ", "全然", "ひとつ",
-  "ふたつ", "みっつ", "何", "誰", "どこか", "いつも", "みんな"
+  "これ",
+  "それ",
+  "あれ",
+  "どれ",
+  "ここ",
+  "そこ",
+  "あそこ",
+  "どこ",
+  "私",
+  "僕",
+  "俺",
+  "自分",
+  "あなた",
+  "やつ",
+  "こと",
+  "もの",
+  "ため",
+  "感じ",
+  "ところ",
+  "今",
+  "今日",
+  "昨日",
+  "明日",
+  "今回",
+  "前回",
+  "そう",
+  "どう",
+  "こう",
+  "なんか",
+  "ちょっと",
+  "まあ",
+  "やっぱり",
+  "たくさん",
+  "いろいろ",
+  "いっぱい",
+  "かなり",
+  "だいぶ",
+  "全然",
+  "ひとつ",
+  "ふたつ",
+  "みっつ",
+  "何",
+  "誰",
+  "どこか",
+  "いつも",
+  "みんな",
 ]);
 
 /**
@@ -46,7 +86,6 @@ const loadDomainKeywords = (datasetDir: string): string[] => {
     .filter((line) => line.length > 0 && !line.startsWith("#"));
 };
 
-
 /**
  * Extracts distinct expected terms appearing in the ground truth text.
  */
@@ -54,7 +93,7 @@ export const extractExpectedTerms = (
   gt: string,
   title?: string,
   _situation?: string,
-  domainKeywords: readonly string[] = []
+  domainKeywords: readonly string[] = [],
 ): string[] => {
   const terms = new Set<string>();
 
@@ -94,7 +133,8 @@ export const extractExpectedTerms = (
   // Deduplicate and filter out substrings if a longer compound exists (e.g. "Flash" vs "Gemini 3.5Flash")
   const termArr = Array.from(terms);
   const filtered = termArr.filter(
-    (t) => !termArr.some((other) => other !== t && other.includes(t) && other.length > t.length + 3)
+    (t) =>
+      !termArr.some((other) => other !== t && other.includes(t) && other.length > t.length + 3),
   );
 
   return filtered.slice(0, 6);
@@ -103,11 +143,7 @@ export const extractExpectedTerms = (
 /**
  * Formulates core key propositions conveyed in the speech.
  */
-export const extractKeyPoints = (
-  gt: string,
-  title?: string,
-  situation?: string
-): string[] => {
+export const extractKeyPoints = (gt: string, title?: string, situation?: string): string[] => {
   const points: string[] = [];
 
   // Short utterance
@@ -199,15 +235,17 @@ export const extractCleanTranscript = (rawContent: string): string => {
   return body;
 };
 
-export const importFromVoiceJournal = (options: ImportJournalOptions): Effect.Effect<ImportResult, ValidationError> =>
+export const importFromVoiceJournal = (
+  options: ImportJournalOptions,
+): Effect.Effect<ImportResult, ValidationError> =>
   Effect.gen(function* () {
     const { sourceDir, datasetName, copyAudio = true } = options;
 
     if (!fs.existsSync(sourceDir)) {
       return yield* Effect.fail(
         new ValidationError({
-          message: `Source directory does not exist at: ${sourceDir}`
-        })
+          message: `Source directory does not exist at: ${sourceDir}`,
+        }),
       );
     }
 
@@ -249,7 +287,9 @@ export const importFromVoiceJournal = (options: ImportJournalOptions): Effect.Ef
           matchedNotes++;
 
           // Extract model name from frontmatter
-          const modelMatch = content.match(/transcription_model:\s*["\x27]?([^"\x27\n\r]+)["\x27]?/i);
+          const modelMatch = content.match(
+            /transcription_model:\s*["\x27]?([^"\x27\n\r]+)["\x27]?/i,
+          );
           const modelName = modelMatch && modelMatch[1] ? modelMatch[1].trim() : "gemini-3.x-flash";
 
           // Extract audio link
@@ -272,7 +312,10 @@ export const importFromVoiceJournal = (options: ImportJournalOptions): Effect.Ef
 
           // Extract title & situation metadata
           const body = content.replace(/^---[\s\S]*?---\s*/, "");
-          const lines = body.split("\n").map((l) => l.trim()).filter(Boolean);
+          const lines = body
+            .split("\n")
+            .map((l) => l.trim())
+            .filter(Boolean);
           const title = lines[0] && !lines[0].startsWith("#") ? lines[0] : "";
           const sitMatch = body.match(/##\s*(?:状況|要約|サマリ)\s*\n([\s\S]*?)(?=\n## |\n\[|$)/i);
           const situation = sitMatch && sitMatch[1] ? sitMatch[1].trim() : "";
@@ -300,7 +343,7 @@ export const importFromVoiceJournal = (options: ImportJournalOptions): Effect.Ef
             verified: true,
             createdAt: now,
             updatedAt: now,
-            notes: `Imported from voice-journal notes (${modelName})`
+            notes: `Imported from voice-journal notes (${modelName})`,
           });
         }
       }
@@ -317,7 +360,7 @@ export const importFromVoiceJournal = (options: ImportJournalOptions): Effect.Ef
       description: `Voice-journal dataset built from Obsidian notes (${items.length} samples)`,
       createdAt: now,
       updatedAt: now,
-      items
+      items,
     };
 
     try {
@@ -326,8 +369,8 @@ export const importFromVoiceJournal = (options: ImportJournalOptions): Effect.Ef
       return yield* Effect.fail(
         new ValidationError({
           message: `Failed to write dataset.yaml at ${yamlPath}: ${String(err)}`,
-          details: err
-        })
+          details: err,
+        }),
       );
     }
 
@@ -337,6 +380,6 @@ export const importFromVoiceJournal = (options: ImportJournalOptions): Effect.Ef
       importedItems: items.length,
       skippedMissingAudio,
       datasetDir,
-      yamlPath
+      yamlPath,
     };
   });

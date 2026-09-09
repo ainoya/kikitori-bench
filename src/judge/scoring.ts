@@ -8,13 +8,13 @@ export const EVALUATION_AXES = [
   "proper_noun_f1",
   "proposition_recall",
   "proposition_precision",
-  "proposition_f1"
+  "proposition_f1",
 ] as const satisfies readonly EvaluationAxis[];
 
 /** Axes backed by individual pass/fail checks (the F1 axes are derived). */
 export const CHECKED_AXES = [
   "proposition_recall",
-  "proposition_precision"
+  "proposition_precision",
 ] as const satisfies readonly EvaluationAxis[];
 
 /** Equal weight on omissions and fabrications. */
@@ -27,10 +27,10 @@ export const JudgeVerdictSchema = Schema.Struct({
         term: Schema.String,
         present: Schema.Boolean,
         reason: Schema.optional(Schema.String),
-        evidence: Schema.optional(Schema.String)
-      })
+        evidence: Schema.optional(Schema.String),
+      }),
     ),
-    { default: () => [] }
+    { default: () => [] },
   ),
   keyPoints: Schema.optionalWith(
     Schema.Array(
@@ -39,21 +39,21 @@ export const JudgeVerdictSchema = Schema.Struct({
         verdict: Schema.Literal("present", "missing", "contradicted"),
         severity: Schema.optional(Schema.Literal("critical", "minor")),
         reason: Schema.optional(Schema.String),
-        evidence: Schema.optional(Schema.String)
-      })
+        evidence: Schema.optional(Schema.String),
+      }),
     ),
-    { default: () => [] }
+    { default: () => [] },
   ),
   insertions: Schema.optionalWith(
     Schema.Array(
       Schema.Struct({
         text: Schema.String,
         severity: Schema.optional(Schema.Literal("critical", "minor")),
-        reason: Schema.optional(Schema.String)
-      })
+        reason: Schema.optional(Schema.String),
+      }),
     ),
-    { default: () => [] }
-  )
+    { default: () => [] },
+  ),
 });
 
 export type JudgeVerdict = typeof JudgeVerdictSchema.Type;
@@ -84,7 +84,7 @@ const rate = (passed: number, total: number): CategoryScore => ({
   passed,
   total,
   // A sample with no items of a kind cannot lose points for that axis.
-  scorePercent: total > 0 ? round1((passed / total) * 100) : 100
+  scorePercent: total > 0 ? round1((passed / total) * 100) : 100,
 });
 
 /**
@@ -106,7 +106,7 @@ export const scoreVerdict = (input: ScoreVerdictInput): ScoredVerdict => {
       axis: "proper_noun_f1",
       name: `Proper noun missed: ${token}`,
       pass: false,
-      reason: "Present in the ground truth, absent from the hypothesis."
+      reason: "Present in the ground truth, absent from the hypothesis.",
     });
   }
   for (const token of lexical.fabricated) {
@@ -116,7 +116,7 @@ export const scoreVerdict = (input: ScoreVerdictInput): ScoredVerdict => {
       name: `Proper noun fabricated: ${token}`,
       pass: false,
       reason: "Asserted by the hypothesis with no counterpart in the ground truth.",
-      evidence: token
+      evidence: token,
     });
   }
 
@@ -143,7 +143,7 @@ export const scoreVerdict = (input: ScoreVerdictInput): ScoredVerdict => {
       pass: isPresent,
       reason: k.reason ?? `Verdict: ${k.verdict}.`,
       ...(k.evidence ? { evidence: k.evidence } : {}),
-      ...(k.severity ? { severity: k.severity } : {})
+      ...(k.severity ? { severity: k.severity } : {}),
     });
 
     // A contradiction is a false assertion, so it belongs to precision.
@@ -155,7 +155,7 @@ export const scoreVerdict = (input: ScoreVerdictInput): ScoredVerdict => {
         pass: !isCriticalContradiction,
         reason: k.reason ?? "The hypothesis states something incompatible with this proposition.",
         ...(k.evidence ? { evidence: k.evidence } : {}),
-        ...(k.severity ? { severity: k.severity } : {})
+        ...(k.severity ? { severity: k.severity } : {}),
       });
     }
   }
@@ -176,7 +176,7 @@ export const scoreVerdict = (input: ScoreVerdictInput): ScoredVerdict => {
       pass: false,
       reason: ins.reason ?? "Content not supported by the ground truth.",
       evidence: ins.text,
-      severity: ins.severity ?? "critical"
+      severity: ins.severity ?? "critical",
     });
   }
 
@@ -190,22 +190,21 @@ export const scoreVerdict = (input: ScoreVerdictInput): ScoredVerdict => {
   const r = recall.scorePercent / 100;
   const p = precision.scorePercent / 100;
   const beta2 = fBeta * fBeta;
-  const f1 =
-    p + r > 0 && beta2 * p + r > 0 ? ((1 + beta2) * p * r) / (beta2 * p + r) : 0;
+  const f1 = p + r > 0 && beta2 * p + r > 0 ? ((1 + beta2) * p * r) / (beta2 * p + r) : 0;
 
   const categoryScores: Record<EvaluationAxis, CategoryScore> = {
     proper_noun_f1: {
       passed: lexical.referenceTokens.length - lexical.missed.length,
       total: lexical.referenceTokens.length,
-      scorePercent: lexical.f1
+      scorePercent: lexical.f1,
     },
     proposition_recall: recall,
     proposition_precision: precision,
     proposition_f1: {
       passed: present,
       total: keyPoints.length + falseAssertions,
-      scorePercent: round1(f1 * 100)
-    }
+      scorePercent: round1(f1 * 100),
+    },
   };
 
   // A sample with no proper nouns on either side has nothing to measure on that
@@ -217,7 +216,7 @@ export const scoreVerdict = (input: ScoreVerdictInput): ScoredVerdict => {
   const overallScore = properNounApplicable
     ? round1(
         categoryScores.proper_noun_f1.scorePercent * weights.proper_noun_f1 +
-          categoryScores.proposition_f1.scorePercent * weights.proposition_quality
+          categoryScores.proposition_f1.scorePercent * weights.proposition_quality,
       )
     : round1(categoryScores.proposition_f1.scorePercent);
 
@@ -228,6 +227,6 @@ export const scoreVerdict = (input: ScoreVerdictInput): ScoredVerdict => {
     hallucinationsCritical,
     hallucinationsMinor,
     hallucinationsPerMinute,
-    minorContradictions
+    minorContradictions,
   };
 };

@@ -39,7 +39,9 @@ const fmtTokens = (value: number | undefined): string =>
   value === undefined ? "-" : value.toLocaleString("en-US");
 
 const fmtSeconds = (seconds: number): string =>
-  seconds >= 60 ? `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s` : `${seconds.toFixed(1)}s`;
+  seconds >= 60
+    ? `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`
+    : `${seconds.toFixed(1)}s`;
 
 const asrInputCell = (m: ModelUsageSummary): string => {
   const total = m.asrUsage.inputTokens;
@@ -47,9 +49,7 @@ const asrInputCell = (m: ModelUsageSummary): string => {
   const text = m.asrUsage.textInputTokens;
   if (total === undefined && audio === undefined) return "-";
   const split =
-    audio !== undefined || text !== undefined
-      ? ` (${fmtTokens(audio)} / ${fmtTokens(text)})`
-      : "";
+    audio !== undefined || text !== undefined ? ` (${fmtTokens(audio)} / ${fmtTokens(text)})` : "";
   return `${fmtTokens(total ?? audio)}${split}`;
 };
 
@@ -67,7 +67,10 @@ const judgeOutputCell = (m: ModelUsageSummary): string => {
 
 export interface ReporterShape {
   renderConsoleLeaderboard(report: BenchmarkReport, locale?: Locale): void;
-  generateMarkdownReport(report: BenchmarkReport, locale?: Locale): Effect.Effect<string, ValidationError>;
+  generateMarkdownReport(
+    report: BenchmarkReport,
+    locale?: Locale,
+  ): Effect.Effect<string, ValidationError>;
 }
 
 export class Reporter extends Context.Tag("Reporter")<Reporter, ReporterShape>() {}
@@ -79,7 +82,9 @@ export const ReporterLive = Layer.succeed(
       const i18n = t(locale);
       console.log("\n" + "=".repeat(101));
       console.log(`  🏆 ${i18n.leaderboardTitle}`);
-      console.log(`  ${i18n.dataset}: ${report.datasetName} | ${i18n.judge}: ${report.judgeModel} | ${i18n.run}: ${report.runId}`);
+      console.log(
+        `  ${i18n.dataset}: ${report.datasetName} | ${i18n.judge}: ${report.judgeModel} | ${i18n.run}: ${report.runId}`,
+      );
       console.log("=".repeat(101));
 
       const header = [
@@ -92,7 +97,7 @@ export const ReporterLive = Layer.succeed(
         i18n.propositionF1.padStart(8),
         i18n.rtf.padStart(8),
         i18n.latency.padStart(10),
-        i18n.totalCost.padStart(10)
+        i18n.totalCost.padStart(10),
       ].join(" | ");
 
       console.log(header);
@@ -106,12 +111,14 @@ export const ReporterLive = Layer.succeed(
         const recall = `${entry.categoryScores.proposition_recall.toFixed(1)}%`.padStart(11);
         const precision = `${entry.categoryScores.proposition_precision.toFixed(1)}%`.padStart(11);
         const f1 = `${entry.categoryScores.proposition_f1.toFixed(1)}%`.padStart(8);
-        const rtfStr = (entry.averageRtf !== undefined ? `${entry.averageRtf.toFixed(2)}x` : "-").padStart(8);
+        const rtfStr = (
+          entry.averageRtf !== undefined ? `${entry.averageRtf.toFixed(2)}x` : "-"
+        ).padStart(8);
         const lat = `${entry.averageLatencyMs}ms`.padStart(10);
         const cost = fmtUsd(entry.totalCostUsd).padStart(10);
 
         console.log(
-          [rank, name, overall, terms, recall, precision, f1, rtfStr, lat, cost].join(" | ")
+          [rank, name, overall, terms, recall, precision, f1, rtfStr, lat, cost].join(" | "),
         );
       });
 
@@ -123,8 +130,10 @@ export const ReporterLive = Layer.succeed(
         console.log("-".repeat(101));
         for (const m of [...analytics.models].sort((a, b) => b.overallScore - a.overallScore)) {
           console.log(
-            `${m.displayName.slice(0, 20).padEnd(20)} | ${`${m.overallScore.toFixed(1)}%`.padStart(7)} | ${i18n.ciColumn} [${m.ciLow.toFixed(1)}, ${m.ciHigh.toFixed(1)}]`.padEnd(52) +
-              `| ${i18n.termRecall} ${`${m.termRecallPercent.toFixed(1)}%`.padStart(6)} | p50/p95 ${m.latencyP50Ms}/${m.latencyP95Ms} ms`
+            `${m.displayName.slice(0, 20).padEnd(20)} | ${`${m.overallScore.toFixed(1)}%`.padStart(7)} | ${i18n.ciColumn} [${m.ciLow.toFixed(1)}, ${m.ciHigh.toFixed(1)}]`.padEnd(
+              52,
+            ) +
+              `| ${i18n.termRecall} ${`${m.termRecallPercent.toFixed(1)}%`.padStart(6)} | p50/p95 ${m.latencyP50Ms}/${m.latencyP95Ms} ms`,
           );
         }
         for (const cmp of analytics.pairwise) {
@@ -132,15 +141,20 @@ export const ReporterLive = Layer.succeed(
             analytics.models.find((m) => m.modelId === id)?.displayName ?? id;
           const mark = cmp.significantAdjusted ? "✅" : cmp.significant ? "🔸" : "➖";
           console.log(
-            `  ${mark} ${nameOf(cmp.a)} − ${nameOf(cmp.b)}: ${cmp.meanDiff >= 0 ? "+" : ""}${cmp.meanDiff.toFixed(1)}pp  ${i18n.ciColumn} [${cmp.ciLow >= 0 ? "+" : ""}${cmp.ciLow.toFixed(1)}, ${cmp.ciHigh >= 0 ? "+" : ""}${cmp.ciHigh.toFixed(1)}]`
+            `  ${mark} ${nameOf(cmp.a)} − ${nameOf(cmp.b)}: ${cmp.meanDiff >= 0 ? "+" : ""}${cmp.meanDiff.toFixed(1)}pp  ${i18n.ciColumn} [${cmp.ciLow >= 0 ? "+" : ""}${cmp.ciLow.toFixed(1)}, ${cmp.ciHigh >= 0 ? "+" : ""}${cmp.ciHigh.toFixed(1)}]`,
           );
         }
-        console.log(`  ✅ ${i18n.significantAdjusted} / 🔸 ${i18n.significantUnadjusted} / ➖ ${i18n.notSignificant}`);
+        console.log(
+          `  ✅ ${i18n.significantAdjusted} / 🔸 ${i18n.significantUnadjusted} / ➖ ${i18n.notSignificant}`,
+        );
         console.log(
           `  ${i18n.itemSection}: ${analytics.items.discriminating}/${analytics.items.totalSamples} discriminating samples | per axis: ` +
             analytics.items.axisDiscrimination
-              .map((ax) => `${i18n.axes[ax.axis]} ${ax.discriminating}/${analytics.items.totalSamples}`)
-              .join(", ")
+              .map(
+                (ax) =>
+                  `${i18n.axes[ax.axis]} ${ax.discriminating}/${analytics.items.totalSamples}`,
+              )
+              .join(", "),
         );
         console.log("=".repeat(101));
       }
@@ -158,8 +172,8 @@ export const ReporterLive = Layer.succeed(
             i18n.asrCost.padStart(10),
             "Judge in".padStart(12),
             "Judge out".padStart(10),
-            i18n.judgeCost.padStart(10)
-          ].join(" | ")
+            i18n.judgeCost.padStart(10),
+          ].join(" | "),
         );
         for (const m of summary.perModel) {
           console.log(
@@ -171,13 +185,13 @@ export const ReporterLive = Layer.succeed(
               fmtUsd(m.asrCostUsd, m.asrCostEstimated).padStart(10),
               fmtTokens(m.judgeUsage.inputTokens).padStart(12),
               fmtTokens(m.judgeUsage.outputTokens).padStart(10),
-              fmtUsd(m.judgeCostUsd).padStart(10)
-            ].join(" | ")
+              fmtUsd(m.judgeCostUsd).padStart(10),
+            ].join(" | "),
           );
         }
         console.log("-".repeat(101));
         console.log(
-          `  ${i18n.costTotalsRow}: ${i18n.asrCost} ${fmtUsd(summary.totalAsrCostUsd)} + ${i18n.judgeCost} ${fmtUsd(summary.totalJudgeCostUsd)} = ${fmtUsd(summary.totalCostUsd)}`
+          `  ${i18n.costTotalsRow}: ${i18n.asrCost} ${fmtUsd(summary.totalAsrCostUsd)} + ${i18n.judgeCost} ${fmtUsd(summary.totalJudgeCostUsd)} = ${fmtUsd(summary.totalCostUsd)}`,
         );
         console.log("=".repeat(101));
       }
@@ -203,16 +217,17 @@ export const ReporterLive = Layer.succeed(
         lines.push(`## ${i18n.leaderboardSection}`);
         lines.push("");
         lines.push(
-          `| ${i18n.rank} | ${i18n.model} | ${i18n.overall} | ${AXIS_KEYS.map((axis) => `${i18n.axes[axis]}${weightLabel(report, axis)}`).join(" | ")} | ${i18n.rtf} | ${i18n.latency} | ${i18n.totalCost} |`
+          `| ${i18n.rank} | ${i18n.model} | ${i18n.overall} | ${AXIS_KEYS.map((axis) => `${i18n.axes[axis]}${weightLabel(report, axis)}`).join(" | ")} | ${i18n.rtf} | ${i18n.latency} | ${i18n.totalCost} |`,
         );
         lines.push(
-          "| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |"
+          "| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
         );
 
         report.leaderboard.forEach((entry, idx) => {
-          const rtfVal = entry.averageRtf !== undefined ? `**${entry.averageRtf.toFixed(2)}x**` : "-";
+          const rtfVal =
+            entry.averageRtf !== undefined ? `**${entry.averageRtf.toFixed(2)}x**` : "-";
           lines.push(
-            `| ${idx + 1} | **${entry.displayName}** | **${entry.overallScore.toFixed(1)}%** | ${AXIS_KEYS.map((axis) => `${(entry.categoryScores[axis] ?? 0).toFixed(1)}%`).join(" | ")} | ${rtfVal} | ${entry.averageLatencyMs} ms | ${fmtUsd(entry.totalCostUsd)} |`
+            `| ${idx + 1} | **${entry.displayName}** | **${entry.overallScore.toFixed(1)}%** | ${AXIS_KEYS.map((axis) => `${(entry.categoryScores[axis] ?? 0).toFixed(1)}%`).join(" | ")} | ${rtfVal} | ${entry.averageLatencyMs} ms | ${fmtUsd(entry.totalCostUsd)} |`,
           );
         });
 
@@ -225,24 +240,24 @@ export const ReporterLive = Layer.succeed(
           lines.push(`## ${i18n.reliabilitySection}`);
           lines.push("");
           lines.push(
-            `| ${i18n.model} | ${i18n.overall} | ${i18n.ciColumn} | ${i18n.termRecall} | ${i18n.latencyPercentiles} | ${i18n.emptyOutputs} |`
+            `| ${i18n.model} | ${i18n.overall} | ${i18n.ciColumn} | ${i18n.termRecall} | ${i18n.latencyPercentiles} | ${i18n.emptyOutputs} |`,
           );
           lines.push("| :--- | :---: | :---: | :---: | :---: | :---: |");
           for (const m of [...analytics.models].sort((a, b) => b.overallScore - a.overallScore)) {
             lines.push(
-              `| **${m.displayName}** | ${m.overallScore.toFixed(1)}% | [${m.ciLow.toFixed(1)}, ${m.ciHigh.toFixed(1)}] | ${m.termRecallPercent.toFixed(1)}% (${m.termsMatched}/${m.termsTotal}) | ${m.latencyP50Ms} / ${m.latencyP95Ms} ms | ${m.emptyOutputs} |`
+              `| **${m.displayName}** | ${m.overallScore.toFixed(1)}% | [${m.ciLow.toFixed(1)}, ${m.ciHigh.toFixed(1)}] | ${m.termRecallPercent.toFixed(1)}% (${m.termsMatched}/${m.termsTotal}) | ${m.latencyP50Ms} / ${m.latencyP95Ms} ms | ${m.emptyOutputs} |`,
             );
           }
           lines.push("");
           lines.push(
-            `> ${i18n.termRecall}: proper nouns and numbers extracted from the reference and the hypothesis by the same morphological analyser, compared as sets - independent of the judge.`
+            `> ${i18n.termRecall}: proper nouns and numbers extracted from the reference and the hypothesis by the same morphological analyser, compared as sets - independent of the judge.`,
           );
 
           lines.push("");
           lines.push(`### ${i18n.pairwiseSection}`);
           lines.push("");
           lines.push(
-            `| ${i18n.model} A | ${i18n.model} B | Δ | ${i18n.ciColumn} | ${i18n.adjustedCi} | ${i18n.verdict} | McNemar p (${AXIS_KEYS.map((a) => i18n.axes[a]).join(" / ")}) |`
+            `| ${i18n.model} A | ${i18n.model} B | Δ | ${i18n.ciColumn} | ${i18n.adjustedCi} | ${i18n.verdict} | McNemar p (${AXIS_KEYS.map((a) => i18n.axes[a]).join(" / ")}) |`,
           );
           lines.push("| :--- | :--- | :---: | :---: | :---: | :---: | :---: |");
           for (const cmp of analytics.pairwise) {
@@ -251,7 +266,7 @@ export const ReporterLive = Layer.succeed(
               return found ? found.pValue.toFixed(3) : "-";
             }).join(" / ");
             lines.push(
-              `| ${nameOf(cmp.a)} | ${nameOf(cmp.b)} | ${cmp.meanDiff >= 0 ? "+" : ""}${cmp.meanDiff.toFixed(1)}pp | [${cmp.ciLow >= 0 ? "+" : ""}${cmp.ciLow.toFixed(1)}, ${cmp.ciHigh >= 0 ? "+" : ""}${cmp.ciHigh.toFixed(1)}] | [${cmp.adjustedCiLow >= 0 ? "+" : ""}${cmp.adjustedCiLow.toFixed(1)}, ${cmp.adjustedCiHigh >= 0 ? "+" : ""}${cmp.adjustedCiHigh.toFixed(1)}] | ${cmp.significantAdjusted ? "✅" : cmp.significant ? "🔸" : "➖"} | ${ps} |`
+              `| ${nameOf(cmp.a)} | ${nameOf(cmp.b)} | ${cmp.meanDiff >= 0 ? "+" : ""}${cmp.meanDiff.toFixed(1)}pp | [${cmp.ciLow >= 0 ? "+" : ""}${cmp.ciLow.toFixed(1)}, ${cmp.ciHigh >= 0 ? "+" : ""}${cmp.ciHigh.toFixed(1)}] | [${cmp.adjustedCiLow >= 0 ? "+" : ""}${cmp.adjustedCiLow.toFixed(1)}, ${cmp.adjustedCiHigh >= 0 ? "+" : ""}${cmp.adjustedCiHigh.toFixed(1)}] | ${cmp.significantAdjusted ? "✅" : cmp.significant ? "🔸" : "➖"} | ${ps} |`,
             );
           }
           lines.push("");
@@ -262,11 +277,11 @@ export const ReporterLive = Layer.succeed(
           lines.push("");
           const it = analytics.items;
           lines.push(
-            `- ${i18n.samples}: **${it.totalSamples}** (discriminating: **${it.discriminating}**, every model scored 0: **${it.allModelsFail.length}**, every model scored 100: **${it.allModelsPass.length}**)`
+            `- ${i18n.samples}: **${it.totalSamples}** (discriminating: **${it.discriminating}**, every model scored 0: **${it.allModelsFail.length}**, every model scored 100: **${it.allModelsPass.length}**)`,
           );
           if (it.allModelsFail.length > 0) {
             lines.push(
-              `- Every model failed: ${it.allModelsFail.map((id) => `\`${id}\``).join(", ")} - check the ground truth and audio of these before trusting the score.`
+              `- Every model failed: ${it.allModelsFail.map((id) => `\`${id}\``).join(", ")} - check the ground truth and audio of these before trusting the score.`,
             );
           }
           lines.push("");
@@ -274,13 +289,13 @@ export const ReporterLive = Layer.succeed(
           lines.push("| :--- | :---: | :---: | :---: |");
           for (const ax of it.axisDiscrimination) {
             lines.push(
-              `| ${i18n.axes[ax.axis]} | **${ax.discriminating}** / ${it.totalSamples} | ${ax.allPass} | ${ax.allFail} |`
+              `| ${i18n.axes[ax.axis]} | **${ax.discriminating}** / ${it.totalSamples} | ${ax.allPass} | ${ax.allFail} |`,
             );
           }
           lines.push("");
           if (it.termsMissedByAll.length > 0) {
             lines.push(
-              `- Expected terms missed by every model: ${it.termsMissedByAll.map((t) => `\`${t}\``).join(", ")}`
+              `- Expected terms missed by every model: ${it.termsMissedByAll.map((t) => `\`${t}\``).join(", ")}`,
             );
           }
         }
@@ -291,18 +306,16 @@ export const ReporterLive = Layer.succeed(
           lines.push(`## ${i18n.conditionsSection}`);
           lines.push("");
           lines.push(
-            `- **${i18n.judgeSettings}**: \`${conditions.judge.model}\` (${conditions.judge.provider}, ${conditions.judge.endpoint}, temperature: \`${conditions.judge.temperature ?? "default"}\`)`
+            `- **${i18n.judgeSettings}**: \`${conditions.judge.model}\` (${conditions.judge.provider}, ${conditions.judge.endpoint}, temperature: \`${conditions.judge.temperature ?? "default"}\`)`,
           );
           lines.push(
             `- **${i18n.samples}**: ${conditions.sampleCount}${
               conditions.maxDurationSec !== undefined
                 ? ` (${conditions.maxDurationSec}s cap; ${conditions.excludedByDuration ?? 0} longer samples excluded so every provider sees the same set)`
                 : ""
-            } | **${i18n.overall} weights**: ${Object.entries(
-              conditions.weights
-            )
+            } | **${i18n.overall} weights**: ${Object.entries(conditions.weights)
               .map(([k, v]) => `${k}=${v}`)
-              .join(", ")}`
+              .join(", ")}`,
           );
           lines.push("");
           lines.push(`| ${i18n.model} | ${i18n.provider} | ${i18n.parameters} |`);
@@ -321,18 +334,18 @@ export const ReporterLive = Layer.succeed(
           lines.push(`## ${i18n.usageSection}`);
           lines.push("");
           lines.push(
-            `| ${i18n.model} | ${i18n.samples} | ${i18n.audioLength} | ${i18n.asrInputTokens} | ${i18n.asrOutputTokens} | ${i18n.asrCost} | ${i18n.judgeInputTokens} | ${i18n.judgeOutputTokens} | ${i18n.judgeCost} | ${i18n.totalCost} |`
+            `| ${i18n.model} | ${i18n.samples} | ${i18n.audioLength} | ${i18n.asrInputTokens} | ${i18n.asrOutputTokens} | ${i18n.asrCost} | ${i18n.judgeInputTokens} | ${i18n.judgeOutputTokens} | ${i18n.judgeCost} | ${i18n.totalCost} |`,
           );
           lines.push(
-            "| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |"
+            "| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
           );
           for (const m of summary.perModel) {
             lines.push(
-              `| **${m.displayName}** | ${m.sampleCount} | ${fmtSeconds(m.audioSeconds)} | ${asrInputCell(m)} | ${fmtTokens(m.asrUsage.outputTokens)} | ${fmtUsd(m.asrCostUsd, m.asrCostEstimated)} | ${judgeInputCell(m)} | ${judgeOutputCell(m)} | ${fmtUsd(m.judgeCostUsd)} | **${fmtUsd(m.totalCostUsd, m.asrCostEstimated)}** |`
+              `| **${m.displayName}** | ${m.sampleCount} | ${fmtSeconds(m.audioSeconds)} | ${asrInputCell(m)} | ${fmtTokens(m.asrUsage.outputTokens)} | ${fmtUsd(m.asrCostUsd, m.asrCostEstimated)} | ${judgeInputCell(m)} | ${judgeOutputCell(m)} | ${fmtUsd(m.judgeCostUsd)} | **${fmtUsd(m.totalCostUsd, m.asrCostEstimated)}** |`,
             );
           }
           lines.push(
-            `| **${i18n.costTotalsRow}** | | | | | **${fmtUsd(summary.totalAsrCostUsd)}** | | | **${fmtUsd(summary.totalJudgeCostUsd)}** | **${fmtUsd(summary.totalCostUsd)}** |`
+            `| **${i18n.costTotalsRow}** | | | | | **${fmtUsd(summary.totalAsrCostUsd)}** | | | **${fmtUsd(summary.totalJudgeCostUsd)}** | **${fmtUsd(summary.totalCostUsd)}** |`,
           );
           lines.push("");
           lines.push(`> ${i18n.estimatedNote}`);
@@ -362,10 +375,14 @@ export const ReporterLive = Layer.succeed(
           for (const ev of sampleEvals) {
             const modelName =
               report.leaderboard.find((l) => l.modelId === ev.modelId)?.displayName ?? ev.modelId;
-            lines.push(`#### ${i18n.model}: ${modelName} (${i18n.score}: ${ev.overallScore.toFixed(1)}%)`);
+            lines.push(
+              `#### ${i18n.model}: ${modelName} (${i18n.score}: ${ev.overallScore.toFixed(1)}%)`,
+            );
             lines.push("");
             const rtfSample = ev.rtf !== undefined ? `${ev.rtf.toFixed(2)}x` : "-";
-            const durSample = ev.audioDurationMs ? `${(ev.audioDurationMs / 1000).toFixed(1)}s` : "-";
+            const durSample = ev.audioDurationMs
+              ? `${(ev.audioDurationMs / 1000).toFixed(1)}s`
+              : "-";
             const latSample = ev.latencyMs !== undefined ? `${ev.latencyMs} ms` : "-";
             const costSample = fmtUsd(ev.asrCostUsd, ev.asrCostEstimated === true);
             const judgeTokensSample = fmtTokens(ev.judgeUsage?.totalTokens);
@@ -374,7 +391,7 @@ export const ReporterLive = Layer.succeed(
                 ? ` | **${i18n.hallucinationRate}**: \`${ev.hallucinationsPerMinute.toFixed(2)}\` (${ev.hallucinationsCritical ?? 0} critical, ${ev.hallucinationsMinor ?? 0} minor)`
                 : "";
             lines.push(
-              `- **${i18n.rtf}**: \`${rtfSample}\` | **${i18n.latency}**: \`${latSample}\` | **${i18n.audioDuration}**: \`${durSample}\` | **${i18n.asrCost}**: \`${costSample}\` | **${i18n.judgeCost}**: \`${fmtUsd(ev.judgeCostUsd)}\` (${judgeTokensSample} tok)${hallucSample}`
+              `- **${i18n.rtf}**: \`${rtfSample}\` | **${i18n.latency}**: \`${latSample}\` | **${i18n.audioDuration}**: \`${durSample}\` | **${i18n.asrCost}**: \`${costSample}\` | **${i18n.judgeCost}**: \`${fmtUsd(ev.judgeCostUsd)}\` (${judgeTokensSample} tok)${hallucSample}`,
             );
             lines.push("");
             lines.push(`**${i18n.hypothesis}**:`);
@@ -404,13 +421,13 @@ export const ReporterLive = Layer.succeed(
           return yield* Effect.fail(
             new ValidationError({
               message: `Failed to write markdown report to ${reportFilePath}: ${String(err)}`,
-              details: err
-            })
+              details: err,
+            }),
           );
         }
 
         return reportFilePath;
       });
-    }
-  })
+    },
+  }),
 );

@@ -35,6 +35,30 @@ publish a transcript, hypothesis or judge rationale.
 **Repository visibility is the maintainer's decision.** Do not create a public
 repository, change visibility, or push to a public remote on their behalf.
 
+## Toolchain
+
+- `pnpm check` runs the full gate: `pnpm typecheck`, `pnpm lint` (oxlint) and
+  `pnpm format:check` (oxfmt). Run it before proposing a change.
+- Effect diagnostics come from `@effect/tsgo`: `pnpm install` runs
+  `effect-tsgo patch`, which patches the local `typescript` and `oxlint`
+  binaries. Without that patch the Effect rules silently disappear, so never
+  skip lifecycle scripts, and keep `@effect/tsgo`, `oxlint` and
+  `oxlint-tsgolint` pinned to the exact versions the patch supports.
+- In `tsc` output the Effect diagnostics are advisory: suggestions are hidden
+  and warnings do not change the exit code, so a warning is a hint rather
+  than a failure. `pnpm lint` is the gate that fails.
+- `oxfmt` owns formatting for `src/**` and `scripts/**` TypeScript only;
+  Markdown, YAML, JSON and the review UI's HTML are left alone on purpose.
+- Editors: point them at the workspace TypeScript (`node_modules/typescript`)
+  so the patched language service, and with it the Effect refactors and
+  quick fixes, is the one that runs.
+- Git hooks are managed by lefthook (`lefthook.yml`) and installed by the same
+  `prepare` script. The `pre-commit` hook formats the staged TypeScript and
+  re-stages it, then runs lint, typecheck and `check:leaks` - the leak check
+  runs last, and without a glob, because it inspects the staged content itself.
+  `LEFTHOOK=0 git commit ...` skips the hook; do not reach for it to get a
+  commit past the leak check.
+
 ## Core Rules & Conventions
 
 1. **Strict Type Safety**:

@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "extends": ["./node_modules/@effect/tsgo/oxlint-presets/correctness.json"],
+  "plugins": ["typescript", "oxc", "import", "promise"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "eslint/require-yield": "off"
+  },
+  "ignorePatterns": ["dist/", "datasets/", "runs/", "reports/"]
+}

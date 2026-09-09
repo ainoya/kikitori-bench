@@ -5,7 +5,7 @@ import {
   WebSocketCodexClient,
   MockCodexClient,
   isFatalJudgeError,
-  type CodexClient
+  type CodexClient,
 } from "../judge/codex-client.js";
 import { buildJudgePrompt } from "../judge/prompts.js";
 import { judgeOnce } from "../judge/turn.js";
@@ -48,7 +48,7 @@ const termOf = (verdict: JudgeVerdict, term: string): string => {
 const firstPassVerdict = (evaluation: SampleEvaluation, item: DatasetItem): JudgeVerdict => ({
   terms: item.expectedTerms.map((term) => ({
     term,
-    present: evaluation.checks.find((c) => c.id === `term_${term}`)?.pass ?? false
+    present: evaluation.checks.find((c) => c.id === `term_${term}`)?.pass ?? false,
   })),
   keyPoints: item.keyPoints.map((_, idx) => {
     const coverage = evaluation.checks.find((c) => c.id === `point_${idx + 1}_coverage`);
@@ -59,7 +59,7 @@ const firstPassVerdict = (evaluation: SampleEvaluation, item: DatasetItem): Judg
   }),
   insertions: evaluation.checks
     .filter((c) => c.id.startsWith("insertion_"))
-    .map((c) => ({ text: c.evidence ?? c.name, severity: c.severity ?? "critical" }))
+    .map((c) => ({ text: c.evidence ?? c.name, severity: c.severity ?? "critical" })),
 });
 
 /**
@@ -71,7 +71,7 @@ export const measureJudgeConsistency = (
   report: BenchmarkReport,
   items: readonly DatasetItem[],
   config: AppConfig,
-  options: { count: number; seed: number; concurrency: number; useMockJudge?: boolean }
+  options: { count: number; seed: number; concurrency: number; useMockJudge?: boolean },
 ): Effect.Effect<ConsistencyResult, JudgeConnectionError | JudgeEvaluationError> =>
   Effect.gen(function* () {
     const itemMap = new Map(items.map((it) => [it.id, it]));
@@ -81,7 +81,7 @@ export const measureJudgeConsistency = (
         : new WebSocketCodexClient(config.judge.endpoint, config.judge.timeoutMs ?? 600_000);
 
     const candidates = report.evaluations.filter(
-      (e) => e.hypothesis.trim().length > 0 && itemMap.has(e.sampleId)
+      (e) => e.hypothesis.trim().length > 0 && itemMap.has(e.sampleId),
     );
     const picked = sampleWithoutReplacement(candidates, options.count, options.seed);
 
@@ -99,15 +99,15 @@ export const measureJudgeConsistency = (
           prompt: buildJudgePrompt({
             item,
             hypothesis: evaluation.hypothesis,
-            modelId: evaluation.modelId
+            modelId: evaluation.modelId,
           }),
           item,
-          modelId: evaluation.modelId
+          modelId: evaluation.modelId,
         }).pipe(
           Effect.retry({
             times: config.judge.retries ?? 2,
-            while: (err) => !isFatalJudgeError(err)
-          })
+            while: (err) => !isFatalJudgeError(err),
+          }),
         );
 
         const scored = scoreVerdict({
@@ -116,11 +116,11 @@ export const measureJudgeConsistency = (
           audioDurationMs: evaluation.audioDurationMs ?? 0,
           weights: config.weights,
           fBeta: config.scoring?.fBeta ?? DEFAULT_F_BETA,
-          lexical: scoreProperNouns(tokenizer, item.groundTruth, evaluation.hypothesis)
+          lexical: scoreProperNouns(tokenizer, item.groundTruth, evaluation.hypothesis),
         });
 
         console.log(
-          `   ↺ ${evaluation.modelId} / ${evaluation.sampleId}: ${evaluation.overallScore.toFixed(1)}% → ${scored.overallScore.toFixed(1)}%`
+          `   ↺ ${evaluation.modelId} / ${evaluation.sampleId}: ${evaluation.overallScore.toFixed(1)}% → ${scored.overallScore.toFixed(1)}%`,
         );
 
         return { evaluation, item, second: result.verdict, secondScore: scored.overallScore };
@@ -161,8 +161,8 @@ export const measureJudgeConsistency = (
         sampleId: r.evaluation.sampleId,
         modelId: r.evaluation.modelId,
         firstScore: r.evaluation.overallScore,
-        secondScore: r.secondScore
-      }))
+        secondScore: r.secondScore,
+      })),
     };
   });
 
@@ -191,7 +191,7 @@ export interface AuditEntry {
 export const buildAuditWorksheet = (
   report: BenchmarkReport,
   count: number,
-  seed: number
+  seed: number,
 ): AuditEntry[] => {
   const strata = new Map<string, AuditEntry[]>();
 
@@ -215,7 +215,7 @@ export const buildAuditWorksheet = (
         evidence: check.evidence ?? "",
         groundTruth: evaluation.groundTruth,
         hypothesis: evaluation.hypothesis,
-        humanVerdict: ""
+        humanVerdict: "",
       };
       strata.set(key, [...(strata.get(key) ?? []), entry]);
     }
@@ -225,15 +225,19 @@ export const buildAuditWorksheet = (
   // strata. Cycling the flat stratum list instead would fill the sheet with
   // whichever models sort first and leave the last ones unrepresented.
   const models = [...new Set([...strata.keys()].map((k) => k.split("|")[0]!))].sort();
-  const perModel = models.map((model, modelIdx) => ({
-    strata: [...strata.entries()]
-      .filter(([key]) => key.startsWith(`${model}|`))
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([, entries], idx) => sampleWithoutReplacement(entries, entries.length, seed + modelIdx * 31 + idx)),
-    // Stagger where each model starts so a short sheet still covers every check
-    // kind: otherwise all models spend their picks on the same first strata.
-    cursor: modelIdx
-  })).map((m) => ({ ...m, cursor: m.strata.length > 0 ? m.cursor % m.strata.length : 0 }));
+  const perModel = models
+    .map((model, modelIdx) => ({
+      strata: [...strata.entries()]
+        .filter(([key]) => key.startsWith(`${model}|`))
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([, entries], idx) =>
+          sampleWithoutReplacement(entries, entries.length, seed + modelIdx * 31 + idx),
+        ),
+      // Stagger where each model starts so a short sheet still covers every check
+      // kind: otherwise all models spend their picks on the same first strata.
+      cursor: modelIdx,
+    }))
+    .map((m) => ({ ...m, cursor: m.strata.length > 0 ? m.cursor % m.strata.length : 0 }));
 
   const picked: AuditEntry[] = [];
   let exhausted = false;
@@ -258,14 +262,14 @@ export const buildAuditWorksheet = (
 };
 
 export const scoreAuditWorksheet = (
-  entries: readonly AuditEntry[]
+  entries: readonly AuditEntry[],
 ): { agreement: number; kappa: number; n: number; unsure: number; disagreements: AuditEntry[] } => {
   const answered = entries.filter((e) => ["pass", "fail"].includes(e.humanVerdict.trim()));
   const pairs = answered.map((e) => [e.judgeVerdict, e.humanVerdict.trim()] as const);
   return {
     ...cohensKappa(pairs),
     unsure: entries.length - answered.length,
-    disagreements: answered.filter((e) => e.humanVerdict.trim() !== e.judgeVerdict)
+    disagreements: answered.filter((e) => e.humanVerdict.trim() !== e.judgeVerdict),
   };
 };
 

@@ -21,7 +21,7 @@ export class MetaMuseAdapter implements AsrAdapter {
     private readonly modelName = "muse-voice-transcribe-1.0",
     private readonly apiKey = process.env["META_API_KEY"],
     private readonly endpoint = "https://api.meta.ai/v1/asr/transcribe",
-    private readonly options: AsrModelOptions = {}
+    private readonly options: AsrModelOptions = {},
   ) {}
 
   private get languageBias(): readonly string[] {
@@ -44,7 +44,7 @@ export class MetaMuseAdapter implements AsrAdapter {
       audioEncoding: this.audioEncoding,
       languageBias: this.languageBias,
       keywords: this.options.keywords ?? [],
-      preprocessing: "ffmpeg -ac 1 -ar 16000 -c:a pcm_s16le"
+      preprocessing: "ffmpeg -ac 1 -ar 16000 -c:a pcm_s16le",
     };
   }
 
@@ -55,8 +55,8 @@ export class MetaMuseAdapter implements AsrAdapter {
           new AsrExecutionError({
             modelId: this.modelId,
             sampleId,
-            message: "META_API_KEY is not set in environment or config"
-          })
+            message: "META_API_KEY is not set in environment or config",
+          }),
         );
       }
 
@@ -65,8 +65,8 @@ export class MetaMuseAdapter implements AsrAdapter {
           new AsrExecutionError({
             modelId: this.modelId,
             sampleId,
-            message: `Audio file does not exist at ${audioFullPath}`
-          })
+            message: `Audio file does not exist at ${audioFullPath}`,
+          }),
         );
       }
 
@@ -80,8 +80,8 @@ export class MetaMuseAdapter implements AsrAdapter {
                 modelId: this.modelId,
                 sampleId,
                 message: `ffmpeg conversion to WAV failed (is ffmpeg installed?): ${String(err)}`,
-                cause: err
-              })
+                cause: err,
+              }),
           });
 
       const result = yield* Effect.tryPromise({
@@ -94,14 +94,11 @@ export class MetaMuseAdapter implements AsrAdapter {
             ...(this.languageBias.length > 0 ? { languageBias: this.languageBias } : {}),
             ...(this.options.keywords && this.options.keywords.length > 0
               ? { keywords: this.options.keywords }
-              : {})
+              : {}),
           });
 
           const formData = new FormData();
-          formData.append(
-            "request",
-            new Blob([requestConfig], { type: "application/json" })
-          );
+          formData.append("request", new Blob([requestConfig], { type: "application/json" }));
           formData.append("audio", new Blob([fileBuffer]), path.basename(wavPath));
 
           const url = `${this.endpoint}?sessionId=kikitori-${encodeURIComponent(sampleId)}`;
@@ -109,7 +106,7 @@ export class MetaMuseAdapter implements AsrAdapter {
           const res = await fetchWithRetry(url, {
             method: "POST",
             headers: { Authorization: `Bearer ${this.apiKey}` },
-            body: formData
+            body: formData,
           });
           if (!res.ok) {
             const errText = await res.text();
@@ -133,8 +130,8 @@ export class MetaMuseAdapter implements AsrAdapter {
             modelId: this.modelId,
             sampleId,
             message: `Meta Muse Voice Transcribe request failed: ${String(err)}`,
-            cause: err
-          })
+            cause: err,
+          }),
       }).pipe(
         Effect.ensuring(
           Effect.sync(() => {
@@ -145,8 +142,8 @@ export class MetaMuseAdapter implements AsrAdapter {
                 // temp file already gone; nothing to clean up
               }
             }
-          })
-        )
+          }),
+        ),
       );
 
       return result;

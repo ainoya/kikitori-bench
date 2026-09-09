@@ -6,19 +6,19 @@ import { getAudioMimeType, readAudioBase64 } from "../utils/audio.js";
 export const DraftOutputSchema = Schema.Struct({
   transcript: Schema.String,
   expectedTerms: Schema.Array(Schema.String),
-  keyPoints: Schema.Array(Schema.String)
+  keyPoints: Schema.Array(Schema.String),
 });
 
 export type DraftOutput = typeof DraftOutputSchema.Type;
 
 export const KeyPointsOutputSchema = Schema.Struct({
-  keyPoints: Schema.Array(Schema.String)
+  keyPoints: Schema.Array(Schema.String),
 });
 
 export interface DrafterShape {
   draftFromAudio(
     audioFullPath: string,
-    sampleId: string
+    sampleId: string,
   ): Effect.Effect<DraftOutput, DraftingError>;
   /**
    * Re-derive key points from a verified transcript at a granularity fine
@@ -29,7 +29,7 @@ export interface DrafterShape {
   refineKeyPoints(
     groundTruth: string,
     targetCount: number,
-    sampleId: string
+    sampleId: string,
   ): Effect.Effect<readonly string[], DraftingError>;
 }
 
@@ -51,7 +51,7 @@ export const DrafterLive = Layer.succeed(
         const apiKey = process.env["GEMINI_API_KEY"];
         if (!apiKey) {
           return yield* Effect.fail(
-            new DraftingError({ sampleId, message: "GEMINI_API_KEY is not set" })
+            new DraftingError({ sampleId, message: "GEMINI_API_KEY is not set" }),
           );
         }
         const model = process.env["GEMINI_DRAFT_MODEL"] ?? "gemini-3.8-flash";
@@ -81,7 +81,7 @@ Output strictly this JSON and nothing else:
 
         const payload = {
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { response_mime_type: "application/json" }
+          generationConfig: { response_mime_type: "application/json" },
         };
 
         const response = yield* Effect.tryPromise({
@@ -91,8 +91,8 @@ Output strictly this JSON and nothing else:
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-                body: JSON.stringify(payload)
-              }
+                body: JSON.stringify(payload),
+              },
             );
             if (!res.ok) {
               throw new Error(`Gemini API returned status ${res.status}: ${await res.text()}`);
@@ -103,8 +103,8 @@ Output strictly this JSON and nothing else:
             new DraftingError({
               sampleId,
               message: `Failed to call Gemini API for key point refinement: ${String(err)}`,
-              cause: err
-            })
+              cause: err,
+            }),
         });
 
         try {
@@ -125,8 +125,8 @@ Output strictly this JSON and nothing else:
             new DraftingError({
               sampleId,
               message: `Failed to parse Gemini key point JSON: ${String(parseErr)}`,
-              cause: parseErr
-            })
+              cause: parseErr,
+            }),
           );
         }
       });
@@ -138,8 +138,8 @@ Output strictly this JSON and nothing else:
           return yield* Effect.fail(
             new DraftingError({
               sampleId,
-              message: `Audio file does not exist at ${audioFullPath}`
-            })
+              message: `Audio file does not exist at ${audioFullPath}`,
+            }),
           );
         }
 
@@ -149,7 +149,7 @@ Output strictly this JSON and nothing else:
           return {
             transcript: `[Gemini API key not configured - please edit transcript for ${sampleId}]`,
             expectedTerms: [],
-            keyPoints: []
+            keyPoints: [],
           };
         }
 
@@ -178,18 +178,18 @@ Output strictly in JSON format matching this schema:
                 {
                   inline_data: {
                     mime_type: mimeType,
-                    data: base64Data
-                  }
+                    data: base64Data,
+                  },
                 },
                 {
-                  text: systemPrompt
-                }
-              ]
-            }
+                  text: systemPrompt,
+                },
+              ],
+            },
           ],
           generationConfig: {
-            response_mime_type: "application/json"
-          }
+            response_mime_type: "application/json",
+          },
         };
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -199,7 +199,7 @@ Output strictly in JSON format matching this schema:
             const res = await fetch(url, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
+              body: JSON.stringify(payload),
             });
             if (!res.ok) {
               const errText = await res.text();
@@ -211,8 +211,8 @@ Output strictly in JSON format matching this schema:
             new DraftingError({
               sampleId,
               message: `Failed to call Gemini API for drafting: ${String(err)}`,
-              cause: err
-            })
+              cause: err,
+            }),
         });
 
         try {
@@ -230,7 +230,9 @@ Output strictly in JSON format matching this schema:
           const parsed: unknown = JSON.parse(rawText);
           const decoded = Schema.decodeUnknownEither(DraftOutputSchema)(parsed);
           if (decoded._tag === "Left") {
-            throw new Error(`Failed to decode Gemini output schema: ${JSON.stringify(decoded.left)}`);
+            throw new Error(
+              `Failed to decode Gemini output schema: ${JSON.stringify(decoded.left)}`,
+            );
           }
           return decoded.right;
         } catch (parseErr) {
@@ -238,11 +240,11 @@ Output strictly in JSON format matching this schema:
             new DraftingError({
               sampleId,
               message: `Failed to parse Gemini draft JSON output: ${String(parseErr)}`,
-              cause: parseErr
-            })
+              cause: parseErr,
+            }),
           );
         }
       });
-    }
-  })
+    },
+  }),
 );

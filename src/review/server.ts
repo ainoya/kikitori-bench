@@ -40,7 +40,7 @@ export const startReviewServer = (options: ReviewServerOptions) =>
       if (pathname === "/" || pathname === "/index.html") {
         const candidatePaths = [
           path.resolve(__dirname, "static", "index.html"),
-          path.resolve(__dirname, "..", "..", "src", "review", "static", "index.html")
+          path.resolve(__dirname, "..", "..", "src", "review", "static", "index.html"),
         ];
         const htmlPath = candidatePaths.find((p) => fs.existsSync(p));
         if (htmlPath) {
@@ -104,14 +104,14 @@ export const startReviewServer = (options: ReviewServerOptions) =>
             "Content-Range": `bytes ${start}-${end}/${totalSize}`,
             "Accept-Ranges": "bytes",
             "Content-Length": chunksize,
-            "Content-Type": mimeType
+            "Content-Type": mimeType,
           });
           file.pipe(res);
         } else {
           res.writeHead(200, {
             "Content-Length": totalSize,
             "Accept-Ranges": "bytes",
-            "Content-Type": mimeType
+            "Content-Type": mimeType,
           });
           fs.createReadStream(audioFullPath).pipe(res);
         }
@@ -140,7 +140,7 @@ export const startReviewServer = (options: ReviewServerOptions) =>
                 res.writeHead(500, { "Content-Type": "application/json" });
                 res.end(JSON.stringify({ error: String(err) }));
               });
-          } catch (err) {
+          } catch {
             res.writeHead(400, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ error: "Invalid JSON body" }));
           }
@@ -163,15 +163,18 @@ export const startReviewServer = (options: ReviewServerOptions) =>
             Effect.runPromise(
               Effect.gen(function* () {
                 const item = yield* repo.getItem(data.datasetName, data.itemId);
-                const audioFullPath = path.resolve(repo.getDatasetDir(data.datasetName), item.audioPath);
+                const audioFullPath = path.resolve(
+                  repo.getDatasetDir(data.datasetName),
+                  item.audioPath,
+                );
                 const draft = yield* drafter.draftFromAudio(audioFullPath, item.id);
                 yield* repo.updateItem(data.datasetName, item.id, {
                   draftTranscript: draft.transcript,
                   expectedTerms: draft.expectedTerms,
-                  keyPoints: draft.keyPoints
+                  keyPoints: draft.keyPoints,
                 });
                 return draft;
-              })
+              }),
             )
               .then((draft) => {
                 res.writeHead(200, { "Content-Type": "application/json" });
@@ -181,7 +184,7 @@ export const startReviewServer = (options: ReviewServerOptions) =>
                 res.writeHead(500, { "Content-Type": "application/json" });
                 res.end(JSON.stringify({ error: String(err) }));
               });
-          } catch (err) {
+          } catch {
             res.writeHead(400, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ error: "Invalid JSON body" }));
           }
@@ -197,15 +200,17 @@ export const startReviewServer = (options: ReviewServerOptions) =>
       try: () =>
         new Promise<void>((resolve, reject) => {
           server.listen(port, () => {
-            console.log(`\n🎧 Ground Truth Review Web UI is running at: http://localhost:${port}?dataset=${datasetName}`);
+            console.log(
+              `\n🎧 Ground Truth Review Web UI is running at: http://localhost:${port}?dataset=${datasetName}`,
+            );
             console.log(`   Press Ctrl+C to stop the review server.\n`);
             resolve();
           });
           server.on("error", reject);
         }),
-      catch: (err) => new Error(`Failed to start review server: ${String(err)}`)
+      catch: (err) => new Error(`Failed to start review server: ${String(err)}`),
     });
 
     // Keep server running until interrupted
-    yield* Effect.never;
+    return yield* Effect.never;
   });

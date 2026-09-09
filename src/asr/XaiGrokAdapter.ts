@@ -15,7 +15,7 @@ export class XaiGrokAdapter implements AsrAdapter {
     private readonly modelName = "grok-stt",
     private readonly apiKey = process.env["XAI_API_KEY"],
     private readonly endpoint = "https://api.x.ai/v1/stt",
-    private readonly options: AsrModelOptions = {}
+    private readonly options: AsrModelOptions = {},
   ) {}
 
   private get language(): string {
@@ -27,7 +27,7 @@ export class XaiGrokAdapter implements AsrAdapter {
       model: this.modelName,
       endpoint: this.endpoint,
       language: this.language,
-      prompt: this.options.prompt ?? "(none)"
+      prompt: this.options.prompt ?? "(none)",
     };
   }
 
@@ -38,8 +38,8 @@ export class XaiGrokAdapter implements AsrAdapter {
           new AsrExecutionError({
             modelId: this.modelId,
             sampleId,
-            message: "XAI_API_KEY is not set in environment or config"
-          })
+            message: "XAI_API_KEY is not set in environment or config",
+          }),
         );
       }
 
@@ -48,8 +48,8 @@ export class XaiGrokAdapter implements AsrAdapter {
           new AsrExecutionError({
             modelId: this.modelId,
             sampleId,
-            message: `Audio file does not exist at ${audioFullPath}`
-          })
+            message: `Audio file does not exist at ${audioFullPath}`,
+          }),
         );
       }
 
@@ -74,9 +74,9 @@ export class XaiGrokAdapter implements AsrAdapter {
           const res = await fetchWithRetry(this.endpoint, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${this.apiKey}`
+              Authorization: `Bearer ${this.apiKey}`,
             },
-            body: formData
+            body: formData,
           });
 
           if (!res.ok) {
@@ -91,8 +91,8 @@ export class XaiGrokAdapter implements AsrAdapter {
             modelId: this.modelId,
             sampleId,
             message: `xAI Grok STT request failed: ${String(err)}`,
-            cause: err
-          })
+            cause: err,
+          }),
       });
 
       const latencyMs = Date.now() - startTime;

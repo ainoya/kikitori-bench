@@ -15,7 +15,7 @@ export const SUPPORTED_AUDIO_EXTENSIONS = new Set([
   ".ogg",
   ".flac",
   ".aac",
-  ".webm"
+  ".webm",
 ]);
 
 export const isAudioFile = (filename: string): boolean => {
@@ -66,10 +66,7 @@ export const getAudioDurationMs = async (filePath: string): Promise<number> => {
  * Returns the path of a temporary file the caller is responsible for deleting.
  */
 export const convertToWav16kMono = async (filePath: string): Promise<string> => {
-  const outPath = path.join(
-    os.tmpdir(),
-    `kikitori-${process.pid}-${randomUUID()}.wav`
-  );
+  const outPath = path.join(os.tmpdir(), `kikitori-${process.pid}-${randomUUID()}.wav`);
   await execFileAsync("ffmpeg", [
     "-y",
     "-loglevel",
@@ -82,7 +79,7 @@ export const convertToWav16kMono = async (filePath: string): Promise<string> => 
     "16000",
     "-c:a",
     "pcm_s16le",
-    outPath
+    outPath,
   ]);
   return outPath;
 };

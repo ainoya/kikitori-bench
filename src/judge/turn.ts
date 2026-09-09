@@ -28,7 +28,7 @@ export const judgeOnce = (input: JudgeOnceInput) =>
     const judgeResponse = yield* input.client.generate({
       model: input.judgeModel,
       prompt: input.prompt,
-      ...(input.temperature !== undefined ? { temperature: input.temperature } : {})
+      ...(input.temperature !== undefined ? { temperature: input.temperature } : {}),
     });
 
     // Strip a markdown code fence if the judge wrapped its JSON in one.
@@ -51,8 +51,8 @@ export const judgeOnce = (input: JudgeOnceInput) =>
           sampleId: input.item.id,
           modelId: input.modelId,
           message: `Failed to parse judge JSON response: ${String(parseErr)}\nRaw output was: ${judgeResponse.text.slice(0, 2000)}`,
-          cause: parseErr
-        })
+          cause: parseErr,
+        }),
     });
 
     return { judgeResponse, verdict } satisfies JudgeOnceResult;

@@ -11,7 +11,7 @@ export const DatasetItemSchema = Schema.Struct({
   durationSec: Schema.optional(Schema.Number),
   createdAt: Schema.optional(Schema.String),
   updatedAt: Schema.optional(Schema.String),
-  notes: Schema.optional(Schema.String)
+  notes: Schema.optional(Schema.String),
 });
 
 export type DatasetItem = typeof DatasetItemSchema.Type;
@@ -21,7 +21,7 @@ export const DatasetManifestSchema = Schema.Struct({
   description: Schema.optional(Schema.String),
   createdAt: Schema.String,
   updatedAt: Schema.String,
-  items: Schema.Array(DatasetItemSchema)
+  items: Schema.Array(DatasetItemSchema),
 });
 
 export type DatasetManifest = typeof DatasetManifestSchema.Type;

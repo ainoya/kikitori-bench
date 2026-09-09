@@ -3,7 +3,7 @@ import { Schema } from "effect";
 export const AsrRequestSchema = Schema.Struct({
   sampleId: Schema.String,
   audioPath: Schema.String,
-  modelId: Schema.String
+  modelId: Schema.String,
 });
 
 export type AsrRequest = typeof AsrRequestSchema.Type;
@@ -20,7 +20,7 @@ export const TokenUsageSchema = Schema.Struct({
   outputTokens: Schema.optional(Schema.Number),
   reasoningOutputTokens: Schema.optional(Schema.Number),
   totalTokens: Schema.optional(Schema.Number),
-  billedAudioSeconds: Schema.optional(Schema.Number)
+  billedAudioSeconds: Schema.optional(Schema.Number),
 });
 
 export type TokenUsage = typeof TokenUsageSchema.Type;
@@ -34,7 +34,7 @@ export const AsrResultSchema = Schema.Struct({
   rtf: Schema.optional(Schema.Number),
   timestamp: Schema.String,
   usage: Schema.optional(TokenUsageSchema),
-  error: Schema.optional(Schema.String)
+  error: Schema.optional(Schema.String),
 });
 
 export type AsrResult = typeof AsrResultSchema.Type;
@@ -44,7 +44,7 @@ export const ModelRunConditionSchema = Schema.Struct({
   modelId: Schema.String,
   displayName: Schema.String,
   provider: Schema.String,
-  parameters: Schema.Record({ key: Schema.String, value: Schema.Unknown })
+  parameters: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
 });
 
 export type ModelRunCondition = typeof ModelRunConditionSchema.Type;
@@ -55,7 +55,7 @@ export const AsrBatchRunSchema = Schema.Struct({
   timestamp: Schema.String,
   models: Schema.Array(Schema.String),
   conditions: Schema.optional(Schema.Array(ModelRunConditionSchema)),
-  results: Schema.Array(AsrResultSchema)
+  results: Schema.Array(AsrResultSchema),
 });
 
 export type AsrBatchRun = typeof AsrBatchRunSchema.Type;

@@ -23,7 +23,7 @@ export interface AsrRunnerShape {
     items: readonly DatasetItem[],
     models: readonly string[],
     config: AppConfig,
-    concurrency?: number
+    concurrency?: number,
   ): Effect.Effect<AsrBatchRun, AsrExecutionError | ValidationError>;
 }
 
@@ -53,15 +53,19 @@ export const AsrRunnerLive = Layer.succeed(
             return new GroqWhisperAdapter(modelId, "Groq Whisper large-v3", "whisper-large-v3");
           }
           if (modelId === "meta-muse" || modelId === "muse-voice-transcribe") {
-            return new MetaMuseAdapter(modelId, "Meta Muse Voice Transcribe", "muse-voice-transcribe-1.0");
+            return new MetaMuseAdapter(
+              modelId,
+              "Meta Muse Voice Transcribe",
+              "muse-voice-transcribe-1.0",
+            );
           }
           if (modelId === "mock") {
             return new MockAdapter("mock", "Mock ASR Model");
           }
           return yield* Effect.fail(
             new ValidationError({
-              message: `Model '${modelId}' is not configured in kikitori.config.yaml`
-            })
+              message: `Model '${modelId}' is not configured in kikitori.config.yaml`,
+            }),
           );
         }
 
@@ -75,7 +79,7 @@ export const AsrRunnerLive = Layer.succeed(
               modelConf.model ?? "grok-stt",
               modelConf.apiKey,
               modelConf.endpoint ?? "https://api.x.ai/v1/stt",
-              modelConf.options
+              modelConf.options,
             );
           case "gemini":
             return new GeminiAdapter(
@@ -83,7 +87,7 @@ export const AsrRunnerLive = Layer.succeed(
               displayName,
               modelConf.model ?? "gemini-3.8-flash",
               modelConf.apiKey,
-              modelConf.options
+              modelConf.options,
             );
           case "whisper":
             return new WhisperAdapter(
@@ -91,7 +95,7 @@ export const AsrRunnerLive = Layer.succeed(
               displayName,
               modelConf.model ?? "whisper-1",
               modelConf.apiKey,
-              modelConf.options
+              modelConf.options,
             );
           case "groq":
             return new GroqWhisperAdapter(
@@ -100,7 +104,7 @@ export const AsrRunnerLive = Layer.succeed(
               modelConf.model ?? "whisper-large-v3",
               modelConf.apiKey,
               modelConf.endpoint ?? "https://api.groq.com/openai/v1/audio/transcriptions",
-              modelConf.options
+              modelConf.options,
             );
           case "meta":
             return new MetaMuseAdapter(
@@ -109,23 +113,28 @@ export const AsrRunnerLive = Layer.succeed(
               modelConf.model ?? "muse-voice-transcribe-1.0",
               modelConf.apiKey,
               modelConf.endpoint ?? "https://api.meta.ai/v1/asr/transcribe",
-              modelConf.options
+              modelConf.options,
             );
           case "custom-http":
             if (!modelConf.endpoint) {
               return yield* Effect.fail(
                 new ValidationError({
-                  message: `Custom HTTP model '${modelId}' requires an 'endpoint' configuration`
-                })
+                  message: `Custom HTTP model '${modelId}' requires an 'endpoint' configuration`,
+                }),
               );
             }
-            return new CustomHttpAdapter(modelId, displayName, modelConf.endpoint, modelConf.apiKey);
+            return new CustomHttpAdapter(
+              modelId,
+              displayName,
+              modelConf.endpoint,
+              modelConf.apiKey,
+            );
           case "custom-command":
             if (!modelConf.command) {
               return yield* Effect.fail(
                 new ValidationError({
-                  message: `Custom command model '${modelId}' requires a 'command' configuration`
-                })
+                  message: `Custom command model '${modelId}' requires a 'command' configuration`,
+                }),
               );
             }
             return new CustomCommandAdapter(modelId, displayName, modelConf.command);
@@ -140,7 +149,7 @@ export const AsrRunnerLive = Layer.succeed(
       items: readonly DatasetItem[],
       modelIds: readonly string[],
       config: AppConfig,
-      concurrency = 3
+      concurrency = 3,
     ) {
       return Effect.gen(this, function* () {
         const adapters: AsrAdapter[] = [];
@@ -205,7 +214,7 @@ export const AsrRunnerLive = Layer.succeed(
                     ? Math.round((res.latencyMs / audioDurationMs) * 1000) / 1000
                     : undefined,
                 timestamp: new Date().toISOString(),
-                usage: res.usage
+                usage: res.usage,
               })),
               // One model failing on one file is data about that model, not a
               // reason to abandon the batch.
@@ -219,10 +228,10 @@ export const AsrRunnerLive = Layer.succeed(
                     latencyMs: 0,
                     audioDurationMs: audioDurationMs > 0 ? audioDurationMs : undefined,
                     timestamp: new Date().toISOString(),
-                    error: err.message
+                    error: err.message,
                   } satisfies AsrResult;
-                })
-              )
+                }),
+              ),
             );
 
             fs.appendFileSync(resultsPath, `${JSON.stringify(result)}\n`, "utf-8");
@@ -240,9 +249,9 @@ export const AsrRunnerLive = Layer.succeed(
             modelId: adapter.modelId,
             displayName: adapter.displayName,
             provider: adapter.provider,
-            parameters: adapter.parameters
+            parameters: adapter.parameters,
           })),
-          results
+          results,
         };
 
         const outPath = path.resolve(runDir, "asr_results.json");
@@ -250,6 +259,6 @@ export const AsrRunnerLive = Layer.succeed(
 
         return batchRun;
       });
-    }
-  })
+    },
+  }),
 );

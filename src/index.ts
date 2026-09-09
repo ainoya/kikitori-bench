@@ -22,7 +22,7 @@ import {
   measureJudgeConsistency,
   scoreAuditWorksheet,
   writeConsistency,
-  type AuditEntry
+  type AuditEntry,
 } from "./services/JudgeAudit.js";
 import * as YAML from "yaml";
 import { getAudioDurationMs } from "./utils/audio.js";
@@ -38,7 +38,9 @@ const program = new Command();
 
 program
   .name("kikitori")
-  .description("Private speech recognition benchmark with LLM-as-a-judge (Codex App Server / GPT-5.6 Luna)")
+  .description(
+    "Private speech recognition benchmark with LLM-as-a-judge (Codex App Server / GPT-5.6 Luna)",
+  )
   .version("0.1.0");
 
 // Compound live layer containing all services
@@ -47,7 +49,7 @@ const MainLive = Layer.mergeAll(
   DrafterLive,
   AsrRunnerLive,
   JudgeServiceLive,
-  ReporterLive
+  ReporterLive,
 );
 
 type MainServices = Layer.Layer.Success<typeof MainLive>;
@@ -65,17 +67,17 @@ const runEffect = <A, E>(effect: Effect.Effect<A, E, MainServices>): Promise<A> 
 const applyDurationCap = (
   items: readonly DatasetItem[],
   datasetDir: string,
-  maxDurationSec: number | undefined
+  maxDurationSec: number | undefined,
 ) =>
   Effect.gen(function* () {
     if (maxDurationSec === undefined) return { items: [...items], excluded: 0 };
     const measured = yield* Effect.all(
       items.map((item) =>
         Effect.promise(() => getAudioDurationMs(path.resolve(datasetDir, item.audioPath))).pipe(
-          Effect.map((durationMs) => ({ item, durationMs }))
-        )
+          Effect.map((durationMs) => ({ item, durationMs })),
+        ),
       ),
-      { concurrency: 8 }
+      { concurrency: 8 },
     );
     const kept = measured.filter((m) => m.durationMs <= maxDurationSec * 1000);
     return { items: kept.map((m) => m.item), excluded: measured.length - kept.length };
@@ -103,15 +105,13 @@ datasetCmd
         console.log(`✅ Dataset '${name}' initialized at: datasets/${name}`);
         console.log(`📁 Place your private audio files in: datasets/${name}/audio/`);
         console.log(`📝 Next, run: 'kikitori dataset scan ${name}' or 'kikitori review ${name}'`);
-      })
+      }),
     );
   });
 
 datasetCmd
   .command("import-journal [sourceDir]")
-  .description(
-    "Import audio and transcripts from an Obsidian vault of voice-journal notes"
-  )
+  .description("Import audio and transcripts from an Obsidian vault of voice-journal notes")
   .option("-n, --name <name>", "Target dataset name", "ayumi_journal_ja")
   .action(async (sourceDir: string | undefined, opts: { name: string }) => {
     const { importFromVoiceJournal } = await import("./dataset/obsidian-importer.js");
@@ -119,9 +119,7 @@ datasetCmd
     // rather than baked into the repository.
     const targetDir = sourceDir ?? process.env["JOURNAL_VAULT_DIR"];
     if (!targetDir) {
-      console.error(
-        "❌ Pass the vault directory as an argument, or set JOURNAL_VAULT_DIR in .env"
-      );
+      console.error("❌ Pass the vault directory as an argument, or set JOURNAL_VAULT_DIR in .env");
       console.error("   e.g. pnpm kikitori dataset import-journal ~/vault/journal/2026");
       return;
     }
@@ -133,7 +131,7 @@ datasetCmd
       Effect.gen(function* () {
         const res = yield* importFromVoiceJournal({
           sourceDir: targetDir,
-          datasetName: opts.name
+          datasetName: opts.name,
         });
 
         console.log(`\n🎉 Import completed successfully!`);
@@ -145,8 +143,10 @@ datasetCmd
         }
         console.log(`   Dataset location: datasets/${opts.name}`);
         console.log(`   Manifest: datasets/${opts.name}/dataset.yaml`);
-        console.log(`\nNext step: Run 'kikitori review ${opts.name}' to inspect or edit in Web UI.`);
-      })
+        console.log(
+          `\nNext step: Run 'kikitori review ${opts.name}' to inspect or edit in Web UI.`,
+        );
+      }),
     );
   });
 
@@ -160,14 +160,14 @@ datasetCmd
         const res = yield* repo.scanNewAudioFiles(name);
         console.log(`🔍 Scanned dataset '${name}':`);
         console.log(`   Added ${res.added} new audio files (Total items: ${res.total})`);
-      })
+      }),
     );
   });
 
 datasetCmd
   .command("refine <name>")
   .description(
-    "Re-derive key_points from the verified ground truth at a granularity fine enough to score long clips"
+    "Re-derive key_points from the verified ground truth at a granularity fine enough to score long clips",
   )
   .option("-c, --concurrency <n>", "Concurrent API requests", "3")
   .option("--dry-run", "Show the proposed key points without writing dataset.yaml")
@@ -185,21 +185,21 @@ datasetCmd
           manifest.items.map((item) =>
             Effect.gen(function* () {
               const durationMs = yield* Effect.promise(() =>
-                getAudioDurationMs(path.resolve(datasetDir, item.audioPath))
+                getAudioDurationMs(path.resolve(datasetDir, item.audioPath)),
               );
               return {
                 item,
                 durationMs,
-                target: targetKeyPointCount(durationMs, item.groundTruth)
+                target: targetKeyPointCount(durationMs, item.groundTruth),
               };
-            })
+            }),
           ),
-          { concurrency: 4 }
+          { concurrency: 4 },
         );
 
         const before = targets.reduce((acc, t) => acc + t.item.keyPoints.length, 0);
         console.log(
-          `🔎 Refining key points for ${targets.length} items (currently ${before} points, target ~${targets.reduce((a, t) => a + t.target, 0)})...`
+          `🔎 Refining key points for ${targets.length} items (currently ${before} points, target ~${targets.reduce((a, t) => a + t.target, 0)})...`,
         );
 
         if (!opts.dryRun) {
@@ -219,22 +219,24 @@ datasetCmd
                   Effect.catchAll((err) => {
                     console.error(`   ✗ ${t.item.id}: ${err.message}`);
                     return Effect.succeed(t.item.keyPoints);
-                  })
+                  }),
                 );
               after += points.length;
               console.log(
-                `   ✓ ${t.item.id} (${(t.durationMs / 1000).toFixed(0)}s): ${t.item.keyPoints.length} → ${points.length} points (target ${t.target})`
+                `   ✓ ${t.item.id} (${(t.durationMs / 1000).toFixed(0)}s): ${t.item.keyPoints.length} → ${points.length} points (target ${t.target})`,
               );
               if (!opts.dryRun) {
                 yield* repo.updateItem(name, t.item.id, { keyPoints: points });
               }
-            })
+            }),
           ),
-          { concurrency: parseInt(opts.concurrency, 10) || 3 }
+          { concurrency: parseInt(opts.concurrency, 10) || 3 },
         );
 
-        console.log(`\n🎉 Key points: ${before} → ${after}${opts.dryRun ? " (dry run, nothing written)" : ""}`);
-      })
+        console.log(
+          `\n🎉 Key points: ${before} → ${after}${opts.dryRun ? " (dry run, nothing written)" : ""}`,
+        );
+      }),
     );
   });
 
@@ -256,7 +258,9 @@ datasetCmd
           return;
         }
 
-        console.log(`🚀 Generating Gemini drafts for ${unverified.length} unverified audio files...`);
+        console.log(
+          `🚀 Generating Gemini drafts for ${unverified.length} unverified audio files...`,
+        );
         const datasetDir = repo.getDatasetDir(name);
         const concurrency = parseInt(opts.concurrency, 10) || 2;
 
@@ -270,7 +274,7 @@ datasetCmd
                 draftTranscript: draft.transcript,
                 groundTruth: item.groundTruth || draft.transcript,
                 expectedTerms: draft.expectedTerms,
-                keyPoints: draft.keyPoints
+                keyPoints: draft.keyPoints,
               });
               console.log(`   ✓ Drafted ${item.id}`);
             } catch (err) {
@@ -279,8 +283,10 @@ datasetCmd
           });
 
         yield* Effect.all(unverified.map(draftTask), { concurrency });
-        console.log(`\n🎉 Drafting complete! Run 'kikitori review ${name}' to inspect and approve in the Web UI.`);
-      })
+        console.log(
+          `\n🎉 Drafting complete! Run 'kikitori review ${name}' to inspect and approve in the Web UI.`,
+        );
+      }),
     );
   });
 
@@ -299,8 +305,8 @@ program
         yield* repo.scanNewAudioFiles(name);
 
         const port = opts.port ? parseInt(opts.port, 10) : config.review.port;
-        yield* startReviewServer({ port, datasetName: name });
-      })
+        return yield* startReviewServer({ port, datasetName: name });
+      }),
     );
   });
 
@@ -315,50 +321,74 @@ program
   .option("-l, --limit <n>", "Limit the number of items to run")
   .option("-d, --max-duration <sec>", "Skip samples longer than this many seconds")
   .option("--all", "Run on all items, including unverified ones")
-  .action(async (name: string, opts: { models?: string[]; concurrency?: string; limit?: string; maxDuration?: string; all?: boolean }) => {
-    await runEffect(
-      Effect.gen(function* () {
-        const config = yield* loadConfig();
-        const repo = yield* DatasetRepo;
-        const runner = yield* AsrRunner;
+  .action(
+    async (
+      name: string,
+      opts: {
+        models?: string[];
+        concurrency?: string;
+        limit?: string;
+        maxDuration?: string;
+        all?: boolean;
+      },
+    ) => {
+      await runEffect(
+        Effect.gen(function* () {
+          const config = yield* loadConfig();
+          const repo = yield* DatasetRepo;
+          const runner = yield* AsrRunner;
 
-        const manifest = yield* repo.loadManifest(name);
-        let targetItems = opts.all ? manifest.items : manifest.items.filter((i) => i.verified);
+          const manifest = yield* repo.loadManifest(name);
+          let targetItems = opts.all ? manifest.items : manifest.items.filter((i) => i.verified);
 
-        const maxDurationSec = opts.maxDuration ? parseInt(opts.maxDuration, 10) : undefined;
-        const capped = yield* applyDurationCap(targetItems, repo.getDatasetDir(name), maxDurationSec);
-        targetItems = capped.items;
-        if (capped.excluded > 0) {
-          console.log(`   ⏱️  ${capped.excluded} sample(s) longer than ${maxDurationSec}s excluded`);
-        }
-
-        if (opts.limit) {
-          const limitCount = parseInt(opts.limit, 10);
-          if (limitCount > 0) {
-            targetItems = targetItems.slice(0, limitCount);
+          const maxDurationSec = opts.maxDuration ? parseInt(opts.maxDuration, 10) : undefined;
+          const capped = yield* applyDurationCap(
+            targetItems,
+            repo.getDatasetDir(name),
+            maxDurationSec,
+          );
+          targetItems = capped.items;
+          if (capped.excluded > 0) {
+            console.log(
+              `   ⏱️  ${capped.excluded} sample(s) longer than ${maxDurationSec}s excluded`,
+            );
           }
-        }
 
-        if (targetItems.length === 0) {
-          console.log(`⚠️ No verified items found in dataset '${name}'.`);
-          console.log(`   Run 'kikitori review ${name}' to verify items, or pass '--all' to run on all items.`);
-          return;
-        }
+          if (opts.limit) {
+            const limitCount = parseInt(opts.limit, 10);
+            if (limitCount > 0) {
+              targetItems = targetItems.slice(0, limitCount);
+            }
+          }
 
-        const modelIds = opts.models ?? Object.keys(config.models);
-        console.log(`🎙️ Running ASR models [${modelIds.join(", ")}] on ${targetItems.length} items in '${name}'...`);
+          if (targetItems.length === 0) {
+            console.log(`⚠️ No verified items found in dataset '${name}'.`);
+            console.log(
+              `   Run 'kikitori review ${name}' to verify items, or pass '--all' to run on all items.`,
+            );
+            return;
+          }
 
-        const concurrency = opts.concurrency ? parseInt(opts.concurrency, 10) : config.judge.concurrency;
-        const batchRun = yield* runner.runBatch(name, targetItems, modelIds, config, concurrency);
+          const modelIds = opts.models ?? Object.keys(config.models);
+          console.log(
+            `🎙️ Running ASR models [${modelIds.join(", ")}] on ${targetItems.length} items in '${name}'...`,
+          );
 
-        console.log(`\n✅ ASR transcription complete!`);
-        console.log(`   Run ID: ${batchRun.runId}`);
-        console.log(`   Results saved to: runs/${batchRun.runId}/asr_results.json`);
-        console.log(`\nNext, evaluate using the judge: 'kikitori eval ${name} --run ${batchRun.runId}'`);
-      })
-    );
-  });
+          const concurrency = opts.concurrency
+            ? parseInt(opts.concurrency, 10)
+            : config.judge.concurrency;
+          const batchRun = yield* runner.runBatch(name, targetItems, modelIds, config, concurrency);
 
+          console.log(`\n✅ ASR transcription complete!`);
+          console.log(`   Run ID: ${batchRun.runId}`);
+          console.log(`   Results saved to: runs/${batchRun.runId}/asr_results.json`);
+          console.log(
+            `\nNext, evaluate using the judge: 'kikitori eval ${name} --run ${batchRun.runId}'`,
+          );
+        }),
+      );
+    },
+  );
 
 program
   .command("repair <runId>")
@@ -408,22 +438,24 @@ program
                       : undefined,
                   timestamp: new Date().toISOString(),
                   usage: res.usage,
-                  error: undefined
+                  error: undefined,
                 })),
                 Effect.catchAll((err) =>
                   Effect.sync(() => {
-                    console.error(`   ✗ still failing: ${result.modelId} / ${result.sampleId}: ${err.message}`);
+                    console.error(
+                      `   ✗ still failing: ${result.modelId} / ${result.sampleId}: ${err.message}`,
+                    );
                     return result;
-                  })
-                )
+                  }),
+                ),
               );
               if (outcome.error === undefined) {
                 repaired.set(`${result.modelId}::${result.sampleId}`, outcome);
                 console.log(`   ✓ ${result.modelId} / ${result.sampleId}`);
               }
-            })
+            }),
           ),
-          { concurrency: parseInt(opts.concurrency, 10) || 2 }
+          { concurrency: parseInt(opts.concurrency, 10) || 2 },
         );
 
         if (repaired.size === 0) {
@@ -433,9 +465,7 @@ program
 
         const merged: AsrBatchRun = {
           ...asrRun,
-          results: asrRun.results.map(
-            (r) => repaired.get(`${r.modelId}::${r.sampleId}`) ?? r
-          )
+          results: asrRun.results.map((r) => repaired.get(`${r.modelId}::${r.sampleId}`) ?? r),
         };
         fs.writeFileSync(asrPath, JSON.stringify(merged, null, 2), "utf-8");
 
@@ -449,7 +479,9 @@ program
             .filter((line) => {
               if (!line.trim()) return false;
               try {
-                const entry = JSON.parse(line) as { evaluation?: { modelId: string; sampleId: string } };
+                const entry = JSON.parse(line) as {
+                  evaluation?: { modelId: string; sampleId: string };
+                };
                 const key = `${entry.evaluation?.modelId}::${entry.evaluation?.sampleId}`;
                 return !repaired.has(key);
               } catch {
@@ -461,7 +493,7 @@ program
 
         console.log(`\n🎉 Repaired ${repaired.size} result(s).`);
         console.log(`   Next: pnpm kikitori eval ${asrRun.datasetName} --run ${runId}`);
-      })
+      }),
     );
   });
 
@@ -471,58 +503,72 @@ program
 program
   .command("eval <name>")
   .alias("evaluate")
-  .description("Evaluate ASR transcripts against Ground Truth using Codex App Server (GPT-5.6 Luna)")
+  .description(
+    "Evaluate ASR transcripts against Ground Truth using Codex App Server (GPT-5.6 Luna)",
+  )
   .requiredOption("-r, --run <runId>", "Run ID to evaluate (from 'kikitori run')")
   .option("-c, --concurrency <n>", "Concurrent judge turns")
   .option("--mock-judge", "Use offline mock judge for testing")
   .option("--lang <lang>", "Report language (en or ja)")
-  .action(async (name: string, opts: { run: string; concurrency?: string; mockJudge?: boolean; lang?: string }) => {
-    await runEffect(
-      Effect.gen(function* () {
-        const config = yield* loadConfig();
-        const repo = yield* DatasetRepo;
-        const judge = yield* JudgeService;
-        const reporter = yield* Reporter;
-        const locale = parseLocale(opts.lang);
+  .action(
+    async (
+      name: string,
+      opts: { run: string; concurrency?: string; mockJudge?: boolean; lang?: string },
+    ) => {
+      await runEffect(
+        Effect.gen(function* () {
+          const config = yield* loadConfig();
+          const repo = yield* DatasetRepo;
+          const judge = yield* JudgeService;
+          const reporter = yield* Reporter;
+          const locale = parseLocale(opts.lang);
 
-        const manifest = yield* repo.loadManifest(name);
-        const runDir = path.resolve(process.cwd(), "runs", opts.run);
-        const asrPath = path.resolve(runDir, "asr_results.json");
+          const manifest = yield* repo.loadManifest(name);
+          const runDir = path.resolve(process.cwd(), "runs", opts.run);
+          const asrPath = path.resolve(runDir, "asr_results.json");
 
-        if (!fs.existsSync(asrPath)) {
-          console.error(`❌ Cannot find ASR results at: ${asrPath}`);
-          return;
-        }
+          if (!fs.existsSync(asrPath)) {
+            console.error(`❌ Cannot find ASR results at: ${asrPath}`);
+            return;
+          }
 
-        const rawData = fs.readFileSync(asrPath, "utf-8");
-        const asrRun = JSON.parse(rawData) as AsrBatchRun;
+          const rawData = fs.readFileSync(asrPath, "utf-8");
+          const asrRun = JSON.parse(rawData) as AsrBatchRun;
 
-        console.log(`⚖️ Evaluating run '${opts.run}' with Codex App Server (model: ${config.judge.model})...`);
-        const report = yield* judge.evaluateRun(
-          opts.run,
-          name,
-          manifest.items,
-          asrRun.results,
-          opts.concurrency
-            ? { ...config, judge: { ...config.judge, concurrency: parseInt(opts.concurrency, 10) } }
-            : config,
-          opts.mockJudge,
-          asrRun.conditions
-        );
+          console.log(
+            `⚖️ Evaluating run '${opts.run}' with Codex App Server (model: ${config.judge.model})...`,
+          );
+          const report = yield* judge.evaluateRun(
+            opts.run,
+            name,
+            manifest.items,
+            asrRun.results,
+            opts.concurrency
+              ? {
+                  ...config,
+                  judge: { ...config.judge, concurrency: parseInt(opts.concurrency, 10) },
+                }
+              : config,
+            opts.mockJudge,
+            asrRun.conditions,
+          );
 
-        reporter.renderConsoleLeaderboard(report, locale);
-        const mdPath = yield* reporter.generateMarkdownReport(report, locale);
-        console.log(`📄 Detailed report generated at: ${mdPath}`);
-      })
-    );
-  });
+          reporter.renderConsoleLeaderboard(report, locale);
+          const mdPath = yield* reporter.generateMarkdownReport(report, locale);
+          console.log(`📄 Detailed report generated at: ${mdPath}`);
+        }),
+      );
+    },
+  );
 
 // ==========================================
 // BENCHMARK (RUN + EVAL PIPELINE)
 // ==========================================
 program
   .command("benchmark <name>")
-  .description("Run complete pipeline: ASR execution -> Codex App Server evaluation -> Leaderboard report")
+  .description(
+    "Run complete pipeline: ASR execution -> Codex App Server evaluation -> Leaderboard report",
+  )
   .option("-m, --models <models...>", "List of model IDs to benchmark")
   .option("-c, --concurrency <n>", "Concurrency")
   .option("-l, --limit <n>", "Limit the number of items to benchmark")
@@ -530,90 +576,121 @@ program
   .option("--all", "Benchmark on all items, including unverified")
   .option("--mock-judge", "Use offline mock judge for testing")
   .option("--lang <lang>", "Report language (en or ja)")
-  .action(async (name: string, opts: { models?: string[]; concurrency?: string; limit?: string; maxDuration?: string; all?: boolean; mockJudge?: boolean; lang?: string }) => {
-    await runEffect(
-      Effect.gen(function* () {
-        const config = yield* loadConfig();
-        const repo = yield* DatasetRepo;
-        const runner = yield* AsrRunner;
-        const judge = yield* JudgeService;
-        const reporter = yield* Reporter;
-        const locale = parseLocale(opts.lang);
+  .action(
+    async (
+      name: string,
+      opts: {
+        models?: string[];
+        concurrency?: string;
+        limit?: string;
+        maxDuration?: string;
+        all?: boolean;
+        mockJudge?: boolean;
+        lang?: string;
+      },
+    ) => {
+      await runEffect(
+        Effect.gen(function* () {
+          const config = yield* loadConfig();
+          const repo = yield* DatasetRepo;
+          const runner = yield* AsrRunner;
+          const judge = yield* JudgeService;
+          const reporter = yield* Reporter;
+          const locale = parseLocale(opts.lang);
 
-        const manifest = yield* repo.loadManifest(name);
-        let targetItems = opts.all ? manifest.items : manifest.items.filter((i) => i.verified);
+          const manifest = yield* repo.loadManifest(name);
+          let targetItems = opts.all ? manifest.items : manifest.items.filter((i) => i.verified);
 
-        const maxDurationSec = opts.maxDuration ? parseInt(opts.maxDuration, 10) : undefined;
-        const capped = yield* applyDurationCap(targetItems, repo.getDatasetDir(name), maxDurationSec);
-        targetItems = capped.items;
-        if (capped.excluded > 0) {
-          console.log(`   ⏱️  ${capped.excluded} sample(s) longer than ${maxDurationSec}s excluded`);
-        }
-
-        if (opts.limit) {
-          const limitCount = parseInt(opts.limit, 10);
-          if (limitCount > 0) {
-            targetItems = targetItems.slice(0, limitCount);
+          const maxDurationSec = opts.maxDuration ? parseInt(opts.maxDuration, 10) : undefined;
+          const capped = yield* applyDurationCap(
+            targetItems,
+            repo.getDatasetDir(name),
+            maxDurationSec,
+          );
+          targetItems = capped.items;
+          if (capped.excluded > 0) {
+            console.log(
+              `   ⏱️  ${capped.excluded} sample(s) longer than ${maxDurationSec}s excluded`,
+            );
           }
-        }
 
-        if (targetItems.length === 0) {
-          console.log(`⚠️ No verified items found in dataset '${name}'. Pass '--all' or run 'kikitori review ${name}'.`);
-          return;
-        }
+          if (opts.limit) {
+            const limitCount = parseInt(opts.limit, 10);
+            if (limitCount > 0) {
+              targetItems = targetItems.slice(0, limitCount);
+            }
+          }
 
-        const modelIds = opts.models ?? Object.keys(config.models);
-        console.log(`🚀 Launching full benchmark on '${name}' for models [${modelIds.join(", ")}]...`);
+          if (targetItems.length === 0) {
+            console.log(
+              `⚠️ No verified items found in dataset '${name}'. Pass '--all' or run 'kikitori review ${name}'.`,
+            );
+            return;
+          }
 
-        const concurrency = opts.concurrency ? parseInt(opts.concurrency, 10) : config.judge.concurrency;
-        // -c applies to both phases: ASR requests and judge turns.
-        const runConfig = opts.concurrency
-          ? { ...config, judge: { ...config.judge, concurrency } }
-          : config;
-        const batchRun = yield* runner.runBatch(name, targetItems, modelIds, runConfig, concurrency);
+          const modelIds = opts.models ?? Object.keys(config.models);
+          console.log(
+            `🚀 Launching full benchmark on '${name}' for models [${modelIds.join(", ")}]...`,
+          );
 
-        console.log(`\n⚖️ Running LLM-as-a-judge evaluation with ${config.judge.model}...`);
-        const judged = yield* judge.evaluateRun(
-          batchRun.runId,
-          name,
-          manifest.items,
-          batchRun.results,
-          runConfig,
-          opts.mockJudge,
-          batchRun.conditions
-        );
+          const concurrency = opts.concurrency
+            ? parseInt(opts.concurrency, 10)
+            : config.judge.concurrency;
+          // -c applies to both phases: ASR requests and judge turns.
+          const runConfig = opts.concurrency
+            ? { ...config, judge: { ...config.judge, concurrency } }
+            : config;
+          const batchRun = yield* runner.runBatch(
+            name,
+            targetItems,
+            modelIds,
+            runConfig,
+            concurrency,
+          );
 
-        // The duration cap is a property of the run, not of any one model, so it
-        // is stamped onto the report after judging rather than threaded through.
-        const report: BenchmarkReport =
-          maxDurationSec !== undefined && judged.conditions
-            ? {
-                ...judged,
-                conditions: {
-                  ...judged.conditions,
-                  maxDurationSec,
-                  excludedByDuration: capped.excluded
+          console.log(`\n⚖️ Running LLM-as-a-judge evaluation with ${config.judge.model}...`);
+          const judged = yield* judge.evaluateRun(
+            batchRun.runId,
+            name,
+            manifest.items,
+            batchRun.results,
+            runConfig,
+            opts.mockJudge,
+            batchRun.conditions,
+          );
+
+          // The duration cap is a property of the run, not of any one model, so it
+          // is stamped onto the report after judging rather than threaded through.
+          const report: BenchmarkReport =
+            maxDurationSec !== undefined && judged.conditions
+              ? {
+                  ...judged,
+                  conditions: {
+                    ...judged.conditions,
+                    maxDurationSec,
+                    excludedByDuration: capped.excluded,
+                  },
                 }
-              }
-            : judged;
-        fs.writeFileSync(
-          path.resolve(process.cwd(), "runs", batchRun.runId, "evaluation_report.json"),
-          JSON.stringify(report, null, 2),
-          "utf-8"
-        );
+              : judged;
+          fs.writeFileSync(
+            path.resolve(process.cwd(), "runs", batchRun.runId, "evaluation_report.json"),
+            JSON.stringify(report, null, 2),
+            "utf-8",
+          );
 
-        reporter.renderConsoleLeaderboard(report, locale);
-        const mdPath = yield* reporter.generateMarkdownReport(report, locale);
-        console.log(`📄 Detailed report generated at: ${mdPath}`);
-      })
-    );
-  });
-
-
+          reporter.renderConsoleLeaderboard(report, locale);
+          const mdPath = yield* reporter.generateMarkdownReport(report, locale);
+          console.log(`📄 Detailed report generated at: ${mdPath}`);
+        }),
+      );
+    },
+  );
 
 program
   .command("rescore <runId>")
-  .description("Re-apply the current scoring formula and weights to a finished run (no judge calls)")
+  .description(
+    "Re-apply the current scoring formula and weights to a finished run (no judge calls)",
+  )
   .option("--lang <lang>", "Report language (en or ja)")
   .action(async (runId: string, opts: { lang?: string }) => {
     await runEffect(
@@ -642,7 +719,7 @@ program
             audioDurationMs: evaluation.audioDurationMs ?? 0,
             weights: config.weights,
             fBeta: config.scoring?.fBeta ?? DEFAULT_F_BETA,
-            lexical: scoreProperNouns(tokenizer, item.groundTruth, evaluation.hypothesis)
+            lexical: scoreProperNouns(tokenizer, item.groundTruth, evaluation.hypothesis),
           });
           return {
             ...evaluation,
@@ -652,7 +729,7 @@ program
             hallucinationsCritical: scored.hallucinationsCritical,
             hallucinationsMinor: scored.hallucinationsMinor,
             hallucinationsPerMinute: scored.hallucinationsPerMinute,
-            minorContradictions: scored.minorContradictions
+            minorContradictions: scored.minorContradictions,
           };
         });
 
@@ -665,17 +742,20 @@ program
               axes.map((axis) => [
                 axis,
                 Math.round(
-                  (modelEvals.reduce((acc, e) => acc + (e.categoryScores[axis]?.scorePercent ?? 0), 0) /
+                  (modelEvals.reduce(
+                    (acc, e) => acc + (e.categoryScores[axis]?.scorePercent ?? 0),
+                    0,
+                  ) /
                     n) *
-                    10
-                ) / 10
-              ])
+                    10,
+                ) / 10,
+              ]),
             ) as (typeof stored.leaderboard)[number]["categoryScores"];
             return {
               ...entry,
               categoryScores,
               overallScore:
-                Math.round((modelEvals.reduce((acc, e) => acc + e.overallScore, 0) / n) * 10) / 10
+                Math.round((modelEvals.reduce((acc, e) => acc + e.overallScore, 0) / n) * 10) / 10,
             };
           })
           .sort((a, b) => b.overallScore - a.overallScore);
@@ -684,15 +764,17 @@ program
           ...stored,
           evaluations,
           leaderboard,
-          ...(stored.conditions ? { conditions: { ...stored.conditions, weights: config.weights } } : {}),
-          analytics: buildRunAnalytics(evaluations, manifest.items, config)
+          ...(stored.conditions
+            ? { conditions: { ...stored.conditions, weights: config.weights } }
+            : {}),
+          analytics: buildRunAnalytics(evaluations, manifest.items, config),
         };
         fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), "utf-8");
 
         reporter.renderConsoleLeaderboard(report, locale);
         const mdPath = yield* reporter.generateMarkdownReport(report, locale);
         console.log(`📄 Rescored report written to: ${mdPath}`);
-      })
+      }),
     );
   });
 
@@ -709,7 +791,7 @@ program
   .action(
     async (
       runId: string,
-      opts: { count: string; seed: string; concurrency: string; mockJudge?: boolean }
+      opts: { count: string; seed: string; concurrency: string; mockJudge?: boolean },
     ) => {
       await runEffect(
         Effect.gen(function* () {
@@ -724,13 +806,13 @@ program
           const manifest = yield* repo.loadManifest(report.datasetName);
 
           console.log(
-            `🔁 Re-judging ${opts.count} pairs from ${runId} to measure judge self-consistency...`
+            `🔁 Re-judging ${opts.count} pairs from ${runId} to measure judge self-consistency...`,
           );
           const result = yield* measureJudgeConsistency(report, manifest.items, config, {
             count: parseInt(opts.count, 10) || 20,
             seed: parseInt(opts.seed, 10) || 1,
             concurrency: parseInt(opts.concurrency, 10) || 3,
-            ...(opts.mockJudge ? { useMockJudge: true } : {})
+            ...(opts.mockJudge ? { useMockJudge: true } : {}),
           });
 
           const out = writeConsistency(runId, result);
@@ -740,16 +822,16 @@ program
           console.log(`  |Δ overall score| median   : ${result.medianAbsScoreDelta} pp`);
           console.log(`  |Δ overall score| p95      : ${result.p95AbsScoreDelta} pp`);
           console.log(
-            `  Term verdicts              : ${result.termAgreement.agreement}% agreement, κ=${result.termAgreement.kappa} (n=${result.termAgreement.n})`
+            `  Term verdicts              : ${result.termAgreement.agreement}% agreement, κ=${result.termAgreement.kappa} (n=${result.termAgreement.n})`,
           );
           console.log(
-            `  Key point verdicts         : ${result.keyPointAgreement.agreement}% agreement, κ=${result.keyPointAgreement.kappa} (n=${result.keyPointAgreement.n})`
+            `  Key point verdicts         : ${result.keyPointAgreement.agreement}% agreement, κ=${result.keyPointAgreement.kappa} (n=${result.keyPointAgreement.n})`,
           );
           console.log(`  Insertion count |Δ| / sample: ${result.insertionCountDelta}`);
           console.log(`\n📄 Saved to ${out}`);
-        })
+        }),
       );
-    }
+    },
   );
 
 program
@@ -760,7 +842,10 @@ program
   .option("-n, --count <n>", "Number of checks to sample for the worksheet", "40")
   .option("-s, --seed <n>", "Sampling seed", "1")
   .action(
-    async (runId: string, opts: { export?: string; score?: string; count: string; seed: string }) => {
+    async (
+      runId: string,
+      opts: { export?: string; score?: string; count: string; seed: string },
+    ) => {
       await runEffect(
         Effect.gen(function* () {
           if (opts.score) {
@@ -772,7 +857,7 @@ program
               console.log(`\n  Disagreements:`);
               for (const d of result.disagreements) {
                 console.log(
-                  `   - ${d.modelId} / ${d.sampleId} / ${d.checkName}: judge=${d.judgeVerdict}, human=${d.humanVerdict}`
+                  `   - ${d.modelId} / ${d.sampleId} / ${d.checkName}: judge=${d.judgeVerdict}, human=${d.humanVerdict}`,
                 );
                 console.log(`     ${d.judgeReason}`);
               }
@@ -789,26 +874,31 @@ program
           const worksheet = buildAuditWorksheet(
             report,
             parseInt(opts.count, 10) || 40,
-            parseInt(opts.seed, 10) || 1
+            parseInt(opts.seed, 10) || 1,
           );
-          const target = opts.export ?? path.resolve(process.cwd(), "runs", runId, "judge_audit.yaml");
+          const target =
+            opts.export ?? path.resolve(process.cwd(), "runs", runId, "judge_audit.yaml");
           fs.writeFileSync(target, YAML.stringify(worksheet), "utf-8");
           const tally = (pick: (e: AuditEntry) => string) => {
             const counts = new Map<string, number>();
             for (const e of worksheet) counts.set(pick(e), (counts.get(pick(e)) ?? 0) + 1);
-            return [...counts].sort().map(([k, v]) => `${k} ${v}`).join(", ");
+            return [...counts]
+              .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+              .map(([k, v]) => `${k} ${v}`)
+              .join(", ");
           };
           console.log(`📝 Worksheet with ${worksheet.length} checks written to ${target}`);
           console.log(`   ${tally((e) => e.modelId)}`);
-          console.log(`   ${tally((e) => e.judgeVerdict)} | ${tally((e) => e.checkId.replace(/_.*/, ""))}`);
+          console.log(
+            `   ${tally((e) => e.judgeVerdict)} | ${tally((e) => e.checkId.replace(/_.*/, ""))}`,
+          );
           console.log(`   Fill in "humanVerdict" with pass / fail / unsure, then run:`);
           console.log(`   pnpm kikitori judge-audit ${runId} --score ${target}`);
           yield* Effect.void;
-        })
+        }),
       );
-    }
+    },
   );
-
 
 program
   .command("publish <runId>")
@@ -830,12 +920,12 @@ program
           // Published output must not depend on the locale of whoever runs this:
           // the repository is English, so English is the default here even when
           // the shell's LANG would otherwise select Japanese.
-          locale: parseLocale(opts.lang) ?? "en"
+          locale: parseLocale(opts.lang) ?? "en",
         });
         console.log("📤 Published aggregate results (no sample text, no ids):");
         for (const file of written) console.log(`   ${path.relative(process.cwd(), file)}`);
         yield* Effect.void;
-      })
+      }),
     );
   });
 
@@ -872,7 +962,7 @@ program
             ...entry,
             asrCostUsd: modelUsage?.asrCostUsd,
             judgeCostUsd: modelUsage?.judgeCostUsd,
-            totalCostUsd: modelUsage?.totalCostUsd
+            totalCostUsd: modelUsage?.totalCostUsd,
           };
         });
         const manifest = yield* repo.loadManifest(stored.datasetName);
@@ -880,7 +970,7 @@ program
           ...stored,
           leaderboard,
           usageSummary,
-          analytics: buildRunAnalytics(stored.evaluations, manifest.items, config)
+          analytics: buildRunAnalytics(stored.evaluations, manifest.items, config),
         };
 
         fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), "utf-8");
@@ -888,7 +978,7 @@ program
         reporter.renderConsoleLeaderboard(report, locale);
         const mdPath = yield* reporter.generateMarkdownReport(report, locale);
         console.log(`📄 Report refreshed at: ${mdPath}`);
-      })
+      }),
     );
   });
 

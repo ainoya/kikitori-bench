@@ -13,7 +13,7 @@ export class WhisperAdapter implements AsrAdapter {
     public readonly displayName: string,
     private readonly modelName = "whisper-1",
     private readonly apiKey = process.env["OPENAI_API_KEY"],
-    private readonly options: AsrModelOptions = {}
+    private readonly options: AsrModelOptions = {},
   ) {}
 
   private get language(): string {
@@ -27,7 +27,7 @@ export class WhisperAdapter implements AsrAdapter {
       language: this.language,
       response_format: this.options.responseFormat ?? "json",
       temperature: this.options.temperature ?? "provider default",
-      prompt: this.options.prompt ?? "(none)"
+      prompt: this.options.prompt ?? "(none)",
     };
   }
 
@@ -38,8 +38,8 @@ export class WhisperAdapter implements AsrAdapter {
           new AsrExecutionError({
             modelId: this.modelId,
             sampleId,
-            message: "OPENAI_API_KEY is not set in environment or config"
-          })
+            message: "OPENAI_API_KEY is not set in environment or config",
+          }),
         );
       }
 
@@ -68,9 +68,9 @@ export class WhisperAdapter implements AsrAdapter {
           const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${this.apiKey}`
+              Authorization: `Bearer ${this.apiKey}`,
             },
-            body: formData
+            body: formData,
           });
           if (!res.ok) {
             const errText = await res.text();
@@ -83,8 +83,8 @@ export class WhisperAdapter implements AsrAdapter {
             modelId: this.modelId,
             sampleId,
             message: `Whisper API request failed: ${String(err)}`,
-            cause: err
-          })
+            cause: err,
+          }),
       });
 
       const latencyMs = Date.now() - startTime;

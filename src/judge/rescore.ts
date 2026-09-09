@@ -10,11 +10,11 @@ import type { DatasetItem } from "../schemas/dataset.js";
  */
 export const verdictFromChecks = (
   evaluation: SampleEvaluation,
-  item: DatasetItem
+  item: DatasetItem,
 ): JudgeVerdict => ({
   terms: item.expectedTerms.map((term) => ({
     term,
-    present: evaluation.checks.find((c) => c.id === `term_${term}`)?.pass ?? false
+    present: evaluation.checks.find((c) => c.id === `term_${term}`)?.pass ?? false,
   })),
   keyPoints: item.keyPoints.map((_, idx) => {
     const index = idx + 1;
@@ -27,7 +27,7 @@ export const verdictFromChecks = (
       return {
         index,
         verdict: "contradicted" as const,
-        severity: (fidelity.severity ?? "critical") as "critical" | "minor"
+        severity: (fidelity.severity ?? "critical") as "critical" | "minor",
       };
     }
     return { index, verdict: "missing" as const };
@@ -37,6 +37,6 @@ export const verdictFromChecks = (
     .map((c) => ({
       text: c.evidence ?? c.name,
       severity: (c.severity ?? "critical") as "critical" | "minor",
-      ...(c.reason ? { reason: c.reason } : {})
-    }))
+      ...(c.reason ? { reason: c.reason } : {}),
+    })),
 });

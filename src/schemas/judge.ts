@@ -15,7 +15,7 @@ export const BinaryCheckResultSchema = Schema.Struct({
   reason: Schema.String,
   evidence: Schema.optional(Schema.String),
   /** Only critical defects reduce the score; minor ones are reported separately. */
-  severity: Schema.optional(SeveritySchema)
+  severity: Schema.optional(SeveritySchema),
 });
 
 export type BinaryCheckResult = typeof BinaryCheckResultSchema.Type;
@@ -23,7 +23,7 @@ export type BinaryCheckResult = typeof BinaryCheckResultSchema.Type;
 export const CategoryScoreSchema = Schema.Struct({
   passed: Schema.Number,
   total: Schema.Number,
-  scorePercent: Schema.Number
+  scorePercent: Schema.Number,
 });
 
 export type CategoryScore = typeof CategoryScoreSchema.Type;
@@ -39,7 +39,7 @@ export const SampleEvaluationSchema = Schema.Struct({
   checks: Schema.Array(BinaryCheckResultSchema),
   categoryScores: Schema.Record({
     key: EvaluationAxisSchema,
-    value: CategoryScoreSchema
+    value: CategoryScoreSchema,
   }),
   overallScore: Schema.Number, // 0 to 100
   /** Content asserted by the hypothesis that the ground truth does not support. */
@@ -55,7 +55,7 @@ export const SampleEvaluationSchema = Schema.Struct({
   asrCostEstimated: Schema.optional(Schema.Boolean),
   /** Consumption of the judge turn that produced the checks. */
   judgeUsage: Schema.optional(TokenUsageSchema),
-  judgeCostUsd: Schema.optional(Schema.Number)
+  judgeCostUsd: Schema.optional(Schema.Number),
 });
 
 export type SampleEvaluation = typeof SampleEvaluationSchema.Type;
@@ -66,14 +66,14 @@ export const LeaderboardEntrySchema = Schema.Struct({
   overallScore: Schema.Number,
   categoryScores: Schema.Record({
     key: EvaluationAxisSchema,
-    value: Schema.Number
+    value: Schema.Number,
   }),
   sampleCount: Schema.Number,
   averageLatencyMs: Schema.Number,
   averageRtf: Schema.optional(Schema.Number),
   asrCostUsd: Schema.optional(Schema.Number),
   judgeCostUsd: Schema.optional(Schema.Number),
-  totalCostUsd: Schema.optional(Schema.Number)
+  totalCostUsd: Schema.optional(Schema.Number),
 });
 
 export type LeaderboardEntry = typeof LeaderboardEntrySchema.Type;
@@ -84,14 +84,14 @@ export const ExperimentConditionsSchema = Schema.Struct({
     provider: Schema.String,
     model: Schema.String,
     endpoint: Schema.String,
-    temperature: Schema.optional(Schema.Number)
+    temperature: Schema.optional(Schema.Number),
   }),
   weights: CategoryWeightsSchema,
   sampleCount: Schema.Number,
   /** Duration cap applied when selecting samples, when one was used. */
   maxDurationSec: Schema.optional(Schema.Number),
   excludedByDuration: Schema.optional(Schema.Number),
-  models: Schema.Array(ModelRunConditionSchema)
+  models: Schema.Array(ModelRunConditionSchema),
 });
 
 export type ExperimentConditions = typeof ExperimentConditionsSchema.Type;
@@ -106,7 +106,7 @@ export const ModelUsageSummarySchema = Schema.Struct({
   asrCostEstimated: Schema.Boolean,
   judgeUsage: TokenUsageSchema,
   judgeCostUsd: Schema.optional(Schema.Number),
-  totalCostUsd: Schema.optional(Schema.Number)
+  totalCostUsd: Schema.optional(Schema.Number),
 });
 
 export type ModelUsageSummary = typeof ModelUsageSummarySchema.Type;
@@ -117,7 +117,7 @@ export const RunUsageSummarySchema = Schema.Struct({
   perModel: Schema.Array(ModelUsageSummarySchema),
   totalAsrCostUsd: Schema.optional(Schema.Number),
   totalJudgeCostUsd: Schema.optional(Schema.Number),
-  totalCostUsd: Schema.optional(Schema.Number)
+  totalCostUsd: Schema.optional(Schema.Number),
 });
 
 export type RunUsageSummary = typeof RunUsageSummarySchema.Type;
@@ -135,7 +135,7 @@ export const ModelAnalyticsSchema = Schema.Struct({
   /** Deterministic expected-term recall, independent of the LLM judge. */
   termsMatched: Schema.Number,
   termsTotal: Schema.Number,
-  termRecallPercent: Schema.Number
+  termRecallPercent: Schema.Number,
 });
 
 export type ModelAnalytics = typeof ModelAnalyticsSchema.Type;
@@ -146,7 +146,7 @@ export const AxisComparisonSchema = Schema.Struct({
   bOnly: Schema.Number,
   bothPass: Schema.Number,
   bothFail: Schema.Number,
-  pValue: Schema.Number
+  pValue: Schema.Number,
 });
 
 export type AxisComparison = typeof AxisComparisonSchema.Type;
@@ -163,7 +163,7 @@ export const PairwiseComparisonSchema = Schema.Struct({
   adjustedCiHigh: Schema.Number,
   significant: Schema.Boolean,
   significantAdjusted: Schema.Boolean,
-  axes: Schema.Array(AxisComparisonSchema)
+  axes: Schema.Array(AxisComparisonSchema),
 });
 
 export type PairwiseComparison = typeof PairwiseComparisonSchema.Type;
@@ -182,16 +182,16 @@ export const ItemAnalysisSchema = Schema.Struct({
       axis: EvaluationAxisSchema,
       allPass: Schema.Number,
       allFail: Schema.Number,
-      discriminating: Schema.Number
-    })
-  )
+      discriminating: Schema.Number,
+    }),
+  ),
 });
 
 export const RunAnalyticsSchema = Schema.Struct({
   bootstrapIterations: Schema.Number,
   models: Schema.Array(ModelAnalyticsSchema),
   pairwise: Schema.Array(PairwiseComparisonSchema),
-  items: ItemAnalysisSchema
+  items: ItemAnalysisSchema,
 });
 
 export type RunAnalytics = typeof RunAnalyticsSchema.Type;
@@ -205,7 +205,7 @@ export const BenchmarkReportSchema = Schema.Struct({
   leaderboard: Schema.Array(LeaderboardEntrySchema),
   conditions: Schema.optional(ExperimentConditionsSchema),
   usageSummary: Schema.optional(RunUsageSummarySchema),
-  analytics: Schema.optional(RunAnalyticsSchema)
+  analytics: Schema.optional(RunAnalyticsSchema),
 });
 
 export type BenchmarkReport = typeof BenchmarkReportSchema.Type;

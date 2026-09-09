@@ -136,8 +136,8 @@ export const messages: Record<Locale, Translations> = {
       proper_noun_f1: "Proper-noun F1",
       proposition_recall: "Proposition recall",
       proposition_precision: "Proposition precision",
-      proposition_f1: "Proposition F-beta"
-    }
+      proposition_f1: "Proposition F-beta",
+    },
   },
   ja: {
     leaderboardTitle: "音声認識ベンチマーク リーダーボード",
@@ -198,17 +198,16 @@ export const messages: Record<Locale, Translations> = {
     judgeCost: "判定コスト",
     totalCost: "合計",
     costTotalsRow: "合計",
-    estimatedNote:
-      "`~` はプロバイダがトークン数を返さないため音声長から見積もったコストです。",
+    estimatedNote: "`~` はプロバイダがトークン数を返さないため音声長から見積もったコストです。",
     noPricingNote:
       "トークン列の `-` はプロバイダがトークン数を返さない（音声長課金の）API、コスト列の `-` は `kikitori.config.yaml` に単価未設定であることを示します。",
     axes: {
       proper_noun_f1: "固有名詞F1",
       proposition_recall: "命題再現率 (Recall)",
       proposition_precision: "命題精度 (Precision)",
-      proposition_f1: "命題F値"
-    }
-  }
+      proposition_f1: "命題F値",
+    },
+  },
 };
 
 export const getLocale = (): Locale => {

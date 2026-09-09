@@ -7,7 +7,7 @@ export class MockAdapter implements AsrAdapter {
   constructor(
     public readonly modelId: string,
     public readonly displayName: string,
-    private readonly mockHypothesis?: string
+    private readonly mockHypothesis?: string,
   ) {}
 
   get parameters(): Readonly<Record<string, unknown>> {
@@ -20,7 +20,7 @@ export class MockAdapter implements AsrAdapter {
         hypothesis:
           this.mockHypothesis ??
           `This is a mock transcription result from [${this.displayName}] for sample (${sampleId}).`,
-        latencyMs: 150
+        latencyMs: 150,
       };
     });
   }

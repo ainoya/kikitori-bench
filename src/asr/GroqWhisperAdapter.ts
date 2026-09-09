@@ -18,7 +18,7 @@ export class GroqWhisperAdapter implements AsrAdapter {
     private readonly modelName = "whisper-large-v3",
     private readonly apiKey = process.env["GROQ_API_KEY"],
     private readonly endpoint = "https://api.groq.com/openai/v1/audio/transcriptions",
-    private readonly options: AsrModelOptions = {}
+    private readonly options: AsrModelOptions = {},
   ) {}
 
   private get language(): string {
@@ -36,7 +36,7 @@ export class GroqWhisperAdapter implements AsrAdapter {
       language: this.language,
       response_format: this.responseFormat,
       temperature: this.options.temperature ?? "provider default",
-      prompt: this.options.prompt ?? "(none)"
+      prompt: this.options.prompt ?? "(none)",
     };
   }
 
@@ -47,8 +47,8 @@ export class GroqWhisperAdapter implements AsrAdapter {
           new AsrExecutionError({
             modelId: this.modelId,
             sampleId,
-            message: "GROQ_API_KEY is not set in environment or config"
-          })
+            message: "GROQ_API_KEY is not set in environment or config",
+          }),
         );
       }
 
@@ -57,8 +57,8 @@ export class GroqWhisperAdapter implements AsrAdapter {
           new AsrExecutionError({
             modelId: this.modelId,
             sampleId,
-            message: `Audio file does not exist at ${audioFullPath}`
-          })
+            message: `Audio file does not exist at ${audioFullPath}`,
+          }),
         );
       }
 
@@ -86,7 +86,7 @@ export class GroqWhisperAdapter implements AsrAdapter {
           const res = await fetchWithRetry(this.endpoint, {
             method: "POST",
             headers: { Authorization: `Bearer ${this.apiKey}` },
-            body: formData
+            body: formData,
           });
           if (!res.ok) {
             const errText = await res.text();
@@ -99,8 +99,8 @@ export class GroqWhisperAdapter implements AsrAdapter {
             modelId: this.modelId,
             sampleId,
             message: `Groq Whisper request failed: ${String(err)}`,
-            cause: err
-          })
+            cause: err,
+          }),
       });
 
       const latencyMs = Date.now() - startTime;

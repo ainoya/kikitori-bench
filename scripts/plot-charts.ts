@@ -16,10 +16,9 @@ if (!runId) {
 }
 
 const report = JSON.parse(
-  fs.readFileSync(path.resolve(process.cwd(), "runs", runId, "evaluation_report.json"), "utf-8")
+  fs.readFileSync(path.resolve(process.cwd(), "runs", runId, "evaluation_report.json"), "utf-8"),
 ) as BenchmarkReport;
 
-const outPath =
-  process.argv[3] ?? path.resolve(process.cwd(), "reports", `${runId}-charts.html`);
+const outPath = process.argv[3] ?? path.resolve(process.cwd(), "reports", `${runId}-charts.html`);
 fs.writeFileSync(outPath, buildCharts(report, chartProvenance()).html, "utf-8");
 console.log(`Charts written to ${outPath}`);

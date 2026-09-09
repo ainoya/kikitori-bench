@@ -11,7 +11,7 @@ import * as path from "node:path";
 const staged = execFileSync(
   "git",
   ["diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"],
-  { encoding: "utf8" }
+  { encoding: "utf8" },
 )
   .split("\0")
   .filter(Boolean);
@@ -49,10 +49,14 @@ const corpus = corpusFiles.map(read).join("\n");
 
 // Structural keys of the manifest itself, not spoken content.
 const MANIFEST_KEYS = new Set(
-  ("name description createdAt updatedAt items audioPath groundTruth draftTranscript " +
+  (
+    "name description createdAt updatedAt items audioPath groundTruth draftTranscript " +
     "expectedTerms keyPoints verified notes true false null audio Imported from " +
     "voice journal Obsidian notes recordings Private Japanese dictation captured " +
-    "app never published").split(/\s+/).map((w) => w.toLowerCase())
+    "app never published"
+  )
+    .split(/\s+/)
+    .map((w) => w.toLowerCase()),
 );
 
 // Latin-script words the speaker actually used - product names, company names,
@@ -60,11 +64,13 @@ const MANIFEST_KEYS = new Set(
 const spokenLatin = new Set<string>(
   (corpus.match(/[A-Za-z][A-Za-z0-9_.-]{2,}/g) ?? [])
     .map((w) => w.replace(/[.]+$/, ""))
-    .filter((w) => !MANIFEST_KEYS.has(w.toLowerCase()))
+    .filter((w) => !MANIFEST_KEYS.has(w.toLowerCase())),
 );
 for (const { f, text } of files) {
   for (const word of spokenLatin) {
-    const re = new RegExp(`(^|[^A-Za-z0-9_-])${word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^A-Za-z0-9_-]|$)`);
+    const re = new RegExp(
+      `(^|[^A-Za-z0-9_-])${word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^A-Za-z0-9_-]|$)`,
+    );
     if (re.test(text)) report("check", `word spoken in the recordings: "${word}"`, f);
   }
 }
@@ -87,9 +93,9 @@ const privateVaultPattern = new RegExp(
   [
     ["Mobile", " Documents"].join(""),
     ["iCloud", "~"].join(""),
-    ["Library", "/Containers"].join("")
+    ["Library", "/Containers"].join(""),
   ].join("|"),
-  "g"
+  "g",
 );
 const PATTERNS: Array<[RegExp, string]> = [
   // Describing what the private material is about leaks it just as surely as
@@ -101,17 +107,17 @@ const PATTERNS: Array<[RegExp, string]> = [
         ["family", "names"].join(" "),
         ["health", "and", "financial"].join(" "),
         ["personal", "and", "family"].join(" "),
-        ["workplace", "information"].join(" ")
+        ["workplace", "information"].join(" "),
       ].join("|"),
-      "gi"
+      "gi",
     ),
-    "describes the private corpus's subject matter"
+    "describes the private corpus's subject matter",
   ],
   [/\/Users\/[a-z0-9_.-]+/gi, "absolute home path"],
   [privateVaultPattern, "personal vault path"],
   [/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "email address"],
   [/\b(?:gsk_|sk-|xai-|AQ\.Ab8|AIza)[A-Za-z0-9_-]{20,}/g, "API key"],
-  [/\b(?!127\.0\.0\.1|0\.0\.0\.0)(?:\d{1,3}\.){3}\d{1,3}\b/g, "IP address"]
+  [/\b(?!127\.0\.0\.1|0\.0\.0\.0)(?:\d{1,3}\.){3}\d{1,3}\b/g, "IP address"],
 ];
 for (const { f, text } of files) {
   for (const [re, label] of PATTERNS) {
@@ -122,13 +128,16 @@ for (const { f, text } of files) {
 // Anything staged that should never be
 for (const f of staged) {
   if (/^(runs|reports)\//.test(f)) report("FAIL", "run/report artefact staged", f);
-  if (/^datasets\//.test(f) && !f.startsWith("datasets/demo")) report("FAIL", "non-demo dataset staged", f);
+  if (/^datasets\//.test(f) && !f.startsWith("datasets/demo"))
+    report("FAIL", "non-demo dataset staged", f);
   if (/\.(m4a|mp3|wav|ogg|flac|aac)$/.test(f)) report("FAIL", "audio file staged", f);
 }
 
 const fails = findings.filter((x) => x.severity === "FAIL");
 const checks = findings.filter((x) => x.severity === "check");
-console.log(`staged files: ${staged.length}, private corpus: ${corpus.length.toLocaleString()} chars`);
+console.log(
+  `staged files: ${staged.length}, private corpus: ${corpus.length.toLocaleString()} chars`,
+);
 console.log(`\nFAIL: ${fails.length}`);
 for (const x of fails) console.log(`  ✗ ${x.where}: ${x.what}`);
 // Group by the matched item: one line per distinct word is reviewable, one
@@ -140,7 +149,9 @@ for (const x of checks) {
   grouped.set(x.what, entry);
 }
 console.log(`\nreview manually: ${grouped.size} distinct item(s)`);
-for (const [what, where] of [...grouped].sort()) {
-  console.log(`  ? ${what}  -> ${where.length > 3 ? `${where.slice(0, 3).join(", ")} +${where.length - 3}` : where.join(", ")}`);
+for (const [what, where] of [...grouped].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+  console.log(
+    `  ? ${what}  -> ${where.length > 3 ? `${where.slice(0, 3).join(", ")} +${where.length - 3}` : where.join(", ")}`,
+  );
 }
 process.exit(fails.length > 0 ? 1 : 0);

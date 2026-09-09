@@ -5,25 +5,38 @@ import { Context, Effect, Layer, Schema } from "effect";
 import {
   DatasetManifestSchema,
   type DatasetItem,
-  type DatasetManifest
+  type DatasetManifest,
 } from "../schemas/dataset.js";
-import {
-  DatasetNotFoundError,
-  DatasetItemNotFoundError,
-  ValidationError
-} from "../errors.js";
+import { DatasetNotFoundError, DatasetItemNotFoundError, ValidationError } from "../errors.js";
 import { isAudioFile } from "../utils/audio.js";
 
 export interface DatasetRepoShape {
   getDatasetDir(datasetName: string): string;
   getDatasetYamlPath(datasetName: string): string;
   getAudioDir(datasetName: string): string;
-  initDataset(datasetName: string, description?: string): Effect.Effect<DatasetManifest, ValidationError>;
-  loadManifest(datasetName: string): Effect.Effect<DatasetManifest, DatasetNotFoundError | ValidationError>;
-  saveManifest(datasetName: string, manifest: DatasetManifest): Effect.Effect<void, ValidationError>;
-  scanNewAudioFiles(datasetName: string): Effect.Effect<{ added: number; total: number }, DatasetNotFoundError | ValidationError>;
-  getItem(datasetName: string, itemId: string): Effect.Effect<DatasetItem, DatasetNotFoundError | DatasetItemNotFoundError | ValidationError>;
-  updateItem(datasetName: string, itemId: string, updates: Partial<DatasetItem>): Effect.Effect<DatasetItem, DatasetNotFoundError | DatasetItemNotFoundError | ValidationError>;
+  initDataset(
+    datasetName: string,
+    description?: string,
+  ): Effect.Effect<DatasetManifest, ValidationError>;
+  loadManifest(
+    datasetName: string,
+  ): Effect.Effect<DatasetManifest, DatasetNotFoundError | ValidationError>;
+  saveManifest(
+    datasetName: string,
+    manifest: DatasetManifest,
+  ): Effect.Effect<void, ValidationError>;
+  scanNewAudioFiles(
+    datasetName: string,
+  ): Effect.Effect<{ added: number; total: number }, DatasetNotFoundError | ValidationError>;
+  getItem(
+    datasetName: string,
+    itemId: string,
+  ): Effect.Effect<DatasetItem, DatasetNotFoundError | DatasetItemNotFoundError | ValidationError>;
+  updateItem(
+    datasetName: string,
+    itemId: string,
+    updates: Partial<DatasetItem>,
+  ): Effect.Effect<DatasetItem, DatasetNotFoundError | DatasetItemNotFoundError | ValidationError>;
 }
 
 export class DatasetRepo extends Context.Tag("DatasetRepo")<DatasetRepo, DatasetRepoShape>() {}
@@ -62,7 +75,7 @@ export const DatasetRepoLive = Layer.succeed(
           description: description ?? `Private benchmark dataset: ${datasetName}`,
           createdAt: now,
           updatedAt: now,
-          items: []
+          items: [],
         };
 
         if (!fs.existsSync(yamlPath)) {
@@ -80,8 +93,8 @@ export const DatasetRepoLive = Layer.succeed(
           return yield* Effect.fail(
             new DatasetNotFoundError({
               datasetName,
-              path: yamlPath
-            })
+              path: yamlPath,
+            }),
           );
         }
 
@@ -93,8 +106,8 @@ export const DatasetRepoLive = Layer.succeed(
           return yield* Effect.fail(
             new ValidationError({
               message: `Failed to parse YAML file at ${yamlPath}: ${String(err)}`,
-              details: err
-            })
+              details: err,
+            }),
           );
         }
 
@@ -103,8 +116,8 @@ export const DatasetRepoLive = Layer.succeed(
           return yield* Effect.fail(
             new ValidationError({
               message: `Schema validation failed for dataset ${datasetName}: ${JSON.stringify(decoded.left)}`,
-              details: decoded.left
-            })
+              details: decoded.left,
+            }),
           );
         }
 
@@ -117,7 +130,7 @@ export const DatasetRepoLive = Layer.succeed(
         const yamlPath = this.getDatasetYamlPath(datasetName);
         const updatedManifest: DatasetManifest = {
           ...manifest,
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         };
 
         try {
@@ -127,8 +140,8 @@ export const DatasetRepoLive = Layer.succeed(
           return yield* Effect.fail(
             new ValidationError({
               message: `Failed to write dataset.yaml at ${yamlPath}: ${String(err)}`,
-              details: err
-            })
+              details: err,
+            }),
           );
         }
       });
@@ -162,7 +175,7 @@ export const DatasetRepoLive = Layer.succeed(
               keyPoints: [],
               verified: false,
               createdAt: now,
-              updatedAt: now
+              updatedAt: now,
             });
           }
         }
@@ -171,14 +184,14 @@ export const DatasetRepoLive = Layer.succeed(
           const updatedManifest: DatasetManifest = {
             ...manifest,
             items: [...manifest.items, ...newItems],
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
           };
           yield* this.saveManifest(datasetName, updatedManifest);
         }
 
         return {
           added: newItems.length,
-          total: manifest.items.length + newItems.length
+          total: manifest.items.length + newItems.length,
         };
       });
     },
@@ -191,8 +204,8 @@ export const DatasetRepoLive = Layer.succeed(
           return yield* Effect.fail(
             new DatasetItemNotFoundError({
               datasetName,
-              itemId
-            })
+              itemId,
+            }),
           );
         }
         return item;
@@ -207,8 +220,8 @@ export const DatasetRepoLive = Layer.succeed(
           return yield* Effect.fail(
             new DatasetItemNotFoundError({
               datasetName,
-              itemId
-            })
+              itemId,
+            }),
           );
         }
 
@@ -217,18 +230,18 @@ export const DatasetRepoLive = Layer.succeed(
           ...currentItem,
           ...updates,
           id: currentItem.id, // ID cannot be overwritten
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         };
 
         const updatedItems = manifest.items.map((it) => (it.id === itemId ? updatedItem : it));
         const updatedManifest: DatasetManifest = {
           ...manifest,
           items: updatedItems,
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         };
         yield* this.saveManifest(datasetName, updatedManifest);
         return updatedItem;
       });
-    }
-  })
+    },
+  }),
 );

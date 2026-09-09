@@ -17,7 +17,7 @@ export class GeminiAdapter implements AsrAdapter {
     public readonly displayName: string,
     private readonly modelName = "gemini-3.8-flash",
     private readonly apiKey = process.env["GEMINI_API_KEY"],
-    private readonly options: AsrModelOptions = {}
+    private readonly options: AsrModelOptions = {},
   ) {}
 
   get parameters(): Readonly<Record<string, unknown>> {
@@ -28,7 +28,7 @@ export class GeminiAdapter implements AsrAdapter {
       temperature: this.options.temperature ?? "provider default",
       thinkingBudget: this.options.thinkingBudget ?? "provider default",
       thinkingLevel: this.options.thinkingLevel ?? "provider default",
-      maxOutputTokens: this.options.maxOutputTokens ?? "provider default"
+      maxOutputTokens: this.options.maxOutputTokens ?? "provider default",
     };
   }
 
@@ -39,8 +39,8 @@ export class GeminiAdapter implements AsrAdapter {
           new AsrExecutionError({
             modelId: this.modelId,
             sampleId,
-            message: "GEMINI_API_KEY is not set in environment or config"
-          })
+            message: "GEMINI_API_KEY is not set in environment or config",
+          }),
         );
       }
 
@@ -48,7 +48,9 @@ export class GeminiAdapter implements AsrAdapter {
       const base64Data = readAudioBase64(audioFullPath);
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.modelName}:generateContent?key=${this.apiKey}`;
 
-      const generationConfig: Record<string, unknown> | undefined = buildGenerationConfig(this.options);
+      const generationConfig: Record<string, unknown> | undefined = buildGenerationConfig(
+        this.options,
+      );
 
       const payload = {
         contents: [
@@ -58,16 +60,16 @@ export class GeminiAdapter implements AsrAdapter {
               {
                 inline_data: {
                   mime_type: mimeType,
-                  data: base64Data
-                }
+                  data: base64Data,
+                },
               },
               {
-                text: this.options.prompt ?? DEFAULT_PROMPT
-              }
-            ]
-          }
+                text: this.options.prompt ?? DEFAULT_PROMPT,
+              },
+            ],
+          },
         ],
-        ...(generationConfig ? { generationConfig } : {})
+        ...(generationConfig ? { generationConfig } : {}),
       };
 
       const startTime = Date.now();
@@ -77,7 +79,7 @@ export class GeminiAdapter implements AsrAdapter {
           const res = await fetchWithRetry(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
           });
           if (!res.ok) {
             const errText = await res.text();
@@ -90,8 +92,8 @@ export class GeminiAdapter implements AsrAdapter {
             modelId: this.modelId,
             sampleId,
             message: `Gemini API request failed: ${String(err)}`,
-            cause: err
-          })
+            cause: err,
+          }),
       });
 
       const latencyMs = Date.now() - startTime;
@@ -132,7 +134,7 @@ export class GeminiAdapter implements AsrAdapter {
         cachedInputTokens: um?.cachedContentTokenCount,
         outputTokens: (um?.candidatesTokenCount ?? 0) + (um?.thoughtsTokenCount ?? 0) || undefined,
         reasoningOutputTokens: um?.thoughtsTokenCount,
-        totalTokens: um?.totalTokenCount
+        totalTokens: um?.totalTokenCount,
       };
 
       return { hypothesis, latencyMs, usage };
@@ -140,9 +142,7 @@ export class GeminiAdapter implements AsrAdapter {
   }
 }
 
-const buildGenerationConfig = (
-  options: AsrModelOptions
-): Record<string, unknown> | undefined => {
+const buildGenerationConfig = (options: AsrModelOptions): Record<string, unknown> | undefined => {
   const config: Record<string, unknown> = {};
   if (options.temperature !== undefined) config["temperature"] = options.temperature;
   if (options.maxOutputTokens !== undefined) config["maxOutputTokens"] = options.maxOutputTokens;

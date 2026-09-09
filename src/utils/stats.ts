@@ -23,7 +23,7 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 export const bootstrapMean = (
   values: readonly number[],
   iterations = 4000,
-  alpha = 0.05
+  alpha = 0.05,
 ): Interval => {
   if (values.length === 0) return { mean: 0, low: 0, high: 0 };
   const rng = makeRng();
@@ -40,7 +40,7 @@ export const bootstrapMean = (
   return {
     mean: round1(mean),
     low: round1(means[Math.floor((alpha / 2) * iterations)] ?? mean),
-    high: round1(means[Math.min(iterations - 1, Math.floor((1 - alpha / 2) * iterations))] ?? mean)
+    high: round1(means[Math.min(iterations - 1, Math.floor((1 - alpha / 2) * iterations))] ?? mean),
   };
 };
 
@@ -52,8 +52,13 @@ export const bootstrapMean = (
 export const bootstrapPairedDiff = (
   pairs: ReadonlyArray<readonly [number, number]>,
   iterations = 4000,
-  alpha = 0.05
-): Interval => bootstrapMean(pairs.map(([a, b]) => a - b), iterations, alpha);
+  alpha = 0.05,
+): Interval =>
+  bootstrapMean(
+    pairs.map(([a, b]) => a - b),
+    iterations,
+    alpha,
+  );
 
 const logFactorial = (n: number): number => {
   let acc = 0;
@@ -110,7 +115,7 @@ export const containsTerm = (hypothesis: string, term: string): boolean => {
  * two raters' marginals would produce by chance. 1 is perfect, 0 is chance.
  */
 export const cohensKappa = (
-  pairs: ReadonlyArray<readonly [string, string]>
+  pairs: ReadonlyArray<readonly [string, string]>,
 ): { agreement: number; kappa: number; n: number } => {
   const n = pairs.length;
   if (n === 0) return { agreement: 0, kappa: 0, n: 0 };
@@ -127,12 +132,16 @@ export const cohensKappa = (
   return {
     agreement: Math.round(observed * 1000) / 10,
     kappa: Math.round(kappa * 1000) / 1000,
-    n
+    n,
   };
 };
 
 /** Deterministic subsample without replacement, so an audit is reproducible. */
-export const sampleWithoutReplacement = <T>(items: readonly T[], count: number, seed: number): T[] => {
+export const sampleWithoutReplacement = <T>(
+  items: readonly T[],
+  count: number,
+  seed: number,
+): T[] => {
   const pool = [...items];
   let s = seed >>> 0;
   const rng = () => {
