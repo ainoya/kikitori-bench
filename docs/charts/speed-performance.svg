@@ -59,7 +59,7 @@
       <text class="axis-title" x="486.0" y="414" text-anchor="middle">RTF - processing time ÷ audio length (lower is faster)</text>
       <text class="axis-title" transform="translate(16 201.0) rotate(-90)" text-anchor="middle">Overall score</text>
     </g>
-    <path class="frontier" d="M116.4,207.7 L171.0,207.7 L171.0,146.6 L204.6,146.6 L204.6,128.5 L376.8,128.5 L376.8,117.2"></path>
+    <path class="frontier" d="M99.6,143.9 L204.6,143.9 L204.6,128.5 L376.8,128.5 L376.8,117.2"></path>
       <g class="mark on" tabindex="0">
         <title>Gemini 3.8 Flash
 Score: 75.1%
@@ -78,23 +78,23 @@ Latency: 2967 ms | RTF: 0.03x</title>
         <circle class="dot" cx="204.6" cy="128.5" r="7"></circle>
         <text class="point-label" x="204.6" y="98.5" text-anchor="middle">Gemini 3.8 Flash (no thinking)</text>
       </g>
-      <g class="mark off" tabindex="0">
+      <g class="mark on" tabindex="0">
         <title>Apple SpeechTranscriber
 Score: 67.1%
-RTF: 0.045x  ·  avg latency 4123 ms
-Latency: 4123 ms | RTF: 0.04x</title>
-        <circle class="hit" cx="255.0" cy="143.9" r="18"></circle>
-        <circle class="dot" cx="255.0" cy="143.9" r="7"></circle>
-        <text class="point-label" x="255.0" y="81.9" text-anchor="middle">Apple SpeechTranscriber</text>
+RTF: 0.008x  ·  avg latency 750 ms
+Latency: 750 ms | RTF: 0.01x</title>
+        <circle class="hit" cx="99.6" cy="143.9" r="18"></circle>
+        <circle class="dot" cx="99.6" cy="143.9" r="7"></circle>
+        <text class="point-label" x="93.6" y="81.9" text-anchor="start">Apple SpeechTranscriber</text>
       </g>
-      <g class="mark on" tabindex="0">
+      <g class="mark off" tabindex="0">
         <title>Gemini 3.5 Transcribe
 Score: 66.3%
 RTF: 0.025x  ·  avg latency 2265 ms
 Latency: 2265 ms | RTF: 0.03x</title>
         <circle class="hit" cx="171.0" cy="146.6" r="18"></circle>
         <circle class="dot" cx="171.0" cy="146.6" r="7"></circle>
-        <text class="point-label" x="171.0" y="184.6" text-anchor="middle">Gemini 3.5 Transcribe</text>
+        <text class="point-label" x="171.0" y="232.6" text-anchor="middle">Gemini 3.5 Transcribe</text>
       </g>
       <g class="mark off" tabindex="0">
         <title>Meta Muse Voice Transcribe
@@ -112,28 +112,28 @@ RTF: 0.025x  ·  avg latency 2173 ms
 Latency: 2173 ms | RTF: 0.03x</title>
         <circle class="hit" cx="171.0" cy="154.6" r="18"></circle>
         <circle class="dot" cx="171.0" cy="154.6" r="7"></circle>
-        <text class="point-label" x="171.0" y="224.6" text-anchor="middle">Groq Whisper large-v3</text>
+        <text class="point-label" x="171.0" y="176.6" text-anchor="middle">Groq Whisper large-v3</text>
       </g>
       <g class="mark off" tabindex="0">
         <title>Apple DictationTranscriber
 Score: 55.3%
-RTF: 0.046x  ·  avg latency 4192 ms
-Latency: 4192 ms | RTF: 0.05x</title>
-        <circle class="hit" cx="259.2" cy="183.3" r="18"></circle>
-        <circle class="dot" cx="259.2" cy="183.3" r="7"></circle>
-        <text class="point-label" x="259.2" y="205.3" text-anchor="middle">Apple DictationTranscriber</text>
+RTF: 0.034x  ·  avg latency 3057 ms
+Latency: 3057 ms | RTF: 0.03x</title>
+        <circle class="hit" cx="208.8" cy="183.3" r="18"></circle>
+        <circle class="dot" cx="208.8" cy="183.3" r="7"></circle>
+        <text class="point-label" x="208.8" y="253.3" text-anchor="middle">Apple DictationTranscriber</text>
       </g>
-      <g class="mark on" tabindex="0">
+      <g class="mark off" tabindex="0">
         <title>xAI Grok STT
 Score: 48.0%
 RTF: 0.012x  ·  avg latency 1077 ms
 Latency: 1077 ms | RTF: 0.01x</title>
         <circle class="hit" cx="116.4" cy="207.7" r="18"></circle>
         <circle class="dot" cx="116.4" cy="207.7" r="7"></circle>
-        <text class="point-label" x="116.4" y="245.7" text-anchor="middle">xAI Grok STT</text>
+        <text class="point-label" x="116.4" y="277.7" text-anchor="middle">xAI Grok STT</text>
       </g>
   <g class="mark on"><circle class="dot" cx="71" cy="441" r="5"/></g><text class="legend-text" x="83" y="445">On the Pareto frontier</text>
   <g class="mark off"><circle class="dot" cx="255.2" cy="441" r="5"/></g><text class="legend-text" x="267.2" y="445">Dominated</text>
 </g>
-  <text class="chart-footnote" x="20" y="527">2026-09-10 · github.com/ainoya/kikitori-bench @ 1ce77da</text>
+  <text class="chart-footnote" x="20" y="527">2026-09-10 · github.com/ainoya/kikitori-bench @ 6668291</text>
 </svg>
