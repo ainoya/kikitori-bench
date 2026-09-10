@@ -236,7 +236,10 @@ export const buildCharts = (report: BenchmarkReport, provenance: ChartProvenance
         .map((p) => p.modelId),
     );
 
-  const W = 760;
+  // Keep dense multi-model runs readable instead of squeezing every label into
+  // the six-model width used by the original report.
+  const W = Math.max(760, points.length * 120);
+  const BREAKDOWN_W = Math.max(W, points.length * 150);
   const H = 430;
 
   /** Scatter of score against a lower-is-better measure, with the Pareto staircase. */
@@ -246,9 +249,10 @@ export const buildCharts = (report: BenchmarkReport, provenance: ChartProvenance
     xFormat: (v: number) => string;
     xTitle: string;
     tipLine: (p: Point) => string;
+    emptyMessage?: string;
   }
 
-  const scatter = ({ id, xOf, xFormat, xTitle, tipLine }: ScatterOptions) => {
+  const scatter = ({ id, xOf, xFormat, xTitle, tipLine, emptyMessage }: ScatterOptions) => {
     const data = points.filter((p) => xOf(p) !== undefined && xOf(p) !== null);
     // Narrowed once here: everything below runs on points that do have a value.
     const at = (p: Point): number => xOf(p) ?? 0;
@@ -256,6 +260,16 @@ export const buildCharts = (report: BenchmarkReport, provenance: ChartProvenance
     const M = { top: 34, right: 54, bottom: 62, left: 66 };
     const plotW = W - M.left - M.right;
     const plotH = H - M.top - M.bottom;
+
+    if (data.length === 0) {
+      return {
+        data,
+        onFrontier,
+        svg: `  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="No data for ${esc(xTitle)}" id="${id}">
+    <text class="chart-subtitle" x="${W / 2}" y="${H / 2}" text-anchor="middle">${esc(emptyMessage ?? "No comparable measurements are available.")}</text>
+  </svg>`,
+      };
+    }
 
     const maxX = Math.max(...data.map(at));
     const xStep = niceStep(maxX * 1.15, 4);
@@ -390,7 +404,7 @@ ${marks}
   const breakdownBars = () => {
     const BH = 400;
     const M = { top: 24, right: 24, bottom: 74, left: 56 };
-    const plotW = W - M.left - M.right;
+    const plotW = BREAKDOWN_W - M.left - M.right;
     const plotH = BH - M.top - M.bottom;
     const yMax = 100;
     const yStep = 25;
@@ -418,8 +432,8 @@ ${marks}
         // Wrap long model names onto two lines under the group.
         const words = p.name.split(" ");
         const mid = Math.ceil(words.length / 2);
-        const l1 = words.length > 2 ? words.slice(0, mid).join(" ") : p.name;
-        const l2 = words.length > 2 ? words.slice(mid).join(" ") : "";
+        const l1 = words.length > 1 ? words.slice(0, mid).join(" ") : p.name;
+        const l2 = words.length > 1 ? words.slice(mid).join(" ") : "";
         const cx = M.left + groupW * gi + groupW / 2;
         return `      <g class="group">
 ${bars}
@@ -428,7 +442,7 @@ ${bars}
       })
       .join("\n");
 
-    return `  <svg viewBox="0 0 ${W} ${BH}" role="img" aria-label="Score by evaluation axis for each model">
+    return `  <svg viewBox="0 0 ${BREAKDOWN_W} ${BH}" role="img" aria-label="Score by evaluation axis for each model">
     <g class="grid">
 ${ticksTo(yMax, yStep)
   .map(
@@ -454,6 +468,7 @@ ${groups}
     xOf: (p) => p.costPerHour,
     xFormat: (t) => `$${t.toFixed(2)}`,
     xTitle: "ASR cost per hour of audio (USD)",
+    emptyMessage: "No models in this run have a calculable ASR price.",
     tipLine: (p) =>
       `Cost: ${fmtUsd(p.costPerHour)}${p.estimated ? " (est.)" : ""} / audio hour  ·  run: ${fmtUsd(p.asrCostUsd)}`,
   });
@@ -536,7 +551,7 @@ ${AXES.map((a) => `          <td>${(p.categoryScores[a.key] ?? 0).toFixed(1)}%</
     color: var(--text-primary);
     font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif;
   }
-  .wrap { max-width: 820px; margin: 0 auto; }
+  .wrap { max-width: ${Math.max(820, BREAKDOWN_W)}px; margin: 0 auto; }
   h1 { font-size: 18px; margin: 0 0 4px; }
   h2 { font-size: 15px; margin: 34px 0 2px; }
   .sub { color: var(--text-secondary); font-size: 13px; margin: 0 0 6px; }
@@ -547,6 +562,7 @@ ${AXES.map((a) => `          <td>${(p.categoryScores[a.key] ?? 0).toFixed(1)}%</
   .grid line { stroke: var(--grid); stroke-width: 1; }
   .axis text { fill: var(--text-secondary); font-size: 11px; }
   .axis-title { fill: var(--text-secondary); font-size: 12px; }
+  .chart-subtitle { fill: var(--text-secondary); font-size: 12px; }
   .group-label { fill: var(--text-secondary); font-size: 11px; }
   .frontier { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-dasharray: 5 4; opacity: .85; }
   .hit { fill: transparent; }
@@ -588,11 +604,15 @@ ${AXES.map((a) => `          <td>${(p.categoryScores[a.key] ?? 0).toFixed(1)}%</
     <div class="chart">
 ${costChart.svg}
     </div>
-    <p class="legend">
+    ${
+      costChart.data.length > 0
+        ? `<p class="legend">
       <span><span class="swatch dot-on"></span>On the frontier</span>
       <span><span class="swatch dot-off"></span>Dominated (something is cheaper and better)</span>
-    </p>
-    <p class="note">Price is ASR spend only &mdash; the LLM-as-a-judge cost is the same work for every model and is not a property of the model under test. <code>~</code> marks a cost estimated from audio length where the provider reports no token counts.</p>
+    </p>`
+        : ""
+    }
+    <p class="note">Price is ASR spend only &mdash; the LLM-as-a-judge cost is the same work for every model and is not a property of the model under test. Models without a calculable ASR price are excluded from this chart and its frontier. <code>~</code> marks a cost estimated from audio length where the provider reports no token counts.</p>
   </section>
 
   <section>
@@ -629,7 +649,7 @@ ${AXES.map((a, i) => `      <span><span class="swatch s${i + 1}"></span>${esc(a.
 ${rows}
       </tbody>
     </table>
-    <p class="note">Frontier column: ✔ price/performance, ⚡ speed/performance.</p>
+    <p class="note">Frontier column: ✔ price/performance, ⚡ speed/performance. A model with <code>-</code> under USD / audio h is excluded from price/performance only.</p>
   </section>
 </div>
 </body>
@@ -650,11 +670,14 @@ ${rows}
   const footnote = `${provenance.date} · ${provenance.repository} @ ${provenance.commit}`;
 
   return {
-    costSvg: standalone(withLegend(costChart.svg, frontierLegend), {
-      title: "Japanese voice-journal ASR: price versus score",
-      subtitle,
-      footnote,
-    }),
+    costSvg: standalone(
+      withLegend(costChart.svg, costChart.data.length > 0 ? frontierLegend : []),
+      {
+        title: "Japanese voice-journal ASR: price versus score",
+        subtitle,
+        footnote,
+      },
+    ),
     speedSvg: standalone(withLegend(speedChart.svg, frontierLegend), {
       title: "Japanese voice-journal ASR: speed versus score",
       subtitle,

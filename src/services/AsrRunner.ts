@@ -7,6 +7,7 @@ import { WhisperAdapter } from "../asr/WhisperAdapter.js";
 import { XaiGrokAdapter } from "../asr/XaiGrokAdapter.js";
 import { GroqWhisperAdapter } from "../asr/GroqWhisperAdapter.js";
 import { MetaMuseAdapter } from "../asr/MetaMuseAdapter.js";
+import { AppleSpeechAdapter } from "../asr/AppleSpeechAdapter.js";
 import { CustomHttpAdapter } from "../asr/CustomHttpAdapter.js";
 import { CustomCommandAdapter } from "../asr/CustomCommandAdapter.js";
 import { MockAdapter } from "../asr/MockAdapter.js";
@@ -58,6 +59,9 @@ export const AsrRunnerLive = Layer.succeed(
               "Meta Muse Voice Transcribe",
               "muse-voice-transcribe-1.0",
             );
+          }
+          if (modelId === "apple-speech" || modelId === "speech-transcriber") {
+            return new AppleSpeechAdapter(modelId, "Apple SpeechTranscriber");
           }
           if (modelId === "mock") {
             return new MockAdapter("mock", "Mock ASR Model");
@@ -113,6 +117,24 @@ export const AsrRunnerLive = Layer.succeed(
               modelConf.model ?? "muse-voice-transcribe-1.0",
               modelConf.apiKey,
               modelConf.endpoint ?? "https://api.meta.ai/v1/asr/transcribe",
+              modelConf.options,
+            );
+          case "apple":
+            if (
+              modelConf.model !== undefined &&
+              modelConf.model !== "speech-transcriber" &&
+              modelConf.model !== "dictation"
+            ) {
+              return yield* Effect.fail(
+                new ValidationError({
+                  message: `Apple model '${modelId}' must use 'speech-transcriber' or 'dictation'`,
+                }),
+              );
+            }
+            return new AppleSpeechAdapter(
+              modelId,
+              displayName,
+              modelConf.model ?? "speech-transcriber",
               modelConf.options,
             );
           case "custom-http":

@@ -137,9 +137,9 @@ No warranty of any kind. If a decision matters to you, run the benchmark on your
 - **Statistical reliability.** Bootstrap confidence intervals, all pairwise comparisons with a
   multiple-comparison adjustment, exact McNemar tests per axis, latency percentiles, and an
   item analysis showing which samples actually discriminate between models.
-- **Pluggable ASR adapters.** xAI Grok STT, Gemini 3.8 Flash, Gemini 3.5 Transcribe, Meta Muse
-  Voice Transcribe, Groq-hosted Whisper, OpenAI Whisper, plus generic HTTP endpoints and local
-  CLI commands.
+- **Pluggable ASR adapters.** Apple SpeechTranscriber (on-device), xAI Grok STT, Gemini 3.8
+  Flash, Gemini 3.5 Transcribe, Meta Muse Voice Transcribe, Groq-hosted Whisper, OpenAI Whisper,
+  plus generic HTTP endpoints and local CLI commands.
 
 ---
 
@@ -163,6 +163,21 @@ pnpm install
 
 # Run strict type checking
 pnpm typecheck
+```
+
+To use the optional Apple SpeechTranscriber adapter, install macOS 26 and Xcode 26 or newer,
+then build its Swift helper and install the Japanese on-device model once. Do this before
+measuring so model download/build time is not counted as ASR latency:
+
+```bash
+pnpm apple:prepare
+```
+
+`apple-dictation` uses a separate, older on-device dictation model. Install its assets only when
+you want to benchmark that model independently:
+
+```bash
+pnpm apple:prepare:dictation
 ```
 
 ### Environment variables
@@ -256,8 +271,8 @@ pnpm kikitori review my_dataset_ja
 Execute transcription across verified samples using your chosen ASR models:
 
 ```bash
-# Run specific models (e.g., xAI Grok, Gemini, Meta Muse, Groq Whisper)
-pnpm kikitori run my_dataset_ja -m xai-grok gemini-flash gemini-transcribe meta-muse groq-whisper
+# Run specific models (e.g., Apple, xAI Grok, Gemini, Meta Muse, Groq Whisper)
+pnpm kikitori run my_dataset_ja -m apple-speech xai-grok gemini-flash gemini-transcribe meta-muse groq-whisper
 
 # Offline / dry-run test using mock model
 pnpm kikitori run my_dataset_ja -m mock --all
@@ -286,7 +301,7 @@ pnpm kikitori eval my_dataset_ja --run <run_id> --mock-judge
 Execute the entire pipeline (ASR execution -> judge evaluation -> Leaderboard generation) in a single step:
 
 ```bash
-pnpm kikitori benchmark my_dataset_ja -m xai-grok gemini-flash gemini-transcribe meta-muse groq-whisper
+pnpm kikitori benchmark my_dataset_ja -m apple-speech xai-grok gemini-flash gemini-transcribe meta-muse groq-whisper
 ```
 
 ---
@@ -328,7 +343,7 @@ Rank  | Model                |   Overall |     Names |     Recall |  Precision |
 - **Scoring (`scoring.fBeta`)**: 1.0 treats an omission and a fabrication as equally bad; below 1 weights precision, above 1 weights recall.
 - **Options (`options`)**: Per-model request parameters, recorded as the experiment condition of every run. Unset values keep the provider default:
   - `prompt`: transcription instruction / vocabulary biasing hint (Gemini, Whisper, Groq, xAI).
-  - `language`: language hint such as `ja` (Whisper, Groq, xAI).
+  - `language`: language or locale hint such as `ja` or `ja-JP` (Apple, Whisper, Groq, xAI).
   - `temperature`, `maxOutputTokens`: decoding controls.
   - `thinkingBudget` / `thinkingLevel`: Gemini thinking controls, both nested under
     `generationConfig.thinkingConfig`. `thinkingBudget: 0` disables thinking, which cuts output
@@ -339,8 +354,13 @@ Rank  | Model                |   Overall |     Names |     Recall |  Precision |
   - `inputPerMTok` / `cachedInputPerMTok` / `audioInputPerMTok` / `outputPerMTok`: per 1M tokens (token-billed models).
   - `perAudioHour` / `minBillableSeconds`: per hour of audio, with an optional minimum billed length per request (duration-billed STT APIs).
   - `estimateAudioTokensPerSecond` / `estimateOutputTokensPerMinute`: fallback ratios used to estimate cost when the provider omits token counts.
-  - A model without a `pricing` block simply reports `-` instead of a cost.
+  - A model without a `pricing` block reports `-` for its ASR and combined costs and is excluded
+    from the price/performance chart and Pareto frontier. Its judge cost remains visible, and the
+    model remains in quality and speed comparisons. Apple SpeechTranscriber intentionally has no
+    pricing block.
 - **Models (`models`)**:
+  - `apple`: Apple Speech framework on macOS 26+ (`speech-transcriber`, or `dictation` for the
+    older on-device dictation model; each model needs its own prepared assets)
   - `xai`: xAI Grok STT endpoint
   - `gemini`: Gemini ASR (`gemini-3.8-flash`, `gemini-3.5-transcribe`, ...)
   - `meta`: Meta Muse Voice Transcribe (`https://api.meta.ai/v1/asr/transcribe`, requires `ffmpeg`)

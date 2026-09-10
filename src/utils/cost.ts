@@ -183,11 +183,17 @@ export const buildRunUsageSummary = (
       asrCostEstimated: asrCosts.some((c) => c?.estimated === true),
       judgeUsage: sumUsage(modelEvals.map((e) => e.judgeUsage)),
       judgeCostUsd,
-      totalCostUsd: addOptional(asrCostUsd, judgeCostUsd),
+      // A judge-only subtotal is not a comparable model cost when the ASR price
+      // is unknown. Keep the judge cost visible in its own column, but leave the
+      // combined figure absent.
+      totalCostUsd: asrCostUsd === undefined ? undefined : addOptional(asrCostUsd, judgeCostUsd),
     });
   }
 
-  const totalAsrCostUsd = sumOptional(perModel.map((m) => m.asrCostUsd));
+  const allAsrCostsKnown = perModel.every((m) => m.asrCostUsd !== undefined);
+  const totalAsrCostUsd = allAsrCostsKnown
+    ? sumOptional(perModel.map((m) => m.asrCostUsd))
+    : undefined;
   const totalJudgeCostUsd = sumOptional(perModel.map((m) => m.judgeCostUsd));
 
   return {
@@ -195,7 +201,7 @@ export const buildRunUsageSummary = (
     perModel,
     totalAsrCostUsd,
     totalJudgeCostUsd,
-    totalCostUsd: addOptional(totalAsrCostUsd, totalJudgeCostUsd),
+    totalCostUsd: allAsrCostsKnown ? addOptional(totalAsrCostUsd, totalJudgeCostUsd) : undefined,
   };
 };
 

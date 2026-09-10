@@ -99,6 +99,7 @@ export const AsrModelConfigSchema = Schema.Struct({
     "whisper",
     "groq",
     "meta",
+    "apple",
     "custom-http",
     "custom-command",
     "mock",

@@ -10,6 +10,9 @@
   },
   "scripts": {
     "build": "tsc && cp -r src/review/static dist/review/static",
+    "apple:build": "swift build -c release --package-path tools/apple-speech-transcriber",
+    "apple:prepare": "pnpm apple:build && tools/apple-speech-transcriber/.build/release/apple-speech-transcriber --prepare --engine speech-transcriber --locale ja-JP",
+    "apple:prepare:dictation": "pnpm apple:build && tools/apple-speech-transcriber/.build/release/apple-speech-transcriber --prepare --engine dictation --locale ja-JP",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "dev": "tsx src/index.ts",
     "kikitori": "tsx src/index.ts",

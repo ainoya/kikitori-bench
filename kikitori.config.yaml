@@ -109,6 +109,22 @@ models:
       language: ja
     pricing:
       perAudioHour: 0.36
+  apple-speech:
+    type: apple
+    model: speech-transcriber
+    displayName: "Apple SpeechTranscriber"
+    options:
+      language: ja-JP
+    # Runs on device. No pricing is assigned, so it is excluded from the
+    # price/performance chart and frontier while remaining in quality/speed comparisons.
+  apple-dictation:
+    type: apple
+    model: dictation
+    displayName: "Apple DictationTranscriber"
+    options:
+      language: ja-JP
+    # Uses the older on-device system dictation model. Kept separate from
+    # SpeechTranscriber because the model and decoding preset differ.
   # Example of a custom HTTP ASR endpoint:
   # my-custom-model:
   #   type: custom-http

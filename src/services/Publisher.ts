@@ -145,6 +145,10 @@ export const publishRun = (options: PublishOptions): string[] => {
   lines.push("");
   lines.push(`![Price versus score](${rel(path.join(chartDir, "price-performance.svg"))})`);
   lines.push("");
+  lines.push(
+    "_Models without a calculable ASR price are excluded from the price/performance chart and frontier._",
+  );
+  lines.push("");
   lines.push(`![Speed versus score](${rel(path.join(chartDir, "speed-performance.svg"))})`);
   lines.push("");
   lines.push(`![Score by axis](${rel(path.join(chartDir, "score-breakdown.svg"))})`);
