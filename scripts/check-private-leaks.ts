@@ -36,11 +36,15 @@ const report = (severity: Finding["severity"], what: string, where: string): voi
 // Only what the speaker actually said, plus the annotations derived from it.
 // Reports and run artefacts are excluded on purpose: they are full of the
 // judge's English prose, and matching against that flags every ordinary word.
+// Holding a `dataset.yaml` is what makes a directory a dataset. Testing that
+// with `existsSync`, which follows symlinks, rather than `entry.isDirectory()`,
+// which is false for one: a symlinked dataset used to load as an empty corpus,
+// and an empty corpus makes this check pass without comparing anything.
 const corpusFiles: string[] = [];
 if (fs.existsSync("datasets")) {
-  for (const entry of fs.readdirSync("datasets", { withFileTypes: true })) {
-    const manifest = path.join("datasets", entry.name, "dataset.yaml");
-    if (entry.isDirectory() && entry.name !== "demo" && fs.existsSync(manifest)) {
+  for (const entry of fs.readdirSync("datasets")) {
+    const manifest = path.join("datasets", entry, "dataset.yaml");
+    if (entry !== "demo" && fs.existsSync(manifest)) {
       corpusFiles.push(manifest);
     }
   }
@@ -138,6 +142,15 @@ const checks = findings.filter((x) => x.severity === "check");
 console.log(
   `staged files: ${staged.length}, private corpus: ${corpus.length.toLocaleString()} chars`,
 );
+// Without a corpus the phrase comparison has nothing to compare against, so a
+// clean result below says only that no secret or artefact was staged. Say so,
+// rather than letting an empty corpus read as a full pass.
+if (corpus.length === 0) {
+  console.log(
+    "  ! no private dataset found under datasets/ - phrase comparison did not run;\n" +
+      "    only secrets, personal paths and staged artefacts were checked.",
+  );
+}
 console.log(`\nFAIL: ${fails.length}`);
 for (const x of fails) console.log(`  ✗ ${x.where}: ${x.what}`);
 // Group by the matched item: one line per distinct word is reviewable, one
