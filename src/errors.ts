@@ -55,3 +55,8 @@ export class ValidationError extends Data.TaggedError("ValidationError")<{
   readonly message: string;
   readonly details?: unknown;
 }> {}
+
+export class RunNotFoundError extends Data.TaggedError("RunNotFoundError")<{
+  readonly runId: string;
+  readonly path: string;
+}> {}

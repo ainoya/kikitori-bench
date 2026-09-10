@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kikitori-bench: GT vs Models</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --gt-accent: #a78bfa;
+      --col-width: 420px;
+      --body-font-size: 15px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    header { background: #090d16; border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-shrink: 0; }
+    header h1 { font-size: 17px; font-weight: 600; white-space: nowrap; }
+    header h1 .sub { font-weight: 300; font-size: 13px; color: var(--text-muted); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    select, .lang-btn { background: #1e293b; border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    select { max-width: 420px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .lang-btn { color: var(--primary); font-weight: 600; }
+    .lang-btn:hover { background: #334155; }
+    .dataset-badge { background: var(--border); padding: 4px 10px; border-radius: 9999px; font-size: 12px; white-space: nowrap; }
+
+    .container { display: flex; flex: 1; overflow: hidden; }
+
+    /* Sidebar */
+    .sidebar { width: 290px; flex-shrink: 0; border-right: 1px solid var(--border); background: #131d2e; display: flex; flex-direction: column; }
+    .sidebar-header { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+    .sidebar-title { font-size: 12px; font-weight: 600; color: var(--text-muted); display: flex; justify-content: space-between; }
+    .filter-input { width: 100%; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; }
+    .item-list { flex: 1; overflow-y: auto; list-style: none; }
+    .item-card { padding: 10px 14px; border-bottom: 1px solid #1e293b; cursor: pointer; }
+    .item-card:hover { background: #1e293b; }
+    .item-card.active { background: #1e3a5f; border-left: 3px solid var(--primary); }
+    .item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .item-id { font-weight: 600; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item-meta { font-size: 11px; color: var(--text-muted); display: flex; gap: 8px; }
+    .badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+    .badge-verified { background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid #059669; }
+    .badge-draft { background: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid #d97706; }
+
+    /* Main pane */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .toolbar { border-bottom: 1px solid var(--border); background: #131d2e; padding: 10px 16px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+    .toolbar-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .toolbar audio { height: 32px; flex: 1; min-width: 260px; max-width: 520px; filter: invert(0.9) hue-rotate(180deg); }
+    .control-group { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+    .seg { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .seg button { background: #1e293b; border: none; color: var(--text-muted); padding: 5px 12px; font-size: 12px; cursor: pointer; }
+    .seg button.active { background: var(--primary); color: #04283a; font-weight: 700; }
+    .chip-toggle { background: #1e293b; border: 1px solid var(--border); color: var(--text-muted); padding: 4px 10px; border-radius: 9999px; font-size: 12px; cursor: pointer; }
+    .chip-toggle.on { background: rgba(56, 189, 248, 0.15); border-color: var(--primary); color: var(--primary); }
+    .icon-btn { background: #1e293b; border: 1px solid var(--border); color: var(--text); width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 13px; line-height: 1; }
+    .icon-btn:hover { background: #334155; }
+    input[type="range"] { accent-color: var(--primary); width: 110px; }
+    label.check { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    input[type="checkbox"] { accent-color: var(--primary); }
+
+    /* Columns */
+    .columns { flex: 1; display: flex; gap: 12px; overflow-x: auto; overflow-y: hidden; padding: 14px 16px; align-items: stretch; }
+    .column { width: var(--col-width); flex: 0 0 var(--col-width); background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+    .column.gt { position: sticky; left: 0; z-index: 5; border-color: var(--gt-accent); box-shadow: 6px 0 14px -8px #000; }
+    .col-header { padding: 10px 12px; border-bottom: 1px solid var(--border); background: #172033; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .col-title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+    .col-title { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .column.gt .col-title { color: var(--gt-accent); }
+    .col-model-id { font-size: 11px; color: var(--text-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .col-stats { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; color: var(--text-muted); }
+    .stat { background: #0f172a; border: 1px solid var(--border); padding: 2px 7px; border-radius: 5px; white-space: nowrap; }
+    .stat.score-good { color: #34d399; border-color: #059669; }
+    .stat.score-mid { color: #fbbf24; border-color: #d97706; }
+    .stat.score-bad { color: #f87171; border-color: #b91c1c; }
+    .term-row { display: flex; flex-wrap: wrap; gap: 4px; }
+    .term-chip { font-size: 11px; padding: 1px 7px; border-radius: 9999px; border: 1px solid; }
+    .term-chip.found { background: rgba(16, 185, 129, 0.14); color: #34d399; border-color: #047857; }
+    .term-chip.missing { background: rgba(239, 68, 68, 0.14); color: #f87171; border-color: #b91c1c; }
+    .col-body { flex: 1; overflow-y: auto; padding: 14px; font-size: var(--body-font-size); line-height: 1.9; white-space: pre-wrap; word-break: break-word; }
+    .col-body.empty { color: var(--text-muted); font-style: italic; }
+    .col-error { margin: 12px 14px 0; padding: 8px 10px; border-radius: 6px; background: rgba(239, 68, 68, 0.12); border: 1px solid #b91c1c; color: #fca5a5; font-size: 12px; white-space: pre-wrap; }
+
+    mark.term { background: rgba(56, 189, 248, 0.22); color: #bae6fd; border-bottom: 1px solid var(--primary); border-radius: 2px; padding: 0 1px; }
+    .ins { background: rgba(239, 68, 68, 0.22); border-radius: 2px; }
+    .del { color: #64748b; text-decoration: line-through; text-decoration-color: #ef4444; background: rgba(100, 116, 139, 0.12); border-radius: 2px; }
+    .diff-note { margin: 10px 14px 0; font-size: 11px; color: var(--warning); }
+
+    .placeholder { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 14px; padding: 40px; text-align: center; line-height: 1.8; }
+    .legend { font-size: 11px; color: var(--text-muted); display: flex; gap: 12px; align-items: center; }
+    .legend span.sw { padding: 0 6px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>kikitori-bench <span class="sub" id="headerSubtitle">| GT vs Models</span></h1>
+    <div class="header-right">
+      <select id="runSelect" title="Run"></select>
+      <div class="dataset-badge" id="datasetBadge">-</div>
+      <button class="lang-btn" id="langToggleBtn">EN / JA</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <span id="labelSamples">SAMPLES</span>
+          <span id="sampleCount">0</span>
+        </div>
+        <input type="text" class="filter-input" id="filterInput" placeholder="Filter by id...">
+      </div>
+      <ul class="item-list" id="itemList"></ul>
+    </div>
+
+    <div class="main">
+      <div class="toolbar">
+        <div class="toolbar-row">
+          <audio id="audioPlayer" controls preload="metadata"></audio>
+          <div class="control-group">
+            <span id="labelSpeed">Speed</span>
+            <div class="seg" id="speedSeg">
+              <button data-speed="1" class="active">1.0x</button>
+              <button data-speed="1.25">1.25x</button>
+              <button data-speed="1.5">1.5x</button>
+              <button data-speed="2">2.0x</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <span id="labelView">View</span>
+            <div class="seg" id="viewSeg">
+              <button data-view="plain" class="active" id="btnPlain">Plain</button>
+              <button data-view="diff" id="btnDiff">Diff vs GT</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <span id="labelOrder">Order</span>
+            <div class="seg" id="orderSeg">
+              <button data-order="score" class="active" id="btnOrderScore">Score</button>
+              <button data-order="run" id="btnOrderRun">Run</button>
+            </div>
+          </div>
+          <label class="check control-group">
+            <input type="checkbox" id="termToggle" checked>
+            <span id="labelTerms">Highlight terms</span>
+          </label>
+          <label class="check control-group">
+            <input type="checkbox" id="syncToggle">
+            <span id="labelSync">Sync scroll</span>
+          </label>
+        </div>
+        <div class="toolbar-row">
+          <div class="control-group">
+            <span id="labelFont">Text</span>
+            <button class="icon-btn" id="fontDown">A-</button>
+            <button class="icon-btn" id="fontUp">A+</button>
+          </div>
+          <div class="control-group">
+            <span id="labelWidth">Column width</span>
+            <input type="range" id="widthRange" min="280" max="760" step="20" value="420">
+          </div>
+          <div class="control-group" id="modelChips"></div>
+          <div class="legend" id="legendBox"></div>
+        </div>
+      </div>
+      <div class="columns" id="columns"></div>
+      <div class="placeholder" id="placeholder" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script>
+    const i18n = {
+      en: {
+        subtitle: "| GT vs Models",
+        samples: "SAMPLES",
+        filter: "Filter by id...",
+        speed: "Speed",
+        view: "View",
+        order: "Order",
+        orderScore: "Score",
+        orderRun: "Run",
+        plain: "Plain",
+        diff: "Diff vs GT",
+        terms: "Highlight terms",
+        sync: "Sync scroll",
+        font: "Text",
+        width: "Column width",
+        groundTruth: "GROUND TRUTH",
+        verified: "verified",
+        draft: "draft",
+        noOutput: "(no output)",
+        noGroundTruth: "(no ground truth in the dataset)",
+        chars: "chars",
+        match: "match",
+        latency: "latency",
+        score: "score",
+        missingTerms: "missing",
+        diffTooLong: "Texts are too far apart to diff; showing plain text.",
+        noRuns: "No run found under runs/.\nRun `pnpm kikitori run <dataset>` first.",
+        pickSample: "Select a sample on the left.",
+        legendIns: "extra (not in GT)",
+        legendDel: "missing (in GT only)",
+        legendTerm: "expected term",
+        models: "Models",
+        runs: "runs",
+        mergedRuns: "All runs merged",
+        evaluated: "judged",
+        notEvaluated: "not judged"
+      },
+      ja: {
+        subtitle: "| 正解 vs モデル比較",
+        samples: "サンプル一覧",
+        filter: "IDで絞り込み...",
+        speed: "再生速度",
+        view: "表示",
+        order: "並び",
+        orderScore: "スコア順",
+        orderRun: "実行順",
+        plain: "そのまま",
+        diff: "正解との差分",
+        terms: "用語を強調",
+        sync: "スクロール同期",
+        font: "文字サイズ",
+        width: "カラム幅",
+        groundTruth: "正解テキスト (GT)",
+        verified: "承認済",
+        draft: "下書き",
+        noOutput: "(出力なし)",
+        noGroundTruth: "(データセットに正解テキストがありません)",
+        chars: "文字",
+        match: "一致率",
+        latency: "処理時間",
+        score: "スコア",
+        missingTerms: "欠落",
+        diffTooLong: "差分を取るには差が大きすぎるため、そのまま表示しています。",
+        noRuns: "runs/ に実行結果がありません。\nまず `pnpm kikitori run <dataset>` を実行してください。",
+        pickSample: "左のリストからサンプルを選んでください。",
+        legendIns: "余分 (正解になし)",
+        legendDel: "欠落 (正解にのみ)",
+        legendTerm: "必須用語",
+        models: "モデル",
+        runs: "ラン",
+        mergedRuns: "全ランをまとめて表示",
+        evaluated: "判定済",
+        notEvaluated: "未判定"
+      }
+    };
+
+    let lang = localStorage.getItem("kikitori_lang") || (navigator.language.startsWith("ja") ? "ja" : "en");
+    const t = () => i18n[lang];
+
+    const state = {
+      view: null,
+      sampleId: null,
+      mode: localStorage.getItem("kikitori_cmp_mode") || "plain",
+      terms: localStorage.getItem("kikitori_cmp_terms") !== "0",
+      sync: localStorage.getItem("kikitori_cmp_sync") === "1",
+      hidden: new Set(JSON.parse(localStorage.getItem("kikitori_cmp_hidden") || "[]")),
+      mergedRunIds: [],
+      order: localStorage.getItem("kikitori_cmp_order") || "score",
+      /** modelId -> mean judge score across the run, for leaderboard ordering. */
+      meanScores: new Map(),
+      filter: ""
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const escapeHtml = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    const normalize = (s) => s.normalize("NFKC").toLowerCase();
+
+    // ---------- character diff (Myers) ----------
+    const MAX_DIFF_CHARS = 12000;
+    const MAX_D = 1500;
+
+    function myers(a, b) {
+      const n = a.length, m = b.length;
+      if (n === 0 && m === 0) return []; // identical once the common ends are trimmed
+      const max = Math.min(n + m, MAX_D);
+      const offset = max;
+      const v = new Int32Array(2 * max + 1);
+      const trace = [];
+      for (let d = 0; d <= max; d++) {
+        trace.push(v.slice(offset - d, offset + d + 1));
+        for (let k = -d; k <= d; k += 2) {
+          let x;
+          if (k === -d || (k !== d && v[offset + k - 1] < v[offset + k + 1])) x = v[offset + k + 1];
+          else x = v[offset + k - 1] + 1;
+          let y = x - k;
+          while (x < n && y < m && a[x] === b[y]) { x++; y++; }
+          v[offset + k] = x;
+          if (x >= n && y >= m) return backtrack(trace, a, b);
+        }
+      }
+      return null; // too different to diff within the cap
+    }
+
+    function backtrack(trace, a, b) {
+      const ops = [];
+      let x = a.length, y = b.length;
+      for (let d = trace.length - 1; d >= 0; d--) {
+        const v = trace[d];
+        const at = (k) => v[k + d];
+        const k = x - y;
+        let prevK;
+        if (k === -d || (k !== d && at(k - 1) < at(k + 1))) prevK = k + 1;
+        else prevK = k - 1;
+        const prevX = d > 0 ? at(prevK) : 0;
+        const prevY = prevX - prevK;
+        while (x > prevX && y > prevY) { ops.push([0, a[x - 1]]); x--; y--; }
+        if (d > 0) {
+          if (x === prevX) { ops.push([1, b[y - 1]]); y--; }
+          else { ops.push([-1, a[x - 1]]); x--; }
+          x = prevX; y = prevY;
+        }
+      }
+      ops.reverse();
+      // merge adjacent characters that share an operation
+      const merged = [];
+      for (const [op, ch] of ops) {
+        const last = merged[merged.length - 1];
+        if (last && last[0] === op) last[1] += ch;
+        else merged.push([op, ch]);
+      }
+      return merged;
+    }
+
+    /** Diff `gt` against `hyp`; -1 = only in GT, 1 = only in hypothesis, 0 = shared. */
+    function charDiff(gt, hyp) {
+      const a = Array.from(gt), b = Array.from(hyp);
+      if (a.length > MAX_DIFF_CHARS || b.length > MAX_DIFF_CHARS) return null;
+
+      let head = 0;
+      while (head < a.length && head < b.length && a[head] === b[head]) head++;
+      let tail = 0;
+      while (tail < a.length - head && tail < b.length - head
+        && a[a.length - 1 - tail] === b[b.length - 1 - tail]) tail++;
+
+      const core = myers(a.slice(head, a.length - tail), b.slice(head, b.length - tail));
+      if (!core) return null;
+
+      const ops = [];
+      if (head > 0) ops.push([0, a.slice(0, head).join("")]);
+      ops.push(...core);
+      if (tail > 0) ops.push([0, a.slice(a.length - tail).join("")]);
+      return ops;
+    }
+
+    function diffStats(ops) {
+      let same = 0, changed = 0;
+      for (const [op, text] of ops) {
+        if (op === 0) same += text.length;
+        else changed += text.length;
+      }
+      const total = same + changed;
+      return { matchPercent: total === 0 ? 100 : Math.round((same / total) * 100) };
+    }
+
+    // ---------- rendering helpers ----------
+    function highlightTerms(text, terms) {
+      const html = escapeHtml(text);
+      const usable = terms.filter((term) => term.trim().length > 0)
+        .sort((x, y) => y.length - x.length);
+      if (usable.length === 0) return html;
+      const pattern = usable.map((term) => escapeHtml(term).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+        .join("|");
+      return html.replace(new RegExp(pattern, "gi"), (hit) => `<mark class="term">${hit}</mark>`);
+    }
+
+    function renderDiff(ops, terms, highlight) {
+      return ops.map(([op, text]) => {
+        const inner = op === 0 && highlight ? highlightTerms(text, terms) : escapeHtml(text);
+        if (op === 1) return `<span class="ins">${inner}</span>`;
+        if (op === -1) return `<span class="del">${inner}</span>`;
+        return inner;
+      }).join("");
+    }
+
+    const termsFoundIn = (text, terms) => {
+      const haystack = normalize(text);
+      const found = [], missing = [];
+      for (const term of terms) {
+        if (term.trim() && haystack.includes(normalize(term))) found.push(term);
+        else if (term.trim()) missing.push(term);
+      }
+      return { found, missing };
+    };
+
+    const scoreClass = (score) => score >= 75 ? "score-good" : score >= 50 ? "score-mid" : "score-bad";
+
+    // ---------- data loading ----------
+    const params = new URLSearchParams(location.search);
+
+    const MERGED = "__merged__";
+
+    async function loadRuns() {
+      const res = await fetch("/api/runs");
+      const data = await res.json();
+      const select = $("runSelect");
+      select.innerHTML = "";
+
+      if (data.runs.length === 0) {
+        $("columns").style.display = "none";
+        $("placeholder").style.display = "flex";
+        $("placeholder").textContent = t().noRuns;
+        return null;
+      }
+
+      // A model set is often spread over several runs, so the merged set the
+      // server was started with is its own entry at the top of the picker.
+      const requested = params.getAll("run");
+      const merged = requested.length > 0 ? requested : data.defaultRunIds ?? [];
+      state.mergedRunIds = merged;
+      if (merged.length > 1) {
+        const option = document.createElement("option");
+        option.value = MERGED;
+        option.textContent = `${t().mergedRuns} (${merged.length} ${t().runs})`;
+        select.appendChild(option);
+      }
+      for (const run of data.runs) {
+        const option = document.createElement("option");
+        option.value = run.runId;
+        option.textContent = `${run.runId}  [${run.modelIds.length} ${t().models}, ${run.sampleCount} ${t().samples.toLowerCase()}, ${run.evaluated ? t().evaluated : t().notEvaluated}]`;
+        select.appendChild(option);
+      }
+
+      if (merged.length > 1) {
+        select.value = MERGED;
+        return merged;
+      }
+      const wanted = merged[0];
+      const runId = data.runs.some((r) => r.runId === wanted) ? wanted : data.runs[0].runId;
+      select.value = runId;
+      return [runId];
+    }
+
+    async function loadComparison(runIds) {
+      const query = runIds.map((id) => `run=${encodeURIComponent(id)}`).join("&");
+      const res = await fetch(`/api/comparison?${query}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      state.view = data;
+      state.sampleId = data.samples.length > 0 ? data.samples[0].sampleId : null;
+      state.meanScores = meanScoresByModel(data);
+      $("datasetBadge").textContent = `${data.datasetName} / ${data.models.length} ${t().models}`;
+      renderModelChips();
+      renderSidebar();
+      renderColumns();
+    }
+
+    // ---------- UI ----------
+    function renderModelChips() {
+      const box = $("modelChips");
+      box.innerHTML = "";
+      for (const model of state.view.models) {
+        const chip = document.createElement("button");
+        chip.className = "chip-toggle" + (state.hidden.has(model.modelId) ? "" : " on");
+        chip.textContent = model.displayName;
+        chip.title = model.modelId;
+        chip.onclick = () => {
+          if (state.hidden.has(model.modelId)) state.hidden.delete(model.modelId);
+          else state.hidden.add(model.modelId);
+          localStorage.setItem("kikitori_cmp_hidden", JSON.stringify([...state.hidden]));
+          renderModelChips();
+          renderColumns();
+        };
+        box.appendChild(chip);
+      }
+    }
+
+    function visibleSamples() {
+      const needle = state.filter.trim().toLowerCase();
+      return state.view.samples.filter((s) => !needle || s.sampleId.toLowerCase().includes(needle));
+    }
+
+    function renderSidebar() {
+      const list = $("itemList");
+      const samples = visibleSamples();
+      $("sampleCount").textContent = `${samples.length} / ${state.view.samples.length}`;
+      list.innerHTML = "";
+      for (const sample of samples) {
+        const scored = sample.hypotheses.filter((h) => typeof h.overallScore === "number");
+        const average = scored.length > 0
+          ? Math.round(scored.reduce((sum, h) => sum + h.overallScore, 0) / scored.length)
+          : null;
+
+        const li = document.createElement("li");
+        li.className = "item-card" + (sample.sampleId === state.sampleId ? " active" : "");
+        li.innerHTML = `
+          <div class="item-top">
+            <span class="item-id">${escapeHtml(sample.sampleId)}</span>
+            <span class="badge ${sample.verified ? "badge-verified" : "badge-draft"}">${sample.verified ? t().verified : t().draft}</span>
+          </div>
+          <div class="item-meta">
+            ${sample.durationSec ? `<span>${formatDuration(sample.durationSec)}</span>` : ""}
+            ${average !== null ? `<span>${t().score} ${average}%</span>` : ""}
+            <span>${sample.expectedTerms.length} terms</span>
+          </div>`;
+        li.onclick = () => selectSample(sample.sampleId);
+        list.appendChild(li);
+      }
+    }
+
+    const formatDuration = (sec) => {
+      const total = Math.round(sec);
+      return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+    };
+
+    function selectSample(sampleId) {
+      state.sampleId = sampleId;
+      renderSidebar();
+      renderColumns();
+    }
+
+    function currentSample() {
+      return state.view.samples.find((s) => s.sampleId === state.sampleId);
+    }
+
+    /**
+     * Mean judge score per model over the whole run. Ordering columns by this
+     * rather than by the score of the sample on screen keeps the columns in one
+     * place while moving between samples.
+     */
+    function meanScoresByModel(view) {
+      const totals = new Map();
+      for (const sample of view.samples) {
+        for (const hypothesis of sample.hypotheses) {
+          if (typeof hypothesis.overallScore !== "number") continue;
+          const entry = totals.get(hypothesis.modelId) ?? { sum: 0, count: 0 };
+          entry.sum += hypothesis.overallScore;
+          entry.count += 1;
+          totals.set(hypothesis.modelId, entry);
+        }
+      }
+      return new Map([...totals].map(([modelId, e]) => [modelId, e.sum / e.count]));
+    }
+
+    function orderedHypotheses(sample) {
+      const hypotheses = sample.hypotheses.filter((h) => !state.hidden.has(h.modelId));
+      if (state.order !== "score" || state.meanScores.size === 0) return hypotheses;
+      // Unscored models keep the run order, after the scored ones.
+      return [...hypotheses].sort((a, b) =>
+        (state.meanScores.get(b.modelId) ?? -1) - (state.meanScores.get(a.modelId) ?? -1)
+      );
+    }
+
+    function renderColumns() {
+      const box = $("columns");
+      const sample = currentSample();
+      if (!sample) {
+        box.style.display = "none";
+        $("placeholder").style.display = "flex";
+        $("placeholder").textContent = t().pickSample;
+        return;
+      }
+      box.style.display = "flex";
+      $("placeholder").style.display = "none";
+
+      const audio = $("audioPlayer");
+      const src = sample.audioPath
+        ? `/api/audio?dataset=${encodeURIComponent(state.view.datasetName)}&path=${encodeURIComponent(sample.audioPath)}`
+        : "";
+      if (audio.dataset.src !== src) {
+        audio.dataset.src = src;
+        audio.src = src;
+      }
+
+      box.innerHTML = "";
+      box.appendChild(buildGtColumn(sample));
+      for (const hypothesis of orderedHypotheses(sample)) {
+        box.appendChild(buildModelColumn(sample, hypothesis));
+      }
+      wireSyncScroll();
+    }
+
+    function buildGtColumn(sample) {
+      const column = document.createElement("div");
+      column.className = "column gt";
+      const hasText = sample.groundTruth.length > 0;
+      const body = hasText
+        ? (state.terms ? highlightTerms(sample.groundTruth, sample.expectedTerms) : escapeHtml(sample.groundTruth))
+        : t().noGroundTruth;
+
+      column.innerHTML = `
+        <div class="col-header">
+          <div class="col-title-row">
+            <span class="col-title">${t().groundTruth}</span>
+            <span class="col-model-id">${escapeHtml(sample.sampleId)}</span>
+          </div>
+          <div class="col-stats">
+            <span class="stat">${sample.groundTruth.length} ${t().chars}</span>
+            ${sample.durationSec ? `<span class="stat">${formatDuration(sample.durationSec)}</span>` : ""}
+            <span class="stat">${sample.expectedTerms.length} terms</span>
+          </div>
+        </div>
+        <div class="col-body${hasText ? "" : " empty"}">${body}</div>`;
+      return column;
+    }
+
+    function buildModelColumn(sample, hypothesis) {
+      const model = state.view.models.find((m) => m.modelId === hypothesis.modelId);
+      const column = document.createElement("div");
+      column.className = "column";
+
+      const stats = [`<span class="stat">${hypothesis.hypothesis.length} ${t().chars}</span>`];
+      if (typeof hypothesis.overallScore === "number") {
+        const rounded = Math.round(hypothesis.overallScore * 10) / 10;
+        stats.unshift(`<span class="stat ${scoreClass(hypothesis.overallScore)}">${t().score} ${rounded}%</span>`);
+      }
+      if (typeof hypothesis.latencyMs === "number" && hypothesis.latencyMs > 0) {
+        stats.push(`<span class="stat">${t().latency} ${(hypothesis.latencyMs / 1000).toFixed(1)}s</span>`);
+      }
+      if (typeof hypothesis.rtf === "number") {
+        stats.push(`<span class="stat">RTF ${hypothesis.rtf.toFixed(2)}</span>`);
+      }
+
+      let bodyHtml;
+      let note = "";
+      const hasText = hypothesis.hypothesis.length > 0;
+      if (!hasText) {
+        bodyHtml = t().noOutput;
+      } else if (state.mode === "diff" && sample.groundTruth.length > 0) {
+        const ops = charDiff(sample.groundTruth, hypothesis.hypothesis);
+        if (ops) {
+          bodyHtml = renderDiff(ops, sample.expectedTerms, state.terms);
+          stats.push(`<span class="stat">${t().match} ${diffStats(ops).matchPercent}%</span>`);
+        } else {
+          bodyHtml = state.terms
+            ? highlightTerms(hypothesis.hypothesis, sample.expectedTerms)
+            : escapeHtml(hypothesis.hypothesis);
+          note = `<div class="diff-note">${t().diffTooLong}</div>`;
+        }
+      } else {
+        bodyHtml = state.terms
+          ? highlightTerms(hypothesis.hypothesis, sample.expectedTerms)
+          : escapeHtml(hypothesis.hypothesis);
+      }
+
+      const { found, missing } = termsFoundIn(hypothesis.hypothesis, sample.expectedTerms);
+      const termRow = sample.expectedTerms.length > 0
+        ? `<div class="col-stats"><span class="stat">terms ${found.length}/${found.length + missing.length}</span></div>
+           <div class="term-row">${missing.map((term) => `<span class="term-chip missing">${escapeHtml(term)}</span>`).join("")}</div>`
+        : "";
+
+      column.innerHTML = `
+        <div class="col-header">
+          <div class="col-title-row">
+            <span class="col-title" title="${escapeHtml(model?.displayName ?? hypothesis.modelId)}">${escapeHtml(model?.displayName ?? hypothesis.modelId)}</span>
+            <span class="col-model-id">${escapeHtml(hypothesis.modelId)}</span>
+          </div>
+          <div class="col-stats">${stats.join("")}</div>
+          ${termRow}
+        </div>
+        ${hypothesis.error ? `<div class="col-error">${escapeHtml(hypothesis.error)}</div>` : ""}
+        ${note}
+        <div class="col-body${hasText ? "" : " empty"}">${bodyHtml}</div>`;
+      return column;
+    }
+
+    function wireSyncScroll() {
+      const bodies = [...document.querySelectorAll(".col-body")];
+      let syncing = false;
+      for (const body of bodies) {
+        body.onscroll = () => {
+          if (!state.sync || syncing) return;
+          syncing = true;
+          const range = body.scrollHeight - body.clientHeight;
+          const ratio = range > 0 ? body.scrollTop / range : 0;
+          for (const other of bodies) {
+            if (other === body) continue;
+            const otherRange = other.scrollHeight - other.clientHeight;
+            other.scrollTop = otherRange * ratio;
+          }
+          requestAnimationFrame(() => { syncing = false; });
+        };
+      }
+    }
+
+    function applyLanguage() {
+      const labels = t();
+      $("headerSubtitle").textContent = labels.subtitle;
+      $("labelSamples").textContent = labels.samples;
+      $("filterInput").placeholder = labels.filter;
+      $("labelSpeed").textContent = labels.speed;
+      $("labelView").textContent = labels.view;
+      $("labelOrder").textContent = labels.order;
+      $("btnOrderScore").textContent = labels.orderScore;
+      $("btnOrderRun").textContent = labels.orderRun;
+      $("btnPlain").textContent = labels.plain;
+      $("btnDiff").textContent = labels.diff;
+      $("labelTerms").textContent = labels.terms;
+      $("labelSync").textContent = labels.sync;
+      $("labelFont").textContent = labels.font;
+      $("labelWidth").textContent = labels.width;
+      $("langToggleBtn").textContent = lang.toUpperCase();
+      $("legendBox").innerHTML = `
+        <span><span class="sw ins">&nbsp;&nbsp;</span> ${labels.legendIns}</span>
+        <span><span class="sw del">&nbsp;&nbsp;</span> ${labels.legendDel}</span>
+        <span><span class="sw" style="background: rgba(56,189,248,0.22);">&nbsp;&nbsp;</span> ${labels.legendTerm}</span>`;
+      if (state.view) { renderSidebar(); renderColumns(); }
+    }
+
+    // ---------- events ----------
+    $("langToggleBtn").onclick = () => {
+      lang = lang === "en" ? "ja" : "en";
+      localStorage.setItem("kikitori_lang", lang);
+      applyLanguage();
+    };
+
+    $("runSelect").onchange = (event) => {
+      const runIds = event.target.value === MERGED ? state.mergedRunIds : [event.target.value];
+      history.replaceState(null, "", "?" + runIds.map((id) => `run=${encodeURIComponent(id)}`).join("&"));
+      loadComparison(runIds).catch((err) => alert(String(err)));
+    };
+
+    $("filterInput").oninput = (event) => {
+      state.filter = event.target.value;
+      renderSidebar();
+    };
+
+    $("viewSeg").onclick = (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      state.mode = button.dataset.view;
+      localStorage.setItem("kikitori_cmp_mode", state.mode);
+      [...$("viewSeg").children].forEach((b) => b.classList.toggle("active", b === button));
+      renderColumns();
+    };
+
+    $("orderSeg").onclick = (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      state.order = button.dataset.order;
+      localStorage.setItem("kikitori_cmp_order", state.order);
+      [...$("orderSeg").children].forEach((b) => b.classList.toggle("active", b === button));
+      renderColumns();
+    };
+
+    $("speedSeg").onclick = (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      $("audioPlayer").playbackRate = parseFloat(button.dataset.speed);
+      [...$("speedSeg").children].forEach((b) => b.classList.toggle("active", b === button));
+    };
+
+    $("termToggle").onchange = (event) => {
+      state.terms = event.target.checked;
+      localStorage.setItem("kikitori_cmp_terms", state.terms ? "1" : "0");
+      renderColumns();
+    };
+
+    $("syncToggle").onchange = (event) => {
+      state.sync = event.target.checked;
+      localStorage.setItem("kikitori_cmp_sync", state.sync ? "1" : "0");
+    };
+
+    const setFontSize = (size) => {
+      const clamped = Math.max(11, Math.min(24, size));
+      localStorage.setItem("kikitori_cmp_font", String(clamped));
+      document.documentElement.style.setProperty("--body-font-size", `${clamped}px`);
+    };
+    const currentFontSize = () =>
+      parseInt(getComputedStyle(document.documentElement).getPropertyValue("--body-font-size"), 10);
+    $("fontUp").onclick = () => setFontSize(currentFontSize() + 1);
+    $("fontDown").onclick = () => setFontSize(currentFontSize() - 1);
+
+    $("widthRange").oninput = (event) => {
+      localStorage.setItem("kikitori_cmp_width", event.target.value);
+      document.documentElement.style.setProperty("--col-width", `${event.target.value}px`);
+    };
+
+    document.addEventListener("keydown", (event) => {
+      const target = event.target;
+      if (target instanceof Element && target.matches("input, textarea, select")) return;
+      if (!state.view) return;
+      const samples = visibleSamples();
+      const index = samples.findIndex((s) => s.sampleId === state.sampleId);
+      if (event.key === "j" || event.key === "ArrowDown") {
+        if (index < samples.length - 1) { selectSample(samples[index + 1].sampleId); event.preventDefault(); }
+      } else if (event.key === "k" || event.key === "ArrowUp") {
+        if (index > 0) { selectSample(samples[index - 1].sampleId); event.preventDefault(); }
+      } else if (event.key === "d") {
+        $("viewSeg").querySelector(`[data-view="${state.mode === "diff" ? "plain" : "diff"}"]`).click();
+      } else if (event.key === " ") {
+        const audio = $("audioPlayer");
+        if (audio.src) { audio.paused ? audio.play() : audio.pause(); event.preventDefault(); }
+      }
+    });
+
+    // ---------- boot ----------
+    (async function init() {
+      setFontSize(parseInt(localStorage.getItem("kikitori_cmp_font") || "15", 10));
+      const width = localStorage.getItem("kikitori_cmp_width") || "420";
+      $("widthRange").value = width;
+      document.documentElement.style.setProperty("--col-width", `${width}px`);
+      $("termToggle").checked = state.terms;
+      $("syncToggle").checked = state.sync;
+      [...$("viewSeg").children].forEach((b) => b.classList.toggle("active", b.dataset.view === state.mode));
+      [...$("orderSeg").children].forEach((b) => b.classList.toggle("active", b.dataset.order === state.order));
+      applyLanguage();
+
+      const runIds = await loadRuns();
+      if (runIds) await loadComparison(runIds);
+    })();
+  </script>
+</body>
+</html>

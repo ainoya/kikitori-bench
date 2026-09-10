@@ -126,6 +126,11 @@ No warranty of any kind. If a decision matters to you, run the benchmark on your
   audio length (`kikitori dataset refine`).
 - **Human-in-the-loop review web UI.** Listen to audio (speed control, seeking), edit ground
   truth, adjust key points, and verify samples with one-key shortcuts. English and Japanese.
+- **Side-by-side transcript comparison.** Read the ground truth and every model's
+  hypothesis in parallel columns for one sample at a time, with a character-level diff
+  against the reference, expected-term hits and misses per model, and the judge score,
+  latency and RTF in each column header (`kikitori compare`). Models benchmarked in
+  separate runs are merged into one set of columns, ordered by score. English and Japanese.
 - **Recorded experiment conditions.** Every run stores the resolved request parameters of each
   model - prompt, language, temperature, thinking budget, response format, diarization mode,
   biasing, audio preprocessing - plus judge settings and scoring weights. Unset values are
@@ -217,7 +222,8 @@ CODEX_APP_SERVER_MODEL=gpt-5.6-luna
 # Obsidian vault directory for 'dataset import-journal' (personal path, never committed)
 JOURNAL_VAULT_DIR=/path/to/your/vault/journal/2026
 
-# Local Review Web UI port
+# Local Review Web UI port. The comparison UI ('kikitori compare') defaults to
+# REVIEW_PORT + 1, so both can stay open at once.
 REVIEW_PORT=3000
 ```
 
@@ -300,6 +306,45 @@ pnpm kikitori eval my_dataset_ja --run run_2026-09-07T07-04-39-940Z
 # (For offline testing with mock judge)
 pnpm kikitori eval my_dataset_ja --run <run_id> --mock-judge
 ```
+
+---
+
+### Compare the transcripts side by side
+Read the ground truth and every model hypothesis in parallel columns, one sample at a time:
+
+```bash
+pnpm kikitori compare                                  # newest run under runs/
+pnpm kikitori compare run_2026-09-07T07-04-39-940Z     # a specific run
+pnpm kikitori compare <run_a> <run_b>                  # merge runs into one set of columns
+pnpm kikitori compare -d my_dataset_ja                 # every model of a dataset
+# Opens http://localhost:3001?run=<run_id> (REVIEW_PORT + 1, or -p to choose)
+```
+
+A model set is rarely all in one run - a provider added later is benchmarked separately
+over the same samples - so several runs can be merged into one set of columns. `--dataset`
+does that resolution for you: it takes each model from the **newest evaluated run that
+contains it**, skipping the mock adapter, and prints which runs it merged. Merging all runs
+blindly would let a stale run supply a model's hypotheses, which is the one comparison a
+reader would misread. Runs from different datasets are refused, since the ground truth
+would differ.
+
+The ground truth column is pinned on the left, then one column per model. Per column the
+header carries the judge score (when the run has been evaluated), latency, RTF, character
+count, and how many `expected_terms` the hypothesis contains, with the missing ones listed
+as chips. **Order** sorts the columns by mean judge score - leaderboard order, computed
+over the whole run so columns do not jump around between samples - or by run order.
+
+- **Diff vs GT** renders a character-level diff against the ground truth: text the model
+  invented is marked, text it dropped stays visible struck through, and the header gains a
+  match percentage. It is computed in the browser, so nothing leaves the machine.
+- **Highlight terms** marks every `expected_terms` occurrence in all columns.
+- Model columns can be hidden individually, the column width and text size are adjustable,
+  and **Sync scroll** keeps long transcripts lined up while reading across. The header's run
+  picker switches between the merged set and any single run.
+- `j` / `k` (or the arrow keys) move between samples, `d` toggles the diff, space plays the
+  audio.
+
+The view is read-only: correcting a transcript is still the job of `kikitori review`.
 
 ---
 
@@ -387,6 +432,7 @@ Rank  | Model                |   Overall |     Names |     Recall |  Precision |
 | `dataset draft <name>` | Draft transcripts, terms and key points from audio with Gemini |
 | `dataset refine <name>` | Re-derive `key_points` from verified transcripts at a length-aware granularity |
 | `review <name>` | Local web UI for listening, editing and verifying |
+| `compare [runs...]` | Local web UI comparing the ground truth and every model hypothesis side by side; merges runs, or use `-d <dataset>` |
 | `run <name>` | Run the ASR models and store hypotheses |
 | `eval <name> --run <id>` | Judge a finished run; re-running retries only what is missing |
 | `benchmark <name>` | `run` followed by `eval` |

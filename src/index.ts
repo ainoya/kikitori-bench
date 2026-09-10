@@ -10,7 +10,9 @@ import { Drafter, DrafterLive, targetKeyPointCount } from "./services/Drafter.js
 import { AsrRunner, AsrRunnerLive } from "./services/AsrRunner.js";
 import { JudgeService, JudgeServiceLive } from "./services/JudgeService.js";
 import { Reporter, ReporterLive } from "./services/Reporter.js";
+import { RunRepo, RunRepoLive } from "./services/RunRepo.js";
 import { startReviewServer } from "./review/server.js";
+import { startCompareServer } from "./review/compare-server.js";
 import { buildRunUsageSummary } from "./utils/cost.js";
 import { buildRunAnalytics } from "./services/Analytics.js";
 import { publishRun } from "./services/Publisher.js";
@@ -29,6 +31,8 @@ import { getAudioDurationMs } from "./utils/audio.js";
 import type { DatasetItem } from "./schemas/dataset.js";
 import type { AsrBatchRun, AsrResult } from "./schemas/asr.js";
 import type { BenchmarkReport } from "./schemas/judge.js";
+import type { RunSummary } from "./schemas/compare.js";
+import type { AppConfig } from "./schemas/config.js";
 import type { Locale } from "./i18n/index.js";
 
 // Load environment variables from .env
@@ -50,6 +54,7 @@ const MainLive = Layer.mergeAll(
   AsrRunnerLive,
   JudgeServiceLive,
   ReporterLive,
+  RunRepoLive,
 );
 
 type MainServices = Layer.Layer.Success<typeof MainLive>;
@@ -306,6 +311,88 @@ program
 
         const port = opts.port ? parseInt(opts.port, 10) : config.review.port;
         return yield* startReviewServer({ port, datasetName: name });
+      }),
+    );
+  });
+
+// ==========================================
+// GT vs MODELS COMPARISON VIEW
+// ==========================================
+
+/**
+ * Pick the runs to merge for a whole dataset: for every model, the newest
+ * evaluated run that contains it. Merging *all* runs instead would let a stale
+ * run supply a model's hypotheses, which is exactly the comparison a reader
+ * would misread. The mock adapter is a dry-run tool rather than a benchmark
+ * entry, so it never selects a run of its own.
+ */
+const resolveDatasetRuns = (
+  available: readonly RunSummary[],
+  datasetName: string,
+  config: AppConfig,
+): string[] => {
+  // Same rule AsrRunner resolves a mock by: the bare id, or a configured mock type.
+  const isMock = (modelId: string) => modelId === "mock" || config.models[modelId]?.type === "mock";
+
+  // `listRuns` returns newest first, so the first run holding a model is its newest.
+  const evaluated = available.filter((run) => run.datasetName === datasetName && run.evaluated);
+  const claimed = new Set<string>();
+  const selected: string[] = [];
+
+  for (const run of evaluated) {
+    const newModels = run.modelIds.filter((modelId) => !isMock(modelId) && !claimed.has(modelId));
+    if (newModels.length === 0) continue;
+    for (const modelId of newModels) claimed.add(modelId);
+    selected.push(run.runId);
+  }
+  return selected;
+};
+program
+  .command("compare [runIds...]")
+  .description(
+    "Launch local Web UI comparing the ground truth and every model hypothesis side by side",
+  )
+  .option("-p, --port <port>", "Port number for the comparison server")
+  .option(
+    "-d, --dataset <name>",
+    "Merge this dataset's runs, taking each model from the newest evaluated run that has it",
+  )
+  .action(async (runIds: string[], opts: { port?: string; dataset?: string }) => {
+    await runEffect(
+      Effect.gen(function* () {
+        const config = yield* loadConfig();
+        const runRepo = yield* RunRepo;
+        const available = yield* runRepo.listRuns();
+
+        // Explicit ids win; then a whole dataset; then the newest run alone.
+        const resolvedRunIds =
+          runIds.length > 0
+            ? runIds
+            : opts.dataset
+              ? resolveDatasetRuns(available, opts.dataset, config)
+              : available.slice(0, 1).map((run) => run.runId);
+
+        if (resolvedRunIds.length === 0) {
+          console.error(
+            opts.dataset
+              ? `No evaluated run found for dataset '${opts.dataset}' under runs/.`
+              : "No run found under runs/. Run 'kikitori run <dataset>' first.",
+          );
+          return;
+        }
+
+        if (resolvedRunIds.length > 1) {
+          console.log(`Merging ${resolvedRunIds.length} runs:`);
+          for (const id of resolvedRunIds) {
+            const models = available.find((run) => run.runId === id)?.modelIds ?? [];
+            console.log(`  ${id}  (${models.join(", ")})`);
+          }
+        }
+
+        // One above the review UI, so ground truth editing and comparison can
+        // stay open at the same time.
+        const port = opts.port ? parseInt(opts.port, 10) : config.review.port + 1;
+        return yield* startCompareServer({ port, runIds: resolvedRunIds, config });
       }),
     );
   });
