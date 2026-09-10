@@ -2,12 +2,17 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { AsrAdapter } from "./types.js";
 import { AsrExecutionError } from "../errors.js";
 import type { AsrModelOptions } from "../schemas/config.js";
 
 const execFileAsync = promisify(execFile);
+
+const AppleHelperOutputSchema = Schema.Struct({
+  transcript: Schema.String,
+  transcriptionMs: Schema.Number,
+});
 
 /** SpeechAnalyzer conservatively limits simultaneous sessions on one device. */
 class SerialGate {
@@ -53,6 +58,7 @@ export class AppleSpeechAdapter implements AsrAdapter {
       locale: this.locale,
       preset: this.engine === "dictation" ? "longDictation" : "transcription",
       processing: "on-device",
+      timing: "analyze+finalize (excludes helper launch, asset checks, and queue wait)",
     };
   }
 
@@ -78,7 +84,6 @@ export class AppleSpeechAdapter implements AsrAdapter {
         );
       }
 
-      const startTime = Date.now();
       const result = yield* Effect.tryPromise({
         try: () =>
           gate.run(() =>
@@ -100,9 +105,21 @@ export class AppleSpeechAdapter implements AsrAdapter {
           }),
       });
 
+      const output = yield* Effect.try({
+        try: () =>
+          Schema.decodeUnknownSync(AppleHelperOutputSchema)(JSON.parse(result.stdout) as unknown),
+        catch: (error) =>
+          new AsrExecutionError({
+            modelId: this.modelId,
+            sampleId,
+            message: `Apple helper returned invalid JSON: ${String(error)}`,
+            cause: error,
+          }),
+      });
+
       return {
-        hypothesis: result.stdout.trim(),
-        latencyMs: Date.now() - startTime,
+        hypothesis: output.transcript.trim(),
+        latencyMs: Math.max(0, Math.round(output.transcriptionMs)),
       };
     });
   }

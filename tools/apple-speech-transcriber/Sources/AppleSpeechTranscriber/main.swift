@@ -1,4 +1,5 @@
 import AVFAudio
+import Dispatch
 import Foundation
 import Speech
 
@@ -40,6 +41,11 @@ private enum Engine: String {
             return "SpeechTranscriber"
         }
     }
+}
+
+private struct TranscriptionOutput: Encodable {
+    let transcript: String
+    let transcriptionMs: Double
 }
 
 private struct Arguments {
@@ -169,7 +175,7 @@ private func makeDictationTranscriber(
 private func transcribeWithSpeechTranscriber(
     audioPath: String,
     localeIdentifier: String
-) async throws -> String {
+) async throws -> TranscriptionOutput {
     let transcriber = try await makeSpeechTranscriber(
         localeIdentifier: localeIdentifier,
         installAssets: false
@@ -179,24 +185,30 @@ private func transcribeWithSpeechTranscriber(
         throw CommandError.emptyAudio(audioPath)
     }
 
+    let analyzer = SpeechAnalyzer(modules: [transcriber])
+    let startedAt = DispatchTime.now().uptimeNanoseconds
     async let transcription = transcriber.results.reduce("") { partial, result in
         partial + String(result.text.characters)
     }
 
-    let analyzer = SpeechAnalyzer(modules: [transcriber])
     if let lastSample = try await analyzer.analyzeSequence(from: audioFile) {
         try await analyzer.finalizeAndFinish(through: lastSample)
     } else {
         await analyzer.cancelAndFinishNow()
     }
 
-    return try await transcription
+    let transcript = try await transcription
+    let elapsedNanoseconds = DispatchTime.now().uptimeNanoseconds - startedAt
+    return TranscriptionOutput(
+        transcript: transcript,
+        transcriptionMs: Double(elapsedNanoseconds) / 1_000_000
+    )
 }
 
 private func transcribeWithDictationTranscriber(
     audioPath: String,
     localeIdentifier: String
-) async throws -> String {
+) async throws -> TranscriptionOutput {
     let transcriber = try await makeDictationTranscriber(
         localeIdentifier: localeIdentifier,
         installAssets: false
@@ -206,18 +218,24 @@ private func transcribeWithDictationTranscriber(
         throw CommandError.emptyAudio(audioPath)
     }
 
+    let analyzer = SpeechAnalyzer(modules: [transcriber])
+    let startedAt = DispatchTime.now().uptimeNanoseconds
     async let transcription = transcriber.results.reduce("") { partial, result in
         partial + String(result.text.characters)
     }
 
-    let analyzer = SpeechAnalyzer(modules: [transcriber])
     if let lastSample = try await analyzer.analyzeSequence(from: audioFile) {
         try await analyzer.finalizeAndFinish(through: lastSample)
     } else {
         await analyzer.cancelAndFinishNow()
     }
 
-    return try await transcription
+    let transcript = try await transcription
+    let elapsedNanoseconds = DispatchTime.now().uptimeNanoseconds - startedAt
+    return TranscriptionOutput(
+        transcript: transcript,
+        transcriptionMs: Double(elapsedNanoseconds) / 1_000_000
+    )
 }
 
 private func prepare(engine: Engine, localeIdentifier: String) async throws {
@@ -239,7 +257,7 @@ private func transcribe(
     engine: Engine,
     audioPath: String,
     localeIdentifier: String
-) async throws -> String {
+) async throws -> TranscriptionOutput {
     switch engine {
     case .dictation:
         return try await transcribeWithDictationTranscriber(
@@ -273,11 +291,14 @@ private struct AppleSpeechTranscriberCommand {
             guard let audioPath = arguments.audioPath else {
                 throw CommandError.invalidArguments(Arguments.usage)
             }
-            print(try await transcribe(
+            let output = try await transcribe(
                 engine: arguments.engine,
                 audioPath: audioPath,
                 localeIdentifier: arguments.localeIdentifier
-            ))
+            )
+            let encoded = try JSONEncoder().encode(output)
+            FileHandle.standardOutput.write(encoded)
+            FileHandle.standardOutput.write(Data("\n".utf8))
         } catch {
             let message = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
             FileHandle.standardError.write(Data("Error: \(message)\n".utf8))

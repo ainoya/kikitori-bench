@@ -180,6 +180,10 @@ you want to benchmark that model independently:
 pnpm apple:prepare:dictation
 ```
 
+For Apple models, RTF is timed inside the Swift helper around SpeechAnalyzer analysis,
+finalization, and result collection. Helper-process launch, asset checks, audio-file opening, and
+waiting for another Apple transcription are excluded.
+
 ### Environment variables
 Copy `.env.example` to `.env` and configure your API keys:
 

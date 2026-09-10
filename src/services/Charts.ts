@@ -625,7 +625,7 @@ ${speedChart.svg}
       <span><span class="swatch dot-on"></span>On the frontier</span>
       <span><span class="swatch dot-off"></span>Dominated (something is faster and better)</span>
     </p>
-    <p class="note">Measured with all models running concurrently, so RTF reflects throughput under load rather than a single-request best case.</p>
+    <p class="note">RTF uses the latency boundary reported by each adapter; consult Experiment Conditions for model-specific timing. Batch concurrency can affect adapters whose measurement includes queueing.</p>
   </section>
 
   <section>
