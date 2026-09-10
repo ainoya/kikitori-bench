@@ -273,5 +273,5 @@ F1: 60.4%</title>
   <g class="bar s3"><rect x="262.79999999999995" y="406" width="11" height="11" rx="2"/></g><text class="legend-text" x="279.79999999999995" y="415">Precision</text>
   <g class="bar s4"><rect x="361.19999999999993" y="406" width="11" height="11" rx="2"/></g><text class="legend-text" x="378.19999999999993" y="415">F1</text>
 </g>
-  <text class="chart-footnote" x="20" y="497">2026-09-10 · github.com/ainoya/kikitori-bench @ 6668291</text>
+  <text class="chart-footnote" x="20" y="497">2026-09-10 · github.com/ainoya/kikitori-bench @ 39a8c0a</text>
 </svg>
