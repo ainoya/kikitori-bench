@@ -1,15 +1,10 @@
 import * as http from "node:http";
-import * as fs from "node:fs";
 import * as path from "node:path";
-import { fileURLToPath } from "node:url";
 import { Effect } from "effect";
 import { ReviewServerError } from "../errors.js";
 import { DatasetRepo } from "../services/DatasetRepo.js";
 import { Drafter } from "../services/Drafter.js";
-import { getAudioMimeType } from "../utils/audio.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { resolveWithinDir, sendText, serveAudioFile, serveStaticPage } from "./http-helpers.js";
 
 export interface ReviewServerOptions {
   port: number;
@@ -39,18 +34,7 @@ export const startReviewServer = (options: ReviewServerOptions) =>
 
       // GET / -> serve index.html
       if (pathname === "/" || pathname === "/index.html") {
-        const candidatePaths = [
-          path.resolve(__dirname, "static", "index.html"),
-          path.resolve(__dirname, "..", "..", "src", "review", "static", "index.html"),
-        ];
-        const htmlPath = candidatePaths.find((p) => fs.existsSync(p));
-        if (htmlPath) {
-          res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-          fs.createReadStream(htmlPath).pipe(res);
-          return;
-        }
-        res.writeHead(404, { "Content-Type": "text/plain" });
-        res.end("index.html not found");
+        serveStaticPage(res, "index.html");
         return;
       }
 
@@ -74,48 +58,17 @@ export const startReviewServer = (options: ReviewServerOptions) =>
         const dName = parsedUrl.searchParams.get("dataset") ?? datasetName;
         const relAudioPath = parsedUrl.searchParams.get("path");
         if (!relAudioPath) {
-          res.writeHead(400, { "Content-Type": "text/plain" });
-          res.end("Missing 'path' query parameter");
+          sendText(res, 400, "Missing 'path' query parameter");
           return;
         }
 
-        const audioFullPath = path.resolve(repo.getDatasetDir(dName), relAudioPath);
-        if (!fs.existsSync(audioFullPath)) {
-          res.writeHead(404, { "Content-Type": "text/plain" });
-          res.end("Audio file not found");
+        const audioFullPath = resolveWithinDir(repo.getDatasetDir(dName), relAudioPath);
+        if (!audioFullPath) {
+          sendText(res, 400, "Invalid 'path' query parameter");
           return;
         }
 
-        const stat = fs.statSync(audioFullPath);
-        const totalSize = stat.size;
-        const mimeType = getAudioMimeType(audioFullPath);
-        const range = req.headers.range;
-
-        // Support HTTP Range requests for seeking in audio player
-        if (range) {
-          const parts = range.replace(/bytes=/, "").split("-");
-          const partialstart = parts[0];
-          const partialend = parts[1];
-          const start = parseInt(partialstart ?? "0", 10);
-          const end = partialend ? parseInt(partialend, 10) : totalSize - 1;
-          const chunksize = end - start + 1;
-
-          const file = fs.createReadStream(audioFullPath, { start, end });
-          res.writeHead(206, {
-            "Content-Range": `bytes ${start}-${end}/${totalSize}`,
-            "Accept-Ranges": "bytes",
-            "Content-Length": chunksize,
-            "Content-Type": mimeType,
-          });
-          file.pipe(res);
-        } else {
-          res.writeHead(200, {
-            "Content-Length": totalSize,
-            "Accept-Ranges": "bytes",
-            "Content-Type": mimeType,
-          });
-          fs.createReadStream(audioFullPath).pipe(res);
-        }
+        serveAudioFile(req, res, audioFullPath);
         return;
       }
 
