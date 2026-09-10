@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 536" role="img" aria-label="Score against ASR cost per hour of audio (USD)" id="cost-chart">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 536" role="img" aria-label="Score against ASR cost per hour of audio (USD)" id="cost-chart">
   <title>Japanese voice-journal ASR: price versus score</title>
   <style>
   .surface { fill: #fcfcfb; }
@@ -39,83 +39,83 @@
   <text class="chart-subtitle" x="20" y="44">122 samples · 185 min of audio per model · judge gpt-5.6-luna</text>
   <g transform="translate(0 52)">
     <g class="grid">
-      <line x1="66" y1="368.0" x2="706" y2="368.0"></line>
-      <line x1="66" y1="284.5" x2="706" y2="284.5"></line>
-      <line x1="66" y1="201.0" x2="706" y2="201.0"></line>
-      <line x1="66" y1="117.5" x2="706" y2="117.5"></line>
-      <line x1="66" y1="34.0" x2="706" y2="34.0"></line>
+      <line x1="66" y1="368.0" x2="906" y2="368.0"></line>
+      <line x1="66" y1="284.5" x2="906" y2="284.5"></line>
+      <line x1="66" y1="201.0" x2="906" y2="201.0"></line>
+      <line x1="66" y1="117.5" x2="906" y2="117.5"></line>
+      <line x1="66" y1="34.0" x2="906" y2="34.0"></line>
     </g>
     <g class="axis">
       <text x="66.0" y="388" text-anchor="middle">$0.00</text>
-      <text x="226.0" y="388" text-anchor="middle">$0.10</text>
-      <text x="386.0" y="388" text-anchor="middle">$0.20</text>
-      <text x="546.0" y="388" text-anchor="middle">$0.30</text>
-      <text x="706.0" y="388" text-anchor="middle">$0.40</text>
+      <text x="276.0" y="388" text-anchor="middle">$0.10</text>
+      <text x="486.0" y="388" text-anchor="middle">$0.20</text>
+      <text x="696.0" y="388" text-anchor="middle">$0.30</text>
+      <text x="906.0" y="388" text-anchor="middle">$0.40</text>
       <text x="54" y="372.0" text-anchor="end">0%</text>
       <text x="54" y="288.5" text-anchor="end">25%</text>
       <text x="54" y="205.0" text-anchor="end">50%</text>
       <text x="54" y="121.5" text-anchor="end">75%</text>
       <text x="54" y="38.0" text-anchor="end">100%</text>
-      <text class="axis-title" x="386.0" y="414" text-anchor="middle">ASR cost per hour of audio (USD)</text>
+      <text class="axis-title" x="486.0" y="414" text-anchor="middle">ASR cost per hour of audio (USD)</text>
       <text class="axis-title" transform="translate(16 201.0) rotate(-90)" text-anchor="middle">Overall score</text>
     </g>
-    <path class="frontier" d="M216.0,128.5 L486.0,128.5 L486.0,117.2"></path>
+    <path class="frontier" d="M262.9,128.5 L617.3,128.5 L617.3,117.2"></path>
       <g class="mark on" tabindex="0">
         <title>Gemini 3.8 Flash
 Score: 75.1%
 Cost: $0.2625 / audio hour  ·  run: $0.8115
 Latency: 6766 ms | RTF: 0.07x</title>
-        <circle class="hit" cx="486.0" cy="117.2" r="18"></circle>
-        <circle class="dot" cx="486.0" cy="117.2" r="7"></circle>
-        <text class="point-label" x="486.0" y="87.2" text-anchor="middle">Gemini 3.8 Flash</text>
+        <circle class="hit" cx="617.3" cy="117.2" r="18"></circle>
+        <circle class="dot" cx="617.3" cy="117.2" r="7"></circle>
+        <text class="point-label" x="617.3" y="139.2" text-anchor="middle">Gemini 3.8 Flash</text>
       </g>
       <g class="mark on" tabindex="0">
         <title>Gemini 3.8 Flash (no thinking)
 Score: 71.7%
 Cost: $0.0938 / audio hour  ·  run: $0.2898
 Latency: 2967 ms | RTF: 0.03x</title>
-        <circle class="hit" cx="216.0" cy="128.5" r="18"></circle>
-        <circle class="dot" cx="216.0" cy="128.5" r="7"></circle>
-        <text class="point-label" x="216.0" y="98.5" text-anchor="middle">Gemini 3.8 Flash (no thinking)</text>
+        <circle class="hit" cx="262.9" cy="128.5" r="18"></circle>
+        <circle class="dot" cx="262.9" cy="128.5" r="7"></circle>
+        <text class="point-label" x="262.9" y="98.5" text-anchor="middle">Gemini 3.8 Flash (no thinking)</text>
       </g>
       <g class="mark off" tabindex="0">
         <title>Gemini 3.5 Transcribe
 Score: 66.3%
 Cost: $0.3016 (est.) / audio hour  ·  run: $0.9324
 Latency: 2265 ms | RTF: 0.03x</title>
-        <circle class="hit" cx="548.6" cy="146.6" r="18"></circle>
-        <circle class="dot" cx="548.6" cy="146.6" r="7"></circle>
-        <text class="point-label" x="548.6" y="168.6" text-anchor="middle">Gemini 3.5 Transcribe</text>
+        <circle class="hit" cx="699.4" cy="146.6" r="18"></circle>
+        <circle class="dot" cx="699.4" cy="146.6" r="7"></circle>
+        <text class="point-label" x="699.4" y="168.6" text-anchor="middle">Gemini 3.5 Transcribe</text>
       </g>
       <g class="mark off" tabindex="0">
         <title>Meta Muse Voice Transcribe
 Score: 66.2%
 Cost: $0.1800 / audio hour  ·  run: $0.5564
 Latency: 14178 ms | RTF: 0.15x</title>
-        <circle class="hit" cx="354.0" cy="146.9" r="18"></circle>
-        <circle class="dot" cx="354.0" cy="146.9" r="7"></circle>
-        <text class="point-label" x="354.0" y="168.9" text-anchor="middle">Meta Muse Voice Transcribe</text>
+        <circle class="hit" cx="444.0" cy="146.9" r="18"></circle>
+        <circle class="dot" cx="444.0" cy="146.9" r="7"></circle>
+        <text class="point-label" x="444.0" y="168.9" text-anchor="middle">Meta Muse Voice Transcribe</text>
       </g>
       <g class="mark off" tabindex="0">
         <title>Groq Whisper large-v3
 Score: 63.9%
 Cost: $0.1113 / audio hour  ·  run: $0.3202
 Latency: 2173 ms | RTF: 0.03x</title>
-        <circle class="hit" cx="244.1" cy="154.6" r="18"></circle>
-        <circle class="dot" cx="244.1" cy="154.6" r="7"></circle>
-        <text class="point-label" x="244.1" y="192.6" text-anchor="middle">Groq Whisper large-v3</text>
+        <circle class="hit" cx="299.8" cy="154.6" r="18"></circle>
+        <circle class="dot" cx="299.8" cy="154.6" r="7"></circle>
+        <text class="point-label" x="299.8" y="192.6" text-anchor="middle">Groq Whisper large-v3</text>
       </g>
       <g class="mark off" tabindex="0">
         <title>xAI Grok STT
 Score: 48.0%
 Cost: $0.1000 / audio hour  ·  run: $0.3091
 Latency: 1077 ms | RTF: 0.01x</title>
-        <circle class="hit" cx="226.0" cy="207.7" r="18"></circle>
-        <circle class="dot" cx="226.0" cy="207.7" r="7"></circle>
-        <text class="point-label" x="226.0" y="229.7" text-anchor="middle">xAI Grok STT</text>
+        <circle class="hit" cx="276.0" cy="207.7" r="18"></circle>
+        <circle class="dot" cx="276.0" cy="207.7" r="7"></circle>
+        <text class="point-label" x="276.0" y="229.7" text-anchor="middle">xAI Grok STT</text>
       </g>
   <g class="mark on"><circle class="dot" cx="71" cy="441" r="5"/></g><text class="legend-text" x="83" y="445">On the Pareto frontier</text>
   <g class="mark off"><circle class="dot" cx="255.2" cy="441" r="5"/></g><text class="legend-text" x="267.2" y="445">Dominated</text>
 </g>
-  <text class="chart-footnote" x="20" y="527">2026-09-09 · github.com/ainoya/kikitori-bench @ 9914d2e</text>
+  <text class="chart-footnote" x="20" y="527">2026-09-10 · github.com/ainoya/kikitori-bench @ 1ce77da</text>
 </svg>

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 506" role="img" aria-label="Score by evaluation axis for each model">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 506" role="img" aria-label="Score by evaluation axis for each model">
   <title>Japanese voice-journal ASR: score by evaluation axis</title>
   <style>
   .surface { fill: #fcfcfb; }
@@ -39,11 +39,11 @@
   <text class="chart-subtitle" x="20" y="44">122 samples · 185 min of audio per model · judge gpt-5.6-luna</text>
   <g transform="translate(0 52)">
     <g class="grid">
-      <line x1="56" y1="326.0" x2="736" y2="326.0"></line>
-      <line x1="56" y1="250.5" x2="736" y2="250.5"></line>
-      <line x1="56" y1="175.0" x2="736" y2="175.0"></line>
-      <line x1="56" y1="99.5" x2="736" y2="99.5"></line>
-      <line x1="56" y1="24.0" x2="736" y2="24.0"></line>
+      <line x1="56" y1="326.0" x2="1176" y2="326.0"></line>
+      <line x1="56" y1="250.5" x2="1176" y2="250.5"></line>
+      <line x1="56" y1="175.0" x2="1176" y2="175.0"></line>
+      <line x1="56" y1="99.5" x2="1176" y2="99.5"></line>
+      <line x1="56" y1="24.0" x2="1176" y2="24.0"></line>
     </g>
     <g class="axis">
       <text x="44" y="330.0" text-anchor="end">0%</text>
@@ -56,168 +56,222 @@
         <g class="bar s1" tabindex="0">
           <title>Gemini 3.8 Flash
 Proper nouns (weight 0.3): 65.9%</title>
-          <rect x="68.5" y="127.0" width="20.6" height="199.0" rx="4"></rect>
-          <rect class="foot" x="68.5" y="322.0" width="20.6" height="4"></rect>
+          <rect x="71.4" y="127.0" width="25.8" height="199.0" rx="4"></rect>
+          <rect class="foot" x="71.4" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s2" tabindex="0">
           <title>Gemini 3.8 Flash
 Recall: 86.2%</title>
-          <rect x="91.1" y="65.7" width="20.6" height="260.3" rx="4"></rect>
-          <rect class="foot" x="91.1" y="322.0" width="20.6" height="4"></rect>
+          <rect x="99.2" y="65.7" width="25.8" height="260.3" rx="4"></rect>
+          <rect class="foot" x="99.2" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s3" tabindex="0">
           <title>Gemini 3.8 Flash
 Precision: 79.1%</title>
-          <rect x="113.7" y="87.1" width="20.6" height="238.9" rx="4"></rect>
-          <rect class="foot" x="113.7" y="322.0" width="20.6" height="4"></rect>
+          <rect x="127.0" y="87.1" width="25.8" height="238.9" rx="4"></rect>
+          <rect class="foot" x="127.0" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s4" tabindex="0">
           <title>Gemini 3.8 Flash
 F1: 81.1%</title>
-          <rect x="136.3" y="81.1" width="20.6" height="244.9" rx="4"></rect>
-          <rect class="foot" x="136.3" y="322.0" width="20.6" height="4"></rect>
+          <rect x="154.8" y="81.1" width="25.8" height="244.9" rx="4"></rect>
+          <rect class="foot" x="154.8" y="322.0" width="25.8" height="4"></rect>
         </g>
-        <text class="group-label" x="112.7" y="346" text-anchor="middle">Gemini 3.8<tspan x="112.7" dy="14">Flash</tspan></text>
+        <text class="group-label" x="126.0" y="346" text-anchor="middle">Gemini 3.8<tspan x="126.0" dy="14">Flash</tspan></text>
       </g>
       <g class="group">
         <g class="bar s1" tabindex="0">
           <title>Gemini 3.8 Flash (no thinking)
 Proper nouns (weight 0.3): 56.0%</title>
-          <rect x="181.8" y="156.9" width="20.6" height="169.1" rx="4"></rect>
-          <rect class="foot" x="181.8" y="322.0" width="20.6" height="4"></rect>
+          <rect x="211.4" y="156.9" width="25.8" height="169.1" rx="4"></rect>
+          <rect class="foot" x="211.4" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s2" tabindex="0">
           <title>Gemini 3.8 Flash (no thinking)
 Recall: 84.6%</title>
-          <rect x="204.4" y="70.5" width="20.6" height="255.5" rx="4"></rect>
-          <rect class="foot" x="204.4" y="322.0" width="20.6" height="4"></rect>
+          <rect x="239.2" y="70.5" width="25.8" height="255.5" rx="4"></rect>
+          <rect class="foot" x="239.2" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s3" tabindex="0">
           <title>Gemini 3.8 Flash (no thinking)
 Precision: 80.8%</title>
-          <rect x="227.0" y="82.0" width="20.6" height="244.0" rx="4"></rect>
-          <rect class="foot" x="227.0" y="322.0" width="20.6" height="4"></rect>
+          <rect x="267.0" y="82.0" width="25.8" height="244.0" rx="4"></rect>
+          <rect class="foot" x="267.0" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s4" tabindex="0">
           <title>Gemini 3.8 Flash (no thinking)
 F1: 80.8%</title>
-          <rect x="249.6" y="82.0" width="20.6" height="244.0" rx="4"></rect>
-          <rect class="foot" x="249.6" y="322.0" width="20.6" height="4"></rect>
+          <rect x="294.8" y="82.0" width="25.8" height="244.0" rx="4"></rect>
+          <rect class="foot" x="294.8" y="322.0" width="25.8" height="4"></rect>
         </g>
-        <text class="group-label" x="226.0" y="346" text-anchor="middle">Gemini 3.8 Flash<tspan x="226.0" dy="14">(no thinking)</tspan></text>
+        <text class="group-label" x="266.0" y="346" text-anchor="middle">Gemini 3.8 Flash<tspan x="266.0" dy="14">(no thinking)</tspan></text>
+      </g>
+      <g class="group">
+        <g class="bar s1" tabindex="0">
+          <title>Apple SpeechTranscriber
+Proper nouns (weight 0.3): 41.1%</title>
+          <rect x="351.4" y="201.9" width="25.8" height="124.1" rx="4"></rect>
+          <rect class="foot" x="351.4" y="322.0" width="25.8" height="4"></rect>
+        </g>
+        <g class="bar s2" tabindex="0">
+          <title>Apple SpeechTranscriber
+Recall: 80.2%</title>
+          <rect x="379.2" y="83.8" width="25.8" height="242.2" rx="4"></rect>
+          <rect class="foot" x="379.2" y="322.0" width="25.8" height="4"></rect>
+        </g>
+        <g class="bar s3" tabindex="0">
+          <title>Apple SpeechTranscriber
+Precision: 84.0%</title>
+          <rect x="407.0" y="72.3" width="25.8" height="253.7" rx="4"></rect>
+          <rect class="foot" x="407.0" y="322.0" width="25.8" height="4"></rect>
+        </g>
+        <g class="bar s4" tabindex="0">
+          <title>Apple SpeechTranscriber
+F1: 80.3%</title>
+          <rect x="434.8" y="83.5" width="25.8" height="242.5" rx="4"></rect>
+          <rect class="foot" x="434.8" y="322.0" width="25.8" height="4"></rect>
+        </g>
+        <text class="group-label" x="406.0" y="346" text-anchor="middle">Apple<tspan x="406.0" dy="14">SpeechTranscriber</tspan></text>
       </g>
       <g class="group">
         <g class="bar s1" tabindex="0">
           <title>Gemini 3.5 Transcribe
 Proper nouns (weight 0.3): 52.8%</title>
-          <rect x="295.1" y="166.5" width="20.6" height="159.5" rx="4"></rect>
-          <rect class="foot" x="295.1" y="322.0" width="20.6" height="4"></rect>
+          <rect x="491.4" y="166.5" width="25.8" height="159.5" rx="4"></rect>
+          <rect class="foot" x="491.4" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s2" tabindex="0">
           <title>Gemini 3.5 Transcribe
 Recall: 77.2%</title>
-          <rect x="317.7" y="92.9" width="20.6" height="233.1" rx="4"></rect>
-          <rect class="foot" x="317.7" y="322.0" width="20.6" height="4"></rect>
+          <rect x="519.2" y="92.9" width="25.8" height="233.1" rx="4"></rect>
+          <rect class="foot" x="519.2" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s3" tabindex="0">
           <title>Gemini 3.5 Transcribe
 Precision: 74.0%</title>
-          <rect x="340.3" y="102.5" width="20.6" height="223.5" rx="4"></rect>
-          <rect class="foot" x="340.3" y="322.0" width="20.6" height="4"></rect>
+          <rect x="547.0" y="102.5" width="25.8" height="223.5" rx="4"></rect>
+          <rect class="foot" x="547.0" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s4" tabindex="0">
           <title>Gemini 3.5 Transcribe
 F1: 74.7%</title>
-          <rect x="362.9" y="100.4" width="20.6" height="225.6" rx="4"></rect>
-          <rect class="foot" x="362.9" y="322.0" width="20.6" height="4"></rect>
+          <rect x="574.8" y="100.4" width="25.8" height="225.6" rx="4"></rect>
+          <rect class="foot" x="574.8" y="322.0" width="25.8" height="4"></rect>
         </g>
-        <text class="group-label" x="339.3" y="346" text-anchor="middle">Gemini 3.5<tspan x="339.3" dy="14">Transcribe</tspan></text>
+        <text class="group-label" x="546.0" y="346" text-anchor="middle">Gemini 3.5<tspan x="546.0" dy="14">Transcribe</tspan></text>
       </g>
       <g class="group">
         <g class="bar s1" tabindex="0">
           <title>Meta Muse Voice Transcribe
 Proper nouns (weight 0.3): 39.9%</title>
-          <rect x="408.5" y="205.5" width="20.6" height="120.5" rx="4"></rect>
-          <rect class="foot" x="408.5" y="322.0" width="20.6" height="4"></rect>
+          <rect x="631.4" y="205.5" width="25.8" height="120.5" rx="4"></rect>
+          <rect class="foot" x="631.4" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s2" tabindex="0">
           <title>Meta Muse Voice Transcribe
 Recall: 81.7%</title>
-          <rect x="431.1" y="79.3" width="20.6" height="246.7" rx="4"></rect>
-          <rect class="foot" x="431.1" y="322.0" width="20.6" height="4"></rect>
+          <rect x="659.2" y="79.3" width="25.8" height="246.7" rx="4"></rect>
+          <rect class="foot" x="659.2" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s3" tabindex="0">
           <title>Meta Muse Voice Transcribe
 Precision: 80.6%</title>
-          <rect x="453.7" y="82.6" width="20.6" height="243.4" rx="4"></rect>
-          <rect class="foot" x="453.7" y="322.0" width="20.6" height="4"></rect>
+          <rect x="687.0" y="82.6" width="25.8" height="243.4" rx="4"></rect>
+          <rect class="foot" x="687.0" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s4" tabindex="0">
           <title>Meta Muse Voice Transcribe
 F1: 79.2%</title>
-          <rect x="476.3" y="86.8" width="20.6" height="239.2" rx="4"></rect>
-          <rect class="foot" x="476.3" y="322.0" width="20.6" height="4"></rect>
+          <rect x="714.8" y="86.8" width="25.8" height="239.2" rx="4"></rect>
+          <rect class="foot" x="714.8" y="322.0" width="25.8" height="4"></rect>
         </g>
-        <text class="group-label" x="452.7" y="346" text-anchor="middle">Meta Muse<tspan x="452.7" dy="14">Voice Transcribe</tspan></text>
+        <text class="group-label" x="686.0" y="346" text-anchor="middle">Meta Muse<tspan x="686.0" dy="14">Voice Transcribe</tspan></text>
       </g>
       <g class="group">
         <g class="bar s1" tabindex="0">
           <title>Groq Whisper large-v3
 Proper nouns (weight 0.3): 47.4%</title>
-          <rect x="521.8" y="182.9" width="20.6" height="143.1" rx="4"></rect>
-          <rect class="foot" x="521.8" y="322.0" width="20.6" height="4"></rect>
+          <rect x="771.4" y="182.9" width="25.8" height="143.1" rx="4"></rect>
+          <rect class="foot" x="771.4" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s2" tabindex="0">
           <title>Groq Whisper large-v3
 Recall: 78.6%</title>
-          <rect x="544.4" y="88.6" width="20.6" height="237.4" rx="4"></rect>
-          <rect class="foot" x="544.4" y="322.0" width="20.6" height="4"></rect>
+          <rect x="799.2" y="88.6" width="25.8" height="237.4" rx="4"></rect>
+          <rect class="foot" x="799.2" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s3" tabindex="0">
           <title>Groq Whisper large-v3
 Precision: 73.8%</title>
-          <rect x="567.0" y="103.1" width="20.6" height="222.9" rx="4"></rect>
-          <rect class="foot" x="567.0" y="322.0" width="20.6" height="4"></rect>
+          <rect x="827.0" y="103.1" width="25.8" height="222.9" rx="4"></rect>
+          <rect class="foot" x="827.0" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s4" tabindex="0">
           <title>Groq Whisper large-v3
 F1: 74.7%</title>
-          <rect x="589.6" y="100.4" width="20.6" height="225.6" rx="4"></rect>
-          <rect class="foot" x="589.6" y="322.0" width="20.6" height="4"></rect>
+          <rect x="854.8" y="100.4" width="25.8" height="225.6" rx="4"></rect>
+          <rect class="foot" x="854.8" y="322.0" width="25.8" height="4"></rect>
         </g>
-        <text class="group-label" x="566.0" y="346" text-anchor="middle">Groq Whisper<tspan x="566.0" dy="14">large-v3</tspan></text>
+        <text class="group-label" x="826.0" y="346" text-anchor="middle">Groq Whisper<tspan x="826.0" dy="14">large-v3</tspan></text>
+      </g>
+      <g class="group">
+        <g class="bar s1" tabindex="0">
+          <title>Apple DictationTranscriber
+Proper nouns (weight 0.3): 44.0%</title>
+          <rect x="911.4" y="193.1" width="25.8" height="132.9" rx="4"></rect>
+          <rect class="foot" x="911.4" y="322.0" width="25.8" height="4"></rect>
+        </g>
+        <g class="bar s2" tabindex="0">
+          <title>Apple DictationTranscriber
+Recall: 60.9%</title>
+          <rect x="939.2" y="142.1" width="25.8" height="183.9" rx="4"></rect>
+          <rect class="foot" x="939.2" y="322.0" width="25.8" height="4"></rect>
+        </g>
+        <g class="bar s3" tabindex="0">
+          <title>Apple DictationTranscriber
+Precision: 75.3%</title>
+          <rect x="967.0" y="98.6" width="25.8" height="227.4" rx="4"></rect>
+          <rect class="foot" x="967.0" y="322.0" width="25.8" height="4"></rect>
+        </g>
+        <g class="bar s4" tabindex="0">
+          <title>Apple DictationTranscriber
+F1: 63.5%</title>
+          <rect x="994.8" y="134.2" width="25.8" height="191.8" rx="4"></rect>
+          <rect class="foot" x="994.8" y="322.0" width="25.8" height="4"></rect>
+        </g>
+        <text class="group-label" x="966.0" y="346" text-anchor="middle">Apple<tspan x="966.0" dy="14">DictationTranscriber</tspan></text>
       </g>
       <g class="group">
         <g class="bar s1" tabindex="0">
           <title>xAI Grok STT
 Proper nouns (weight 0.3): 23.9%</title>
-          <rect x="635.1" y="253.8" width="20.6" height="72.2" rx="4"></rect>
-          <rect class="foot" x="635.1" y="322.0" width="20.6" height="4"></rect>
+          <rect x="1051.4" y="253.8" width="25.8" height="72.2" rx="4"></rect>
+          <rect class="foot" x="1051.4" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s2" tabindex="0">
           <title>xAI Grok STT
 Recall: 61.8%</title>
-          <rect x="657.7" y="139.4" width="20.6" height="186.6" rx="4"></rect>
-          <rect class="foot" x="657.7" y="322.0" width="20.6" height="4"></rect>
+          <rect x="1079.2" y="139.4" width="25.8" height="186.6" rx="4"></rect>
+          <rect class="foot" x="1079.2" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s3" tabindex="0">
           <title>xAI Grok STT
 Precision: 65.2%</title>
-          <rect x="680.3" y="129.1" width="20.6" height="196.9" rx="4"></rect>
-          <rect class="foot" x="680.3" y="322.0" width="20.6" height="4"></rect>
+          <rect x="1107.0" y="129.1" width="25.8" height="196.9" rx="4"></rect>
+          <rect class="foot" x="1107.0" y="322.0" width="25.8" height="4"></rect>
         </g>
         <g class="bar s4" tabindex="0">
           <title>xAI Grok STT
 F1: 60.4%</title>
-          <rect x="702.9" y="143.6" width="20.6" height="182.4" rx="4"></rect>
-          <rect class="foot" x="702.9" y="322.0" width="20.6" height="4"></rect>
+          <rect x="1134.8" y="143.6" width="25.8" height="182.4" rx="4"></rect>
+          <rect class="foot" x="1134.8" y="322.0" width="25.8" height="4"></rect>
         </g>
-        <text class="group-label" x="679.3" y="346" text-anchor="middle">xAI Grok<tspan x="679.3" dy="14">STT</tspan></text>
+        <text class="group-label" x="1106.0" y="346" text-anchor="middle">xAI Grok<tspan x="1106.0" dy="14">STT</tspan></text>
       </g>
   <g class="bar s1"><rect x="66" y="406" width="11" height="11" rx="2"/></g><text class="legend-text" x="83" y="415">Proper nouns</text>
   <g class="bar s2"><rect x="184.2" y="406" width="11" height="11" rx="2"/></g><text class="legend-text" x="201.2" y="415">Recall</text>
   <g class="bar s3"><rect x="262.79999999999995" y="406" width="11" height="11" rx="2"/></g><text class="legend-text" x="279.79999999999995" y="415">Precision</text>
   <g class="bar s4"><rect x="361.19999999999993" y="406" width="11" height="11" rx="2"/></g><text class="legend-text" x="378.19999999999993" y="415">F1</text>
 </g>
-  <text class="chart-footnote" x="20" y="497">2026-09-09 · github.com/ainoya/kikitori-bench @ 9914d2e</text>
+  <text class="chart-footnote" x="20" y="497">2026-09-10 · github.com/ainoya/kikitori-bench @ 1ce77da</text>
 </svg>
