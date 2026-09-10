@@ -1,4 +1,5 @@
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -30,6 +31,12 @@ class SerialGate {
 
 const gate = new SerialGate();
 
+const describeHostHardware = (): string => {
+  const processor = os.cpus()[0]?.model.trim() || os.arch();
+  const memoryGiB = Math.round(os.totalmem() / 2 ** 30);
+  return `${processor}, ${memoryGiB} GB RAM`;
+};
+
 export class AppleSpeechAdapter implements AsrAdapter {
   readonly provider = "apple";
 
@@ -58,6 +65,7 @@ export class AppleSpeechAdapter implements AsrAdapter {
       locale: this.locale,
       preset: this.engine === "dictation" ? "longDictation" : "transcription",
       processing: "on-device",
+      hardware: describeHostHardware(),
       timing: "analyze+finalize (excludes helper launch, asset checks, and queue wait)",
     };
   }

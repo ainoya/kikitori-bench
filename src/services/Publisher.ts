@@ -151,6 +151,12 @@ export const publishRun = (options: PublishOptions): string[] => {
   lines.push("");
   lines.push(`![Speed versus score](${rel(path.join(chartDir, "speed-performance.svg"))})`);
   lines.push("");
+  if (conditions?.models.some((condition) => condition.provider === "apple")) {
+    lines.push(
+      "_Apple transcription runs on-device, so its RTF can vary with host hardware, OS, and installed speech-model assets; the measured host is recorded in Experiment Conditions._",
+    );
+    lines.push("");
+  }
   lines.push(`![Score by axis](${rel(path.join(chartDir, "score-breakdown.svg"))})`);
   lines.push("");
 

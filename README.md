@@ -182,7 +182,9 @@ pnpm apple:prepare:dictation
 
 For Apple models, RTF is timed inside the Swift helper around SpeechAnalyzer analysis,
 finalization, and result collection. Helper-process launch, asset checks, audio-file opening, and
-waiting for another Apple transcription are excluded.
+waiting for another Apple transcription are excluded. Because transcription runs on-device, the
+resolved run conditions also record the host processor and memory; compare Apple RTF only with
+that hardware, OS, and installed speech-model assets in mind.
 
 ### Environment variables
 Copy `.env.example` to `.env` and configure your API keys:
