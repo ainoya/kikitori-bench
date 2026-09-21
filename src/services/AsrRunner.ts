@@ -26,10 +26,29 @@ export interface AsrRunnerShape {
     models: readonly string[],
     config: AppConfig,
     concurrency?: number,
+    /**
+     * Existing run to extend instead of opening a new one. The checkpoint in
+     * that directory already answers every (model, sample) pair it holds, so
+     * only the new model is actually transcribed, and the run keeps the
+     * conditions the other models were measured under.
+     */
+    intoRunId?: string,
   ): Effect.Effect<AsrBatchRun, AsrExecutionError | ValidationError>;
 }
 
 export class AsrRunner extends Context.Tag("AsrRunner")<AsrRunner, AsrRunnerShape>() {}
+
+const outPathFor = (runDir: string): string => path.resolve(runDir, "asr_results.json");
+
+/** The manifest of a run being extended; absent or unreadable means start fresh. */
+const readBatchRun = (outPath: string): AsrBatchRun | undefined => {
+  if (!fs.existsSync(outPath)) return undefined;
+  try {
+    return JSON.parse(fs.readFileSync(outPath, "utf-8")) as AsrBatchRun;
+  } catch {
+    return undefined;
+  }
+};
 
 export const AsrRunnerLive = Layer.succeed(
   AsrRunner,
@@ -46,7 +65,11 @@ export const AsrRunnerLive = Layer.succeed(
             return new WhisperAdapter(modelId, "OpenAI Whisper", "whisper-1");
           }
           if (modelId === "xai-grok" || modelId === "grok") {
-            return new XaiGrokAdapter(modelId, "xAI Grok STT", "grok-stt");
+            return new XaiGrokAdapter(
+              modelId,
+              "Grok Voice Transcribe 2.0",
+              "grok-voice-transcribe-2.0",
+            );
           }
           if (modelId === "gemini-transcribe" || modelId === "gemini-3.5-transcribe") {
             return new GeminiAdapter(modelId, "Gemini 3.5 Transcribe", "gemini-3.5-transcribe");
@@ -187,6 +210,7 @@ export const AsrRunnerLive = Layer.succeed(
       modelIds: readonly string[],
       config: AppConfig,
       concurrency = 3,
+      intoRunId?: string,
     ) {
       return Effect.gen(this, function* () {
         const adapters: AsrAdapter[] = [];
@@ -196,9 +220,24 @@ export const AsrRunnerLive = Layer.succeed(
         }
 
         const datasetDir = path.resolve(process.cwd(), "datasets", datasetName);
-        const runId = `run_${new Date().toISOString().replace(/[:.]/g, "-")}`;
+        const runId = intoRunId ?? `run_${new Date().toISOString().replace(/[:.]/g, "-")}`;
         const runDir = path.resolve(process.cwd(), "runs", runId);
 
+        if (intoRunId && !fs.existsSync(runDir)) {
+          return yield* Effect.fail(
+            new ValidationError({ message: `Run '${intoRunId}' does not exist at ${runDir}` }),
+          );
+        }
+        const existing = intoRunId ? readBatchRun(outPathFor(runDir)) : undefined;
+        if (existing && existing.datasetName !== datasetName) {
+          // Merging across datasets would produce a run whose models were never
+          // asked the same questions.
+          return yield* Effect.fail(
+            new ValidationError({
+              message: `Run '${intoRunId}' was measured on dataset '${existing.datasetName}', not '${datasetName}'`,
+            }),
+          );
+        }
         if (!fs.existsSync(runDir)) {
           fs.mkdirSync(runDir, { recursive: true });
         }
@@ -277,22 +316,40 @@ export const AsrRunnerLive = Layer.succeed(
 
         const results = yield* Effect.all(tasks.map(runTask), { concurrency });
 
-        const batchRun: AsrBatchRun = {
-          runId,
-          datasetName,
-          timestamp: new Date().toISOString(),
-          models: modelIds.slice(),
-          conditions: adapters.map((adapter) => ({
-            modelId: adapter.modelId,
-            displayName: adapter.displayName,
-            provider: adapter.provider,
-            parameters: adapter.parameters,
-          })),
-          results,
-        };
+        const conditions = adapters.map((adapter) => ({
+          modelId: adapter.modelId,
+          displayName: adapter.displayName,
+          provider: adapter.provider,
+          parameters: adapter.parameters,
+        }));
 
-        const outPath = path.resolve(runDir, "asr_results.json");
-        fs.writeFileSync(outPath, JSON.stringify(batchRun, null, 2), "utf-8");
+        const previous = existing;
+
+        const batchRun: AsrBatchRun = previous
+          ? {
+              ...previous,
+              // The models measured earlier stay in the run exactly as they
+              // were recorded; this pass only contributes what it just ran.
+              models: [...new Set([...previous.models, ...modelIds])],
+              conditions: [
+                ...(previous.conditions ?? []).filter((c) => !modelIds.includes(c.modelId)),
+                ...conditions,
+              ],
+              results: [
+                ...previous.results.filter((r) => !modelIds.includes(r.modelId)),
+                ...results,
+              ],
+            }
+          : {
+              runId,
+              datasetName,
+              timestamp: new Date().toISOString(),
+              models: modelIds.slice(),
+              conditions,
+              results,
+            };
+
+        fs.writeFileSync(outPathFor(runDir), JSON.stringify(batchRun, null, 2), "utf-8");
 
         return batchRun;
       });

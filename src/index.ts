@@ -408,6 +408,10 @@ program
   .option("-l, --limit <n>", "Limit the number of items to run")
   .option("-d, --max-duration <sec>", "Skip samples longer than this many seconds")
   .option("--all", "Run on all items, including unverified ones")
+  .option(
+    "--into <runId>",
+    "Add these models to an existing run instead of opening a new one (pairs already transcribed are kept)",
+  )
   .action(
     async (
       name: string,
@@ -417,6 +421,7 @@ program
         limit?: string;
         maxDuration?: string;
         all?: boolean;
+        into?: string;
       },
     ) => {
       await runEffect(
@@ -460,11 +465,21 @@ program
           console.log(
             `🎙️ Running ASR models [${modelIds.join(", ")}] on ${targetItems.length} items in '${name}'...`,
           );
+          if (opts.into) {
+            console.log(`   ↳ extending run ${opts.into}`);
+          }
 
           const concurrency = opts.concurrency
             ? parseInt(opts.concurrency, 10)
             : config.judge.concurrency;
-          const batchRun = yield* runner.runBatch(name, targetItems, modelIds, config, concurrency);
+          const batchRun = yield* runner.runBatch(
+            name,
+            targetItems,
+            modelIds,
+            config,
+            concurrency,
+            opts.into,
+          );
 
           console.log(`\n✅ ASR transcription complete!`);
           console.log(`   Run ID: ${batchRun.runId}`);

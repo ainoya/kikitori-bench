@@ -158,7 +158,7 @@ No warranty of any kind. If a decision matters to you, run the benchmark on your
   multiple-comparison adjustment, exact McNemar tests per axis, latency percentiles, and an
   item analysis showing which samples actually discriminate between models.
 - **Pluggable ASR adapters.** Apple SpeechTranscriber (on-device), Qwen3-ASR on Apple MLX
-  through mlx-audio (on-device), xAI Grok STT, Gemini 3.8 Flash, Gemini 3.5 Transcribe,
+  through mlx-audio (on-device), Grok Voice Transcribe, Gemini 3.8 Flash, Gemini 3.5 Transcribe,
   Meta Muse Voice Transcribe, Groq-hosted Whisper, OpenAI Whisper, plus generic HTTP endpoints
   and local CLI commands.
 
@@ -241,7 +241,7 @@ cp .env.example .env
 
 Configuration items in `.env`:
 ```ini
-# xAI API Key for Grok Speech-to-Text
+# xAI API Key for Grok Voice Transcribe
 XAI_API_KEY=your_xai_api_key
 
 # Gemini API Key (for drafting and Gemini ASR)
@@ -328,8 +328,8 @@ pnpm kikitori review my_dataset_ja
 Execute transcription across verified samples using your chosen ASR models:
 
 ```bash
-# Run specific models (e.g., Apple, Qwen3-ASR on MLX, xAI Grok, Gemini, Meta Muse, Groq Whisper)
-pnpm kikitori run my_dataset_ja -m apple-speech qwen3-asr-1.7b qwen3-asr-0.6b xai-grok gemini-flash gemini-transcribe meta-muse groq-whisper
+# Run specific models (e.g., Apple, Qwen3-ASR on MLX, Grok, Gemini, Meta Muse, Groq Whisper)
+pnpm kikitori run my_dataset_ja -m apple-speech qwen3-asr-1.7b qwen3-asr-0.6b xai-grok-2 gemini-flash gemini-transcribe meta-muse groq-whisper
 
 # Offline / dry-run test using mock model
 pnpm kikitori run my_dataset_ja -m mock --all
@@ -473,7 +473,8 @@ Rank  | Model                |   Overall |     Names |     Recall |  Precision |
     older on-device dictation model; each model needs its own prepared assets)
   - `mlx-audio`: local speech-to-text on Apple MLX, e.g. `mlx-community/Qwen3-ASR-1.7B-8bit`
     or `mlx-community/Qwen3-ASR-0.6B-8bit` (needs `pnpm mlx:prepare` and `ffmpeg`)
-  - `xai`: xAI Grok STT endpoint
+  - `xai`: xAI Grok Voice Transcribe (`grok-voice-transcribe-2.0`, `grok-voice-transcribe-1.0`;
+    the `grok-stt` alias resolves to the provider's current default, so pin an explicit id)
   - `gemini`: Gemini ASR (`gemini-3.8-flash`, `gemini-3.5-transcribe`, ...)
   - `meta`: Meta Muse Voice Transcribe (`https://api.meta.ai/v1/asr/transcribe`, requires `ffmpeg`)
   - `groq`: Groq-hosted Whisper (OpenAI-compatible `/audio/transcriptions`)
@@ -494,7 +495,7 @@ Rank  | Model                |   Overall |     Names |     Recall |  Precision |
 | `dataset refine <name>` | Re-derive `key_points` from verified transcripts at a length-aware granularity |
 | `review <name>` | Local web UI for listening, editing and verifying |
 | `compare [runs...]` | Local web UI comparing the ground truth and every model hypothesis side by side; merges runs, or use `-d <dataset>` |
-| `run <name>` | Run the ASR models and store hypotheses |
+| `run <name>` | Run the ASR models and store hypotheses; `--into <run>` adds a model to a finished run instead of opening a new one |
 | `eval <name> --run <id>` | Judge a finished run; re-running retries only what is missing |
 | `benchmark <name>` | `run` followed by `eval` |
 | `repair <run>` | Retry the ASR requests that failed in a run and drop their stale judgements |
@@ -506,6 +507,19 @@ Rank  | Model                |   Overall |     Names |     Recall |  Precision |
 
 Common flags: `-m` selects models, `-l` limits the number of samples, `-d` skips samples
 longer than N seconds, `-c` sets concurrency, `--lang en|ja` picks the report language.
+
+To add one newly released model to a published comparison, transcribe it into the existing
+run and judge it there, rather than re-measuring every model:
+
+```bash
+pnpm kikitori run my_dataset_ja -m new-model --into run_2026-09-21T09-00-00-000Z -d 600
+pnpm kikitori eval my_dataset_ja --run run_2026-09-21T09-00-00-000Z
+```
+
+Both steps skip the (model, sample) pairs already on disk, so the earlier models keep the
+hypotheses and judgements they were measured with. This is only comparable while the judge
+condition is pinned - `judge.model` and `judge.reasoningEffort` must be what the run was
+judged under, and the same `-d` cap must select the same samples.
 
 ---
 

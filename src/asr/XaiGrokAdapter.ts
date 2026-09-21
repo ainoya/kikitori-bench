@@ -12,7 +12,7 @@ export class XaiGrokAdapter implements AsrAdapter {
   constructor(
     public readonly modelId: string,
     public readonly displayName: string,
-    private readonly modelName = "grok-stt",
+    private readonly modelName = "grok-voice-transcribe-2.0",
     private readonly apiKey = process.env["XAI_API_KEY"],
     private readonly endpoint = "https://api.x.ai/v1/stt",
     private readonly options: AsrModelOptions = {},
@@ -57,8 +57,11 @@ export class XaiGrokAdapter implements AsrAdapter {
       const filename = path.basename(audioFullPath);
       const blob = new Blob([fileBuffer]);
 
+      // The endpoint parses the multipart body as a stream and starts decoding
+      // as soon as the audio arrives, so it rejects a `model` that follows the
+      // file ("The 'model' field must be sent before 'file'"). Every other
+      // field goes first too, for the same reason.
       const formData = new FormData();
-      formData.append("file", blob, filename);
       formData.append("model", this.modelName);
       if (this.language) {
         formData.append("language", this.language);
@@ -66,6 +69,7 @@ export class XaiGrokAdapter implements AsrAdapter {
       if (this.options.prompt) {
         formData.append("prompt", this.options.prompt);
       }
+      formData.append("file", blob, filename);
 
       const startTime = Date.now();
 

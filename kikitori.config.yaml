@@ -37,12 +37,23 @@ scoring:
 models:
   xai-grok:
     type: xai
-    model: grok-stt
-    displayName: "xAI Grok STT"
+    # Pinned rather than the `grok-stt` alias: the alias resolves to 1.0 today,
+    # but it is the provider's default pointer and will move to a later model.
+    model: grok-voice-transcribe-1.0
+    displayName: "Grok Voice Transcribe 1.0"
     options:
       language: ja
     pricing:
       perAudioHour: 0.10      # batch STT
+  xai-grok-2:
+    type: xai
+    model: grok-voice-transcribe-2.0
+    displayName: "Grok Voice Transcribe 2.0"
+    options:
+      language: ja
+      # prompt: ...           # sent as the key-term biasing hint
+    pricing:
+      perAudioHour: 0.10      # batch STT, same list price as 1.0
   gemini-flash:
     type: gemini
     model: gemini-3.8-flash
