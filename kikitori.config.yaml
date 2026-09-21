@@ -9,6 +9,11 @@ judge:
   concurrency: 3
   timeoutMs: 600000           # per-turn ceiling
   retries: 2                  # extra attempts when a turn stalls
+  # Reasoning effort for each judge turn. Left unset, the app server applies its
+  # own default (the model's, or whatever the operator's ~/.codex/config.toml
+  # says), so the benchmark would not control its own judging condition.
+  # "low" is the lowest gpt-5.6-luna advertises.
+  reasoningEffort: low
   # USD per 1M tokens for the judge model (as of 2026-07-30).
   # cachedInputPerMTok assumes the usual 10% cached-input discount.
   pricing:

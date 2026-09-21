@@ -306,7 +306,7 @@ export const ReporterLive = Layer.succeed(
           lines.push(`## ${i18n.conditionsSection}`);
           lines.push("");
           lines.push(
-            `- **${i18n.judgeSettings}**: \`${conditions.judge.model}\` (${conditions.judge.provider}, ${conditions.judge.endpoint}, temperature: \`${conditions.judge.temperature ?? "default"}\`)`,
+            `- **${i18n.judgeSettings}**: \`${conditions.judge.model}\` (${conditions.judge.provider}, ${conditions.judge.endpoint}, temperature: \`${conditions.judge.temperature ?? "default"}\`, reasoning effort: \`${conditions.judge.reasoningEffort ?? "server default"}\`)`,
           );
           lines.push(
             `- **${i18n.samples}**: ${conditions.sampleCount}${

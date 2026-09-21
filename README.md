@@ -420,6 +420,12 @@ Rank  | Model                |   Overall |     Names |     Recall |  Precision |
 
 ## Configuration (`kikitori.config.yaml`)
 
+- **Judge (`judge`)**: provider, model, endpoint and per-turn `timeoutMs` / `retries`, plus
+  `reasoningEffort` - the reasoning effort each judge turn runs at (`low` is the lowest
+  `gpt-5.6-luna` advertises). Leave it unset and the app server applies its own default, which
+  follows the operator's `~/.codex/config.toml` rather than this benchmark; it is recorded in
+  the run conditions either way. Scores from runs judged at different efforts are not strictly
+  comparable.
 - **Weights (`weights`)**: `proper_noun_f1` and `proposition_quality`, summing to 1.0. The overall score is not a plain weighted mean - recall and precision are combined with F-beta first, so a model cannot score well by transcribing almost nothing.
 - **Scoring (`scoring.fBeta`)**: 1.0 treats an omission and a fabrication as equally bad; below 1 weights precision, above 1 weights recall.
 - **Options (`options`)**: Per-model request parameters, recorded as the experiment condition of every run. Unset values keep the provider default:

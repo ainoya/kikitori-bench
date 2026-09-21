@@ -96,6 +96,9 @@ export const measureJudgeConsistency = (
           ...(config.judge.temperature !== undefined
             ? { temperature: config.judge.temperature }
             : {}),
+          ...(config.judge.reasoningEffort !== undefined
+            ? { reasoningEffort: config.judge.reasoningEffort }
+            : {}),
           prompt: buildJudgePrompt({
             item,
             hypothesis: evaluation.hypothesis,

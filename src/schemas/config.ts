@@ -91,6 +91,12 @@ export const JudgeConfigSchema = Schema.Struct({
   timeoutMs: Schema.optional(Schema.Number),
   /** Extra attempts for a judge turn that times out or drops its connection. */
   retries: Schema.optional(Schema.Number),
+  /**
+   * Reasoning effort for the judge turn (`low`, `medium`, `high`, ...; the set
+   * is the model's own). Unset leaves the app server's default, which follows
+   * the operator's `~/.codex/config.toml` rather than this benchmark.
+   */
+  reasoningEffort: Schema.optional(Schema.String),
   pricing: Schema.optional(ModelPricingSchema),
 });
 

@@ -114,7 +114,7 @@ export const publishRun = (options: PublishOptions): string[] => {
   );
   lines.push(`- **Audio per model**: ${fmtDuration(audioSeconds)}`);
   lines.push(
-    `- **Judge**: \`${report.judgeModel}\`, temperature \`${conditions?.judge.temperature ?? "default"}\``,
+    `- **Judge**: \`${report.judgeModel}\`, temperature \`${conditions?.judge.temperature ?? "default"}\`, reasoning effort \`${conditions?.judge.reasoningEffort ?? "server default"}\``,
   );
   lines.push(
     `- **Score**: ${axes

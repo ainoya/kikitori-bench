@@ -85,6 +85,7 @@ export const ExperimentConditionsSchema = Schema.Struct({
     model: Schema.String,
     endpoint: Schema.String,
     temperature: Schema.optional(Schema.Number),
+    reasoningEffort: Schema.optional(Schema.String),
   }),
   weights: CategoryWeightsSchema,
   sampleCount: Schema.Number,

@@ -8,6 +8,7 @@ export interface JudgeOnceInput {
   client: CodexClient;
   judgeModel: string;
   temperature?: number;
+  reasoningEffort?: string;
   prompt: string;
   item: DatasetItem;
   modelId: string;
@@ -29,6 +30,7 @@ export const judgeOnce = (input: JudgeOnceInput) =>
       model: input.judgeModel,
       prompt: input.prompt,
       ...(input.temperature !== undefined ? { temperature: input.temperature } : {}),
+      ...(input.reasoningEffort !== undefined ? { reasoningEffort: input.reasoningEffort } : {}),
     });
 
     // Strip a markdown code fence if the judge wrapped its JSON in one.

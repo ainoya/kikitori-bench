@@ -27,6 +27,8 @@ export interface CodexGenerateParams {
   model: string;
   prompt: string;
   temperature?: number;
+  /** Sent as the turn's `effort`; unset inherits the app server's own default. */
+  reasoningEffort?: string;
 }
 
 export interface CodexGenerateResult {
@@ -179,6 +181,9 @@ export class WebSocketCodexClient implements CodexClient {
                       params: {
                         threadId,
                         input: [{ type: "text", text: params.prompt }],
+                        ...(params.reasoningEffort !== undefined
+                          ? { effort: params.reasoningEffort }
+                          : {}),
                       },
                     }),
                   );
