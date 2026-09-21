@@ -1,11 +1,11 @@
 import * as fs from "node:fs";
-import * as os from "node:os";
 import * as path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { Effect, Schema } from "effect";
 import type { AsrAdapter } from "./types.js";
 import { AsrExecutionError } from "../errors.js";
+import { describeHostHardware, SerialGate } from "../utils/on-device.js";
 import type { AsrModelOptions } from "../schemas/config.js";
 
 const execFileAsync = promisify(execFile);
@@ -16,26 +16,7 @@ const AppleHelperOutputSchema = Schema.Struct({
 });
 
 /** SpeechAnalyzer conservatively limits simultaneous sessions on one device. */
-class SerialGate {
-  private tail: Promise<void> = Promise.resolve();
-
-  run<A>(task: () => Promise<A>): Promise<A> {
-    const previous = this.tail;
-    let release: () => void = () => undefined;
-    this.tail = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    return previous.then(task).finally(release);
-  }
-}
-
 const gate = new SerialGate();
-
-const describeHostHardware = (): string => {
-  const processor = os.cpus()[0]?.model.trim() || os.arch();
-  const memoryGiB = Math.round(os.totalmem() / 2 ** 30);
-  return `${processor}, ${memoryGiB} GB RAM`;
-};
 
 export class AppleSpeechAdapter implements AsrAdapter {
   readonly provider = "apple";

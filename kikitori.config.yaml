@@ -125,6 +125,25 @@ models:
       language: ja-JP
     # Uses the older on-device system dictation model. Kept separate from
     # SpeechTranscriber because the model and decoding preset differ.
+  qwen3-asr-1.7b:
+    type: mlx-audio
+    model: mlx-community/Qwen3-ASR-1.7B-8bit
+    displayName: "Qwen3-ASR 1.7B (MLX, 8-bit)"
+    options:
+      language: ja             # sent to the model as "Japanese"
+      # chunkSeconds: 1200     # library default; long audio is split into chunks
+      # batchSegments: 2       # chunks decoded in parallel
+      # keywords:              # hotwords folded into the system prompt
+      #   - Kubernetes
+    # Runs on this machine through Apple MLX. No pricing is assigned, so it is
+    # excluded from the price/performance chart and frontier while remaining in
+    # quality/speed comparisons.
+  qwen3-asr-0.6b:
+    type: mlx-audio
+    model: mlx-community/Qwen3-ASR-0.6B-8bit
+    displayName: "Qwen3-ASR 0.6B (MLX, 8-bit)"
+    options:
+      language: ja
   # Example of a custom HTTP ASR endpoint:
   # my-custom-model:
   #   type: custom-http

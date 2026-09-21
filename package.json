@@ -13,6 +13,7 @@
     "apple:build": "swift build -c release --package-path tools/apple-speech-transcriber",
     "apple:prepare": "pnpm apple:build && tools/apple-speech-transcriber/.build/release/apple-speech-transcriber --prepare --engine speech-transcriber --locale ja-JP",
     "apple:prepare:dictation": "pnpm apple:build && tools/apple-speech-transcriber/.build/release/apple-speech-transcriber --prepare --engine dictation --locale ja-JP",
+    "mlx:prepare": "uv venv tools/mlx-audio/.venv --python 3.12 && uv pip install --python tools/mlx-audio/.venv/bin/python mlx-audio",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "dev": "tsx src/index.ts",
     "kikitori": "tsx src/index.ts",

@@ -8,6 +8,7 @@ import { XaiGrokAdapter } from "../asr/XaiGrokAdapter.js";
 import { GroqWhisperAdapter } from "../asr/GroqWhisperAdapter.js";
 import { MetaMuseAdapter } from "../asr/MetaMuseAdapter.js";
 import { AppleSpeechAdapter } from "../asr/AppleSpeechAdapter.js";
+import { MlxAudioAdapter } from "../asr/MlxAudioAdapter.js";
 import { CustomHttpAdapter } from "../asr/CustomHttpAdapter.js";
 import { CustomCommandAdapter } from "../asr/CustomCommandAdapter.js";
 import { MockAdapter } from "../asr/MockAdapter.js";
@@ -62,6 +63,13 @@ export const AsrRunnerLive = Layer.succeed(
           }
           if (modelId === "apple-speech" || modelId === "speech-transcriber") {
             return new AppleSpeechAdapter(modelId, "Apple SpeechTranscriber");
+          }
+          if (modelId === "qwen3-asr-mlx" || modelId === "qwen3-asr-1.7b") {
+            return new MlxAudioAdapter(
+              modelId,
+              "Qwen3-ASR 1.7B (MLX)",
+              "mlx-community/Qwen3-ASR-1.7B-8bit",
+            );
           }
           if (modelId === "mock") {
             return new MockAdapter("mock", "Mock ASR Model");
@@ -135,6 +143,13 @@ export const AsrRunnerLive = Layer.succeed(
               modelId,
               displayName,
               modelConf.model ?? "speech-transcriber",
+              modelConf.options,
+            );
+          case "mlx-audio":
+            return new MlxAudioAdapter(
+              modelId,
+              displayName,
+              modelConf.model ?? "mlx-community/Qwen3-ASR-1.7B-8bit",
               modelConf.options,
             );
           case "custom-http":

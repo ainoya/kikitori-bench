@@ -142,9 +142,10 @@ No warranty of any kind. If a decision matters to you, run the benchmark on your
 - **Statistical reliability.** Bootstrap confidence intervals, all pairwise comparisons with a
   multiple-comparison adjustment, exact McNemar tests per axis, latency percentiles, and an
   item analysis showing which samples actually discriminate between models.
-- **Pluggable ASR adapters.** Apple SpeechTranscriber (on-device), xAI Grok STT, Gemini 3.8
-  Flash, Gemini 3.5 Transcribe, Meta Muse Voice Transcribe, Groq-hosted Whisper, OpenAI Whisper,
-  plus generic HTTP endpoints and local CLI commands.
+- **Pluggable ASR adapters.** Apple SpeechTranscriber (on-device), Qwen3-ASR on Apple MLX
+  through mlx-audio (on-device), xAI Grok STT, Gemini 3.8 Flash, Gemini 3.5 Transcribe,
+  Meta Muse Voice Transcribe, Groq-hosted Whisper, OpenAI Whisper, plus generic HTTP endpoints
+  and local CLI commands.
 
 ---
 
@@ -152,7 +153,7 @@ No warranty of any kind. If a decision matters to you, run the benchmark on your
 
 ### Tooling
 This project requires **mise** (Node v26) and **pnpm**.
-`ffmpeg` must also be on `PATH` for the Meta Muse adapter, which only accepts mono 16 kHz 16-bit PCM WAV input (other formats are transcoded on the fly).
+`ffmpeg` must also be on `PATH` for the Meta Muse and mlx-audio adapters, which read WAV input (other formats are transcoded on the fly).
 
 ```bash
 # Trust project configuration
@@ -191,6 +192,31 @@ waiting for another Apple transcription are excluded. Because transcription runs
 resolved run conditions also record the host processor and memory; compare Apple RTF only with
 that hardware, OS, and installed speech-model assets in mind.
 
+To use the optional mlx-audio adapter - Qwen3-ASR running locally on Apple Silicon through
+[mlx-audio](https://github.com/Blaizzy/mlx-audio) - create its Python environment once
+(needs [uv](https://docs.astral.sh/uv/) and Python 3.12):
+
+```bash
+pnpm mlx:prepare
+```
+
+The weights are pulled from Hugging Face on first use and cached under `~/.cache/huggingface`;
+download them before measuring so the first sample is not timed with a download in it:
+
+```bash
+tools/mlx-audio/.venv/bin/python -c "from mlx_audio.stt import load; load('mlx-community/Qwen3-ASR-1.7B-8bit')"
+```
+
+`model` in the config is the Hugging Face id, so any model mlx-audio can load works here
+(`mlx-community/Qwen3-ASR-0.6B-8bit`, other quantizations, a local path). Set
+`MLX_AUDIO_PYTHON` when the interpreter lives outside `tools/mlx-audio/.venv`.
+
+Latency for this adapter is generation only: the helper process loads the weights on every
+sample - a hosted API amortises that across requests - so the load time is measured separately
+and left out of RTF. As with the Apple adapter, local models are run one at a time, so a
+`--concurrency` above 1 still serializes them, and their RTF only means something alongside
+the host processor recorded in the run conditions.
+
 ### Environment variables
 Copy `.env.example` to `.env` and configure your API keys:
 
@@ -214,6 +240,10 @@ META_API_KEY=your_meta_api_key
 
 # OpenAI API Key (for Whisper ASR)
 OPENAI_API_KEY=your_openai_api_key
+
+# Optional: Python interpreter for the mlx-audio adapter
+# (default: tools/mlx-audio/.venv/bin/python, created by 'pnpm mlx:prepare')
+MLX_AUDIO_PYTHON=/path/to/python
 
 # Codex App Server (for the GPT-5.6 Luna judge)
 CODEX_APP_SERVER_URL=ws://127.0.0.1:4500
@@ -283,8 +313,8 @@ pnpm kikitori review my_dataset_ja
 Execute transcription across verified samples using your chosen ASR models:
 
 ```bash
-# Run specific models (e.g., Apple, xAI Grok, Gemini, Meta Muse, Groq Whisper)
-pnpm kikitori run my_dataset_ja -m apple-speech xai-grok gemini-flash gemini-transcribe meta-muse groq-whisper
+# Run specific models (e.g., Apple, Qwen3-ASR on MLX, xAI Grok, Gemini, Meta Muse, Groq Whisper)
+pnpm kikitori run my_dataset_ja -m apple-speech qwen3-asr-1.7b qwen3-asr-0.6b xai-grok gemini-flash gemini-transcribe meta-muse groq-whisper
 
 # Offline / dry-run test using mock model
 pnpm kikitori run my_dataset_ja -m mock --all
@@ -400,18 +430,28 @@ Rank  | Model                |   Overall |     Names |     Recall |  Precision |
     `generationConfig.thinkingConfig`. `thinkingBudget: 0` disables thinking, which cuts output
     tokens and cost sharply. A top-level `thinkingLevel` is rejected by the API.
   - `responseFormat`: `json` / `verbose_json` / `text` (Whisper, Groq).
-  - `mode`, `audioEncoding`, `languageBias`, `keywords`: Meta Muse Voice Transcribe settings.
+  - `mode`, `audioEncoding`, `languageBias`: Meta Muse Voice Transcribe settings.
+  - `keywords`: vocabulary biasing - Meta Muse keywords, mlx-audio hotwords (folded into the
+    model's system prompt).
+  - `chunkSeconds`, `batchSegments`: mlx-audio chunking - the chunk length long audio is split
+    into, and how many chunks are decoded in parallel. For mlx-audio, `language` is translated
+    from the ISO code to the name the model conditions on (`ja` becomes `Japanese`), and an
+    unrecognised value leaves the model auto-detecting.
 - **Pricing (`pricing`)**: Optional per-model price list, also available under `judge` for the LLM-as-a-judge model. All rates are USD:
   - `inputPerMTok` / `cachedInputPerMTok` / `audioInputPerMTok` / `outputPerMTok`: per 1M tokens (token-billed models).
   - `perAudioHour` / `minBillableSeconds`: per hour of audio, with an optional minimum billed length per request (duration-billed STT APIs).
   - `estimateAudioTokensPerSecond` / `estimateOutputTokensPerMinute`: fallback ratios used to estimate cost when the provider omits token counts.
   - A model without a `pricing` block reports `-` for its ASR and combined costs and is excluded
     from the price/performance chart and Pareto frontier. Its judge cost remains visible, and the
-    model remains in quality and speed comparisons. Apple SpeechTranscriber intentionally has no
-    pricing block.
+    model remains in quality and speed comparisons. The on-device models - Apple
+    SpeechTranscriber and Qwen3-ASR on MLX - intentionally have no pricing block: they run on
+    hardware you already own, and an invented hourly rate would not compare with a provider's
+    list price.
 - **Models (`models`)**:
   - `apple`: Apple Speech framework on macOS 26+ (`speech-transcriber`, or `dictation` for the
     older on-device dictation model; each model needs its own prepared assets)
+  - `mlx-audio`: local speech-to-text on Apple MLX, e.g. `mlx-community/Qwen3-ASR-1.7B-8bit`
+    or `mlx-community/Qwen3-ASR-0.6B-8bit` (needs `pnpm mlx:prepare` and `ffmpeg`)
   - `xai`: xAI Grok STT endpoint
   - `gemini`: Gemini ASR (`gemini-3.8-flash`, `gemini-3.5-transcribe`, ...)
   - `meta`: Meta Muse Voice Transcribe (`https://api.meta.ai/v1/asr/transcribe`, requires `ffmpeg`)

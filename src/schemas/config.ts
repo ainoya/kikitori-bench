@@ -55,8 +55,12 @@ export const AsrModelOptionsSchema = Schema.Struct({
   audioEncoding: Schema.optional(Schema.String),
   /** Meta Muse languageBias, e.g. ["Japanese"]. */
   languageBias: Schema.optional(Schema.Array(Schema.String)),
-  /** Keyword / vocabulary biasing list. */
+  /** Keyword / vocabulary biasing list (mlx-audio hotwords, Meta Muse keywords). */
   keywords: Schema.optional(Schema.Array(Schema.String)),
+  /** mlx-audio chunk length in seconds; long audio is split into chunks. */
+  chunkSeconds: Schema.optional(Schema.Number),
+  /** mlx-audio chunks decoded in parallel; above 1 amortises the weight reads. */
+  batchSegments: Schema.optional(Schema.Number),
 });
 
 export type AsrModelOptions = typeof AsrModelOptionsSchema.Type;
@@ -100,6 +104,7 @@ export const AsrModelConfigSchema = Schema.Struct({
     "groq",
     "meta",
     "apple",
+    "mlx-audio",
     "custom-http",
     "custom-command",
     "mock",
