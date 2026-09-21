@@ -42,18 +42,22 @@ your own recordings and it works the same way.
 ## Results (September 2026)
 
 122 samples, 3h 05m of Japanese speech per model, every sample under 10 minutes so that
-every provider sees the same set. Judged by `gpt-5.6-luna`. Overall = proper-noun F1 x 0.30
-+ proposition F1 x 0.70. Full tables, confidence intervals and pairwise tests:
-**[docs/results.md](docs/results.md)**.
+every provider sees the same set. Judged by `gpt-5.6-luna` at reasoning effort `low`.
+Overall = proper-noun F1 x 0.30 + proposition F1 x 0.70. Full tables, confidence intervals
+and pairwise tests: **[docs/results.md](docs/results.md)**.
 
 | # | Model | Overall | 95% CI | Proper nouns | Recall | Precision | RTF | ASR cost / audio hour |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| 1 | Gemini 3.8 Flash | **75.1%** | [70.6, 79.5] | 65.9% | 86.2% | 79.1% | 0.07x | $0.263 |
-| 2 | Gemini 3.8 Flash (thinking off) | 71.7% | [66.6, 76.6] | 56.0% | 84.6% | 80.8% | 0.03x | **$0.094** |
-| 3 | Gemini 3.5 Transcribe | 66.3% | [61.6, 71.0] | 52.8% | 77.2% | 74.0% | 0.03x | $0.302 |
-| 4 | Meta Muse Voice Transcribe | 66.2% | [62.3, 70.1] | 39.9% | 81.7% | 80.6% | 0.15x | $0.180 |
-| 5 | Groq Whisper large-v3 | 63.9% | [59.5, 68.1] | 47.4% | 78.6% | 73.8% | 0.03x | $0.111 |
-| 6 | xAI Grok STT | 48.0% | [43.3, 52.6] | 23.9% | 61.8% | 65.2% | 0.01x | $0.100 |
+| 1 | Gemini 3.8 Flash | **76.1%** | [71.5, 80.4] | 62.8% | 87.5% | 83.8% | 0.06x | $0.214 |
+| 2 | Gemini 3.8 Flash (thinking off) | 71.1% | [65.8, 76.3] | 58.6% | 81.0% | 80.7% | 0.04x | **$0.093** |
+| 3 | Gemini 3.5 Transcribe | 69.2% | [64.7, 73.6] | 52.8% | 79.1% | 78.8% | 0.03x | $0.302 |
+| 4 | Meta Muse Voice Transcribe | 68.4% | [64.7, 72.0] | 40.1% | 81.2% | 86.1% | 0.16x | $0.180 |
+| 5 | Apple SpeechTranscriber | 68.4% | [64.4, 72.1] | 41.1% | 80.8% | 87.6% | **0.01x** | on-device |
+| 6 | Groq Whisper large-v3 | 66.4% | [62.2, 70.5] | 47.3% | 78.7% | 79.4% | 0.12x | $0.111 |
+| 7 | Qwen3-ASR 1.7B (MLX, 8-bit) | 63.2% | [58.9, 67.2] | 34.1% | 78.6% | 81.4% | 0.12x | on-device |
+| 8 | Qwen3-ASR 0.6B (MLX, 8-bit) | 57.8% | [53.1, 62.3] | 34.4% | 71.6% | 75.4% | 0.05x | on-device |
+| 9 | Apple DictationTranscriber | 57.1% | [52.1, 62.1] | 44.0% | 62.7% | 78.6% | 0.03x | on-device |
+| 10 | xAI Grok STT | 49.6% | [44.8, 54.5] | 23.6% | 61.7% | 70.2% | 0.02x | $0.100 |
 
 ![Price versus score](docs/charts/price-performance.svg)
 
@@ -63,14 +67,23 @@ every provider sees the same set. Judged by `gpt-5.6-luna`. Overall = proper-nou
 
 What the numbers said, for my use case:
 
-- **Gemini 3.8 Flash leads**, and the gap to everything except its own thinking-off variant
-  survives a Bonferroni correction over all 15 pairs.
-- **Thinking is not worth its price here.** Turning it off costs 3.4pp (95% CI [-0.4, +7.1],
-  i.e. not distinguishable) and saves 64% of the spend and half the latency. It does help on
-  proper nouns (65.9% vs 56.0%) and slightly hurts precision, so the two effects cancel.
+- **Gemini 3.8 Flash leads**, and every gap below it except its own thinking-off variant
+  survives a Bonferroni correction over all 45 pairs.
+- **Thinking buys little here.** Turning it off costs 5.0pp (95% CI [+1.5, +8.9], which the
+  multiple-comparison adjustment widens to [+0.0, +11.8]) and saves 56% of the spend and a
+  third of the latency.
+- **On-device is competitive, for free.** Apple SpeechTranscriber ties Meta Muse for fourth
+  at the lowest latency in the field, and Qwen3-ASR 1.7B on MLX lands within 3.2pp of Groq
+  Whisper (95% CI [+0.1, +6.5] - not distinguishable once adjusted). Neither costs anything
+  per hour, which the price chart cannot show, so they are excluded from it.
+- **Local models pay for it in proper nouns.** Both Qwen3-ASR sizes score ~34% there, the
+  weakest in the field apart from Grok, while their proposition scores sit mid-pack. Going
+  from 0.6B to 1.7B buys 5.4pp overall (95% CI [+2.2, +8.9]) entirely on the proposition
+  side - proper nouns do not improve at all.
 - **Meta Muse rejects audio longer than 10 minutes.** Those samples are excluded here to keep
   the comparison fair; it is still a hard constraint in production.
-- Every model ran with identical request parameters, all recorded in the run manifest.
+- Every model ran with identical request parameters, all recorded in the run manifest, and
+  every hypothesis was judged in one run at the same reasoning effort.
 
 Regenerate this summary and the charts from a finished run with:
 
@@ -96,7 +109,9 @@ leaderboard, and **use the numbers at your own risk**:
   meetings, multi-party audio or speaker attribution. Your audio will rank differently.
 - **The judge is an LLM.** Measured self-consistency was Cohen's kappa 0.81 on re-judged
   samples, and agreement with a human reviewer was kappa 0.84 over a 30-item audit - good,
-  but not an oracle. Differences smaller than a few points are noise.
+  but not an oracle. Differences smaller than a few points are noise. Those two figures were
+  measured before the judge's reasoning effort was pinned to `low`, so they describe the
+  method rather than this exact run.
 - **Prices are list prices at the time of the run** (September 2026) and are recomputed from a
   price list in `kikitori.config.yaml`; they go stale.
 - **Model versions move.** A result here describes a model on a given day, nothing more.
