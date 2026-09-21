@@ -55,9 +55,10 @@ and pairwise tests: **[docs/results.md](docs/results.md)**.
 | 5 | Apple SpeechTranscriber | 68.4% | [64.4, 72.1] | 41.1% | 80.8% | 87.6% | **0.01x** | on-device |
 | 6 | Groq Whisper large-v3 | 66.4% | [62.2, 70.5] | 47.3% | 78.7% | 79.4% | 0.12x | $0.111 |
 | 7 | Qwen3-ASR 1.7B (MLX, 8-bit) | 63.2% | [58.9, 67.2] | 34.1% | 78.6% | 81.4% | 0.12x | on-device |
-| 8 | Qwen3-ASR 0.6B (MLX, 8-bit) | 57.8% | [53.1, 62.3] | 34.4% | 71.6% | 75.4% | 0.05x | on-device |
-| 9 | Apple DictationTranscriber | 57.1% | [52.1, 62.1] | 44.0% | 62.7% | 78.6% | 0.03x | on-device |
-| 10 | xAI Grok STT | 49.6% | [44.8, 54.5] | 23.6% | 61.7% | 70.2% | 0.02x | $0.100 |
+| 8 | Grok Voice Transcribe 2.0 | 63.2% | [58.4, 67.8] | 46.2% | 72.6% | 77.5% | 0.02x | $0.100 |
+| 9 | Qwen3-ASR 0.6B (MLX, 8-bit) | 57.8% | [53.1, 62.3] | 34.4% | 71.6% | 75.4% | 0.05x | on-device |
+| 10 | Apple DictationTranscriber | 57.1% | [52.1, 62.1] | 44.0% | 62.7% | 78.6% | 0.03x | on-device |
+| 11 | Grok Voice Transcribe 1.0 | 49.6% | [44.8, 54.5] | 23.6% | 61.7% | 70.2% | 0.02x | $0.100 |
 
 ![Price versus score](docs/charts/price-performance.svg)
 
@@ -67,21 +68,34 @@ and pairwise tests: **[docs/results.md](docs/results.md)**.
 
 What the numbers said, for my use case:
 
-- **Gemini 3.8 Flash leads**, and every gap below it except its own thinking-off variant
-  survives a Bonferroni correction over all 45 pairs.
+- **Gemini 3.8 Flash leads**, and every gap below it except its own thinking-off variant and
+  Meta Muse survives a Bonferroni correction over all 55 pairs.
 - **Thinking buys little here.** Turning it off costs 5.0pp (95% CI [+1.5, +8.9], which the
-  multiple-comparison adjustment widens to [+0.0, +11.8]) and saves 56% of the spend and a
+  multiple-comparison adjustment widens to [-0.1, +12.3]) and saves 56% of the spend and a
   third of the latency.
 - **On-device is competitive, for free.** Apple SpeechTranscriber ties Meta Muse for fourth
   at the lowest latency in the field, and Qwen3-ASR 1.7B on MLX lands within 3.2pp of Groq
   Whisper (95% CI [+0.1, +6.5] - not distinguishable once adjusted). Neither costs anything
   per hour, which the price chart cannot show, so they are excluded from it.
+- **A generation of Grok is worth 13.6pp.** Voice Transcribe 2.0 scores 63.2% against 1.0's
+  49.6% (95% CI [+10.4, +17.1], significant adjusted) at the same $0.100 per audio hour -
+  the largest jump between two versions of anything measured here, and most of it is proper
+  nouns, which go from 23.6% to 46.2%. That moves Grok from last place to mid-field, level
+  with Qwen3-ASR 1.7B (+0.0pp, [-4.0, +4.0]) and no longer distinguishable from Groq Whisper.
+  It is also the second-fastest engine in the field behind Apple, at 0.02x RTF and a 1811 ms
+  p50. It does not reach the price/performance frontier, though: Gemini 3.8 Flash with
+  thinking off is both cheaper ($0.093/hr) and 7.9pp better.
 - **Local models pay for it in proper nouns.** Both Qwen3-ASR sizes score ~34% there, the
-  weakest in the field apart from Grok, while their proposition scores sit mid-pack. Going
-  from 0.6B to 1.7B buys 5.4pp overall (95% CI [+2.2, +8.9]) entirely on the proposition
-  side - proper nouns do not improve at all.
+  weakest in the field apart from Grok Voice Transcribe 1.0, while their proposition scores
+  sit mid-pack. Going from 0.6B to 1.7B buys 5.4pp overall (95% CI [+2.2, +8.9]) entirely on
+  the proposition side - proper nouns do not improve at all.
 - **Meta Muse rejects audio longer than 10 minutes.** Those samples are excluded here to keep
   the comparison fair; it is still a hard constraint in production.
+- **Pin the model id, not the alias.** xAI's `grok-stt` is a pointer to the current default,
+  and it resolved to 1.0 while this run was measured - the two returned byte-identical
+  transcripts. The 1.0 row therefore records `grok-stt` as the parameter it was actually sent;
+  both config entries now name an explicit version so a provider-side move cannot silently
+  change what a row means.
 - Every model ran with identical request parameters, all recorded in the run manifest, and
   every hypothesis was judged in one run at the same reasoning effort.
 
