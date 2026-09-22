@@ -49,6 +49,8 @@ export const AsrModelOptionsSchema = Schema.Struct({
   maxOutputTokens: Schema.optional(Schema.Number),
   /** OpenAI/Groq response_format (`json`, `verbose_json`, `text`). */
   responseFormat: Schema.optional(Schema.String),
+  /** Qwen omni reasoning_effort (`none` disables thinking; `low`, `medium`, `xhigh`). */
+  reasoningEffort: Schema.optional(Schema.String),
   /** Meta Muse mode (`DIARIZATION`, `ENDPOINTING`, `PUSH_TO_TALK`). */
   mode: Schema.optional(Schema.String),
   /** Meta Muse audioEncoding (`WAV`, `PCM_16KHZ`, `PCM_24KHZ`). */
@@ -109,6 +111,7 @@ export const AsrModelConfigSchema = Schema.Struct({
     "whisper",
     "groq",
     "meta",
+    "qwen",
     "apple",
     "mlx-audio",
     "custom-http",

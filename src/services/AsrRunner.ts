@@ -7,6 +7,7 @@ import { WhisperAdapter } from "../asr/WhisperAdapter.js";
 import { XaiGrokAdapter } from "../asr/XaiGrokAdapter.js";
 import { GroqWhisperAdapter } from "../asr/GroqWhisperAdapter.js";
 import { MetaMuseAdapter } from "../asr/MetaMuseAdapter.js";
+import { QwenOmniAdapter } from "../asr/QwenOmniAdapter.js";
 import { AppleSpeechAdapter } from "../asr/AppleSpeechAdapter.js";
 import { MlxAudioAdapter } from "../asr/MlxAudioAdapter.js";
 import { CustomHttpAdapter } from "../asr/CustomHttpAdapter.js";
@@ -148,6 +149,16 @@ export const AsrRunnerLive = Layer.succeed(
               modelConf.model ?? "muse-voice-transcribe-1.0",
               modelConf.apiKey,
               modelConf.endpoint ?? "https://api.meta.ai/v1/asr/transcribe",
+              modelConf.options,
+            );
+          case "qwen":
+            return new QwenOmniAdapter(
+              modelId,
+              displayName,
+              modelConf.model ?? "qwen3.8-omni-flash",
+              modelConf.apiKey,
+              modelConf.endpoint ??
+                "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
               modelConf.options,
             );
           case "apple":

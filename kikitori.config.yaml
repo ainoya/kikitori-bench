@@ -117,6 +117,35 @@ models:
       #   - Kubernetes
     pricing:
       perAudioHour: 0.18
+  qwen-omni:
+    type: qwen
+    model: qwen3.8-omni-flash
+    displayName: "Qwen3.8-Omni-Flash"
+    # Stated rather than defaulted: the endpoint is region-scoped and request
+    # data is stored in the region it belongs to. This one is International
+    # (Singapore); a Tokyo workspace would use its own host and its own key.
+    endpoint: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions
+    # Thinking is on by default at reasoning_effort "xhigh". Left unset so the
+    # row records the provider default, as the Gemini entry above does.
+    pricing:
+      inputPerMTok: 0.15       # audio input bills at the text input rate
+      cachedInputPerMTok: 0.016
+      outputPerMTok: 0.47
+      estimateAudioTokensPerSecond: 7    # measured: 11020 tokens for 1574.7s
+      estimateOutputTokensPerMinute: 355
+  qwen-omni-nothink:
+    type: qwen
+    model: qwen3.8-omni-flash
+    displayName: "Qwen3.8-Omni-Flash (no thinking)"
+    endpoint: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions
+    options:
+      reasoningEffort: none    # the only value that disables thinking entirely
+    pricing:
+      inputPerMTok: 0.15
+      cachedInputPerMTok: 0.016
+      outputPerMTok: 0.47
+      estimateAudioTokensPerSecond: 7
+      estimateOutputTokensPerMinute: 130
   whisper-1:
     type: whisper
     model: whisper-1
