@@ -49,16 +49,18 @@ and pairwise tests: **[docs/results.md](docs/results.md)**.
 | # | Model | Overall | 95% CI | Proper nouns | Recall | Precision | RTF | ASR cost / audio hour |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | 1 | Gemini 3.8 Flash | **76.1%** | [71.5, 80.4] | 62.8% | 87.5% | 83.8% | 0.06x | $0.214 |
-| 2 | Gemini 3.8 Flash (thinking off) | 71.1% | [65.8, 76.3] | 58.6% | 81.0% | 80.7% | 0.04x | **$0.093** |
-| 3 | Gemini 3.5 Transcribe | 69.2% | [64.7, 73.6] | 52.8% | 79.1% | 78.8% | 0.03x | $0.302 |
-| 4 | Meta Muse Voice Transcribe | 68.4% | [64.7, 72.0] | 40.1% | 81.2% | 86.1% | 0.16x | $0.180 |
-| 5 | Apple SpeechTranscriber | 68.4% | [64.4, 72.1] | 41.1% | 80.8% | 87.6% | **0.01x** | on-device |
-| 6 | Groq Whisper large-v3 | 66.4% | [62.2, 70.5] | 47.3% | 78.7% | 79.4% | 0.12x | $0.111 |
-| 7 | Qwen3-ASR 1.7B (MLX, 8-bit) | 63.2% | [58.9, 67.2] | 34.1% | 78.6% | 81.4% | 0.12x | on-device |
-| 8 | Grok Voice Transcribe 2.0 | 63.2% | [58.4, 67.8] | 46.2% | 72.6% | 77.5% | 0.02x | $0.100 |
-| 9 | Qwen3-ASR 0.6B (MLX, 8-bit) | 57.8% | [53.1, 62.3] | 34.4% | 71.6% | 75.4% | 0.05x | on-device |
-| 10 | Apple DictationTranscriber | 57.1% | [52.1, 62.1] | 44.0% | 62.7% | 78.6% | 0.03x | on-device |
-| 11 | Grok Voice Transcribe 1.0 | 49.6% | [44.8, 54.5] | 23.6% | 61.7% | 70.2% | 0.02x | $0.100 |
+| 2 | Gemini 3.8 Flash (thinking off) | 71.1% | [65.8, 76.3] | 58.6% | 81.0% | 80.7% | 0.04x | $0.093 |
+| 3 | Qwen3.8-Omni-Flash | 70.8% | [66.5, 75.0] | 53.7% | 81.8% | 80.7% | 0.17x | $0.025 |
+| 4 | Qwen3.8-Omni-Flash (thinking off) | 69.8% | [65.6, 73.9] | 48.4% | 82.2% | 82.7% | 0.06x | **$0.007** |
+| 5 | Gemini 3.5 Transcribe | 69.2% | [64.7, 73.6] | 52.8% | 79.1% | 78.8% | 0.03x | $0.302 |
+| 6 | Meta Muse Voice Transcribe | 68.4% | [64.7, 72.0] | 40.1% | 81.2% | 86.1% | 0.16x | $0.180 |
+| 7 | Apple SpeechTranscriber | 68.4% | [64.4, 72.1] | 41.1% | 80.8% | 87.6% | **0.01x** | on-device |
+| 8 | Groq Whisper large-v3 | 66.4% | [62.2, 70.5] | 47.3% | 78.7% | 79.4% | 0.12x | $0.111 |
+| 9 | Qwen3-ASR 1.7B (MLX, 8-bit) | 63.2% | [58.9, 67.2] | 34.1% | 78.6% | 81.4% | 0.12x | on-device |
+| 10 | Grok Voice Transcribe 2.0 | 63.2% | [58.4, 67.8] | 46.2% | 72.6% | 77.5% | 0.02x | $0.100 |
+| 11 | Qwen3-ASR 0.6B (MLX, 8-bit) | 57.8% | [53.1, 62.3] | 34.4% | 71.6% | 75.4% | 0.05x | on-device |
+| 12 | Apple DictationTranscriber | 57.1% | [52.1, 62.1] | 44.0% | 62.7% | 78.6% | 0.03x | on-device |
+| 13 | Grok Voice Transcribe 1.0 | 49.6% | [44.8, 54.5] | 23.6% | 61.7% | 70.2% | 0.02x | $0.100 |
 
 ![Price versus score](docs/charts/price-performance.svg)
 
@@ -68,12 +70,21 @@ and pairwise tests: **[docs/results.md](docs/results.md)**.
 
 What the numbers said, for my use case:
 
-- **Gemini 3.8 Flash leads**, and every gap below it except its own thinking-off variant and
-  Meta Muse survives a Bonferroni correction over all 55 pairs.
-- **Thinking buys little here.** Turning it off costs 5.0pp (95% CI [+1.5, +8.9], which the
-  multiple-comparison adjustment widens to [-0.1, +12.3]) and saves 56% of the spend and a
-  third of the latency.
-- **On-device is competitive, for free.** Apple SpeechTranscriber ties Meta Muse for fourth
+- **Gemini 3.8 Flash leads**, and every gap below it except its own thinking-off variant,
+  Qwen3.8-Omni-Flash and Meta Muse survives a Bonferroni correction over all 78 pairs.
+- **Thinking buys little here, on either engine.** Turning it off costs Gemini 5.0pp (95% CI
+  [+1.5, +8.9], which the multiple-comparison adjustment widens to [-0.1, +12.3]) and saves
+  56% of the spend and a third of the latency. On Qwen3.8-Omni-Flash it costs 1.0pp
+  ([-1.3, +3.1], not distinguishable) and saves 73% of the spend.
+- **Qwen3.8-Omni-Flash resets the price floor.** Third at 70.8%, with its thinking-off
+  variant fourth at 69.8%; neither is distinguishable from Gemini 3.8 Flash with thinking
+  off (+0.3pp and +1.2pp). What changed is the price. The provider meters audio at 7 tokens
+  per second and bills it at the text input rate, which puts an audio hour at $0.025 with
+  thinking and $0.007 without - against $0.093 for the cheapest engine measured before it.
+  Thinking off is the configuration to use: 85% of the thinking variant's output tokens are
+  reasoning tokens, and they buy 1.0pp. The cost is speed, not quality - 0.17x RTF with
+  thinking is the slowest in the field, though 0.06x without it is mid-pack.
+- **On-device is competitive, for free.** Apple SpeechTranscriber ties Meta Muse for sixth
   at the lowest latency in the field, and Qwen3-ASR 1.7B on MLX lands within 3.2pp of Groq
   Whisper (95% CI [+0.1, +6.5] - not distinguishable once adjusted). Neither costs anything
   per hour, which the price chart cannot show, so they are excluded from it.
@@ -83,8 +94,8 @@ What the numbers said, for my use case:
   nouns, which go from 23.6% to 46.2%. That moves Grok from last place to mid-field, level
   with Qwen3-ASR 1.7B (+0.0pp, [-4.0, +4.0]) and no longer distinguishable from Groq Whisper.
   It is also the second-fastest engine in the field behind Apple, at 0.02x RTF and a 1811 ms
-  p50. It does not reach the price/performance frontier, though: Gemini 3.8 Flash with
-  thinking off is both cheaper ($0.093/hr) and 7.9pp better.
+  p50. It does not reach the price/performance frontier, though: Qwen3.8-Omni-Flash with
+  thinking off is 14x cheaper ($0.007/hr) and 6.6pp better.
 - **Local models pay for it in proper nouns.** Both Qwen3-ASR sizes score ~34% there, the
   weakest in the field apart from Grok Voice Transcribe 1.0, while their proposition scores
   sit mid-pack. Going from 0.6B to 1.7B buys 5.4pp overall (95% CI [+2.2, +8.9]) entirely on

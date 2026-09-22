@@ -13,15 +13,17 @@ Transcription engines compared on unscripted Japanese voice-journal audio - most
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | 1 | **Gemini 3.8 Flash** | **76.1%** | [71.5, 80.4] | 62.8% | 87.5% | 83.8% | 84.4% | 0.06x | 4669 / 13292 ms |
 | 2 | **Gemini 3.8 Flash (no thinking)** | **71.1%** | [65.8, 76.3] | 58.6% | 81.0% | 80.7% | 78.7% | 0.04x | 2997 / 7793 ms |
-| 3 | **Gemini 3.5 Transcribe** | **69.2%** | [64.7, 73.6] | 52.8% | 79.1% | 78.8% | 78.4% | 0.03x | 2305 / 3923 ms |
-| 4 | **Meta Muse Voice Transcribe** | **68.4%** | [64.7, 72.0] | 40.1% | 81.2% | 86.1% | 82.1% | 0.16x | 11810 / 35877 ms |
-| 5 | **Apple SpeechTranscriber** | **68.4%** | [64.4, 72.1] | 41.1% | 80.8% | 87.6% | 82.0% | 0.01x | 614 / 1459 ms |
-| 6 | **Groq Whisper large-v3** | **66.4%** | [62.2, 70.5] | 47.3% | 78.7% | 79.4% | 77.9% | 0.12x | 1291 / 67733 ms |
-| 7 | **Qwen3-ASR 1.7B (MLX, 8-bit)** | **63.2%** | [58.9, 67.2] | 34.1% | 78.6% | 81.4% | 77.6% | 0.12x | 3705 / 33939 ms |
-| 8 | **Grok Voice Transcribe 2.0** | **63.2%** | [58.4, 67.8] | 46.2% | 72.6% | 77.5% | 73.1% | 0.02x | 1811 / 4875 ms |
-| 9 | **Qwen3-ASR 0.6B (MLX, 8-bit)** | **57.8%** | [53.1, 62.3] | 34.4% | 71.6% | 75.4% | 71.1% | 0.05x | 1885 / 7333 ms |
-| 10 | **Apple DictationTranscriber** | **57.1%** | [52.1, 62.1] | 44.0% | 62.7% | 78.6% | 66.0% | 0.03x | 2402 / 7585 ms |
-| 11 | **Grok Voice Transcribe 1.0** | **49.6%** | [44.8, 54.5] | 23.6% | 61.7% | 70.2% | 62.5% | 0.02x | 1142 / 3398 ms |
+| 3 | **Qwen3.8-Omni-Flash** | **70.8%** | [66.5, 75.0] | 53.7% | 81.8% | 80.7% | 80.5% | 0.17x | 12226 / 35215 ms |
+| 4 | **Qwen3.8-Omni-Flash (no thinking)** | **69.8%** | [65.6, 73.9] | 48.4% | 82.2% | 82.7% | 81.1% | 0.06x | 4364 / 10384 ms |
+| 5 | **Gemini 3.5 Transcribe** | **69.2%** | [64.7, 73.6] | 52.8% | 79.1% | 78.8% | 78.4% | 0.03x | 2305 / 3923 ms |
+| 6 | **Meta Muse Voice Transcribe** | **68.4%** | [64.7, 72.0] | 40.1% | 81.2% | 86.1% | 82.1% | 0.16x | 11810 / 35877 ms |
+| 7 | **Apple SpeechTranscriber** | **68.4%** | [64.4, 72.1] | 41.1% | 80.8% | 87.6% | 82.0% | 0.01x | 614 / 1459 ms |
+| 8 | **Groq Whisper large-v3** | **66.4%** | [62.2, 70.5] | 47.3% | 78.7% | 79.4% | 77.9% | 0.12x | 1291 / 67733 ms |
+| 9 | **Qwen3-ASR 1.7B (MLX, 8-bit)** | **63.2%** | [58.9, 67.2] | 34.1% | 78.6% | 81.4% | 77.6% | 0.12x | 3705 / 33939 ms |
+| 10 | **Grok Voice Transcribe 2.0** | **63.2%** | [58.4, 67.8] | 46.2% | 72.6% | 77.5% | 73.1% | 0.02x | 1811 / 4875 ms |
+| 11 | **Qwen3-ASR 0.6B (MLX, 8-bit)** | **57.8%** | [53.1, 62.3] | 34.4% | 71.6% | 75.4% | 71.1% | 0.05x | 1885 / 7333 ms |
+| 12 | **Apple DictationTranscriber** | **57.1%** | [52.1, 62.1] | 44.0% | 62.7% | 78.6% | 66.0% | 0.03x | 2402 / 7585 ms |
+| 13 | **Grok Voice Transcribe 1.0** | **49.6%** | [44.8, 54.5] | 23.6% | 61.7% | 70.2% | 62.5% | 0.02x | 1142 / 3398 ms |
 
 ![Price versus score](charts/price-performance.svg)
 
@@ -38,6 +40,8 @@ _Apple transcription runs on-device, so its RTF can vary with host hardware, OS,
 | Model A | Model B | Δ | 95% CI | Adjusted CI | Verdict |
 | :--- | :--- | :---: | :---: | :---: | :---: |
 | Gemini 3.8 Flash | Gemini 3.8 Flash (no thinking) | +5.0pp | [+1.5, +8.9] | [-0.1, +12.3] | 🔸 |
+| Gemini 3.8 Flash | Qwen3.8-Omni-Flash | +5.3pp | [+1.5, +9.3] | [-2.2, +11.9] | 🔸 |
+| Gemini 3.8 Flash | Qwen3.8-Omni-Flash (no thinking) | +6.3pp | [+2.5, +9.9] | [+0.3, +11.8] | ✅ |
 | Gemini 3.8 Flash | Gemini 3.5 Transcribe | +6.9pp | [+3.4, +10.5] | [+0.9, +12.9] | ✅ |
 | Gemini 3.8 Flash | Meta Muse Voice Transcribe | +7.8pp | [+3.8, +11.4] | [-0.1, +14.2] | 🔸 |
 | Gemini 3.8 Flash | Apple SpeechTranscriber | +7.8pp | [+4.0, +11.6] | [+0.5, +14.4] | ✅ |
@@ -47,6 +51,8 @@ _Apple transcription runs on-device, so its RTF can vary with host hardware, OS,
 | Gemini 3.8 Flash | Qwen3-ASR 0.6B (MLX, 8-bit) | +18.4pp | [+14.4, +22.5] | [+12.0, +25.4] | ✅ |
 | Gemini 3.8 Flash | Apple DictationTranscriber | +19.0pp | [+14.9, +23.2] | [+11.6, +26.3] | ✅ |
 | Gemini 3.8 Flash | Grok Voice Transcribe 1.0 | +26.5pp | [+22.6, +30.7] | [+19.9, +33.9] | ✅ |
+| Gemini 3.8 Flash (no thinking) | Qwen3.8-Omni-Flash | +0.3pp | [-4.6, +5.1] | [-7.4, +8.5] | ➖ |
+| Gemini 3.8 Flash (no thinking) | Qwen3.8-Omni-Flash (no thinking) | +1.2pp | [-3.4, +5.6] | [-7.0, +9.4] | ➖ |
 | Gemini 3.8 Flash (no thinking) | Gemini 3.5 Transcribe | +1.9pp | [-2.6, +6.4] | [-6.7, +9.9] | ➖ |
 | Gemini 3.8 Flash (no thinking) | Meta Muse Voice Transcribe | +2.7pp | [-2.3, +7.7] | [-5.5, +11.9] | ➖ |
 | Gemini 3.8 Flash (no thinking) | Apple SpeechTranscriber | +2.7pp | [-1.7, +7.3] | [-5.7, +10.1] | ➖ |
@@ -56,6 +62,25 @@ _Apple transcription runs on-device, so its RTF can vary with host hardware, OS,
 | Gemini 3.8 Flash (no thinking) | Qwen3-ASR 0.6B (MLX, 8-bit) | +13.3pp | [+8.5, +18.1] | [+5.2, +21.5] | ✅ |
 | Gemini 3.8 Flash (no thinking) | Apple DictationTranscriber | +14.0pp | [+9.1, +19.2] | [+5.3, +22.5] | ✅ |
 | Gemini 3.8 Flash (no thinking) | Grok Voice Transcribe 1.0 | +21.5pp | [+16.5, +26.6] | [+13.9, +30.4] | ✅ |
+| Qwen3.8-Omni-Flash | Qwen3.8-Omni-Flash (no thinking) | +1.0pp | [-1.3, +3.1] | [-3.0, +4.4] | ➖ |
+| Qwen3.8-Omni-Flash | Gemini 3.5 Transcribe | +1.6pp | [-1.5, +4.9] | [-3.5, +7.8] | ➖ |
+| Qwen3.8-Omni-Flash | Meta Muse Voice Transcribe | +2.4pp | [-1.0, +5.7] | [-3.3, +7.5] | ➖ |
+| Qwen3.8-Omni-Flash | Apple SpeechTranscriber | +2.4pp | [-1.2, +6.0] | [-3.5, +8.4] | ➖ |
+| Qwen3.8-Omni-Flash | Groq Whisper large-v3 | +4.4pp | [+1.4, +7.5] | [-0.9, +10.4] | 🔸 |
+| Qwen3.8-Omni-Flash | Qwen3-ASR 1.7B (MLX, 8-bit) | +7.6pp | [+4.4, +10.9] | [+2.5, +13.0] | ✅ |
+| Qwen3.8-Omni-Flash | Grok Voice Transcribe 2.0 | +7.6pp | [+3.5, +11.9] | [+0.0, +14.9] | 🔸 |
+| Qwen3.8-Omni-Flash | Qwen3-ASR 0.6B (MLX, 8-bit) | +13.0pp | [+9.8, +16.5] | [+7.8, +19.4] | ✅ |
+| Qwen3.8-Omni-Flash | Apple DictationTranscriber | +13.7pp | [+9.4, +17.9] | [+5.9, +20.6] | ✅ |
+| Qwen3.8-Omni-Flash | Grok Voice Transcribe 1.0 | +21.2pp | [+17.1, +25.4] | [+13.4, +28.0] | ✅ |
+| Qwen3.8-Omni-Flash (no thinking) | Gemini 3.5 Transcribe | +0.6pp | [-2.4, +4.1] | [-4.6, +6.6] | ➖ |
+| Qwen3.8-Omni-Flash (no thinking) | Meta Muse Voice Transcribe | +1.5pp | [-1.9, +4.7] | [-4.3, +7.7] | ➖ |
+| Qwen3.8-Omni-Flash (no thinking) | Apple SpeechTranscriber | +1.5pp | [-1.7, +4.7] | [-3.9, +7.5] | ➖ |
+| Qwen3.8-Omni-Flash (no thinking) | Groq Whisper large-v3 | +3.5pp | [+0.7, +6.2] | [-0.9, +8.8] | 🔸 |
+| Qwen3.8-Omni-Flash (no thinking) | Qwen3-ASR 1.7B (MLX, 8-bit) | +6.6pp | [+3.7, +9.8] | [+2.0, +11.9] | ✅ |
+| Qwen3.8-Omni-Flash (no thinking) | Grok Voice Transcribe 2.0 | +6.6pp | [+2.2, +11.2] | [-0.7, +14.5] | 🔸 |
+| Qwen3.8-Omni-Flash (no thinking) | Qwen3-ASR 0.6B (MLX, 8-bit) | +12.1pp | [+8.6, +15.8] | [+6.0, +19.1] | ✅ |
+| Qwen3.8-Omni-Flash (no thinking) | Apple DictationTranscriber | +12.7pp | [+8.6, +16.9] | [+5.8, +19.6] | ✅ |
+| Qwen3.8-Omni-Flash (no thinking) | Grok Voice Transcribe 1.0 | +20.2pp | [+16.3, +24.5] | [+13.5, +28.1] | ✅ |
 | Gemini 3.5 Transcribe | Meta Muse Voice Transcribe | +0.8pp | [-2.8, +4.2] | [-6.4, +6.1] | ➖ |
 | Gemini 3.5 Transcribe | Apple SpeechTranscriber | +0.8pp | [-2.4, +4.0] | [-4.6, +6.8] | ➖ |
 | Gemini 3.5 Transcribe | Groq Whisper large-v3 | +2.8pp | [-0.7, +6.1] | [-3.1, +7.8] | ➖ |
@@ -95,7 +120,7 @@ _Apple transcription runs on-device, so its RTF can vary with host hardware, OS,
 
 > Every pair, not just rank-adjacent ones - a chain of indistinguishable neighbours says nothing about the models at the two ends. Paired bootstrap of the per-sample difference (same audio for every model), Bonferroni-adjusted for the number of pairs, plus an exact McNemar test per axis.
 
-Discriminating samples: **120 / 122** · Proposition recall 86/122 · Proposition precision 102/122
+Discriminating samples: **120 / 122** · Proposition recall 89/122 · Proposition precision 103/122
 
 ## Token Usage & Cost
 
@@ -112,7 +137,9 @@ Discriminating samples: **120 / 122** · Proposition recall 86/122 · Propositio
 | **Apple SpeechTranscriber** | - | - | - | 2,867,513 | 103,155 | $0.2245 | - |
 | **Apple DictationTranscriber** | - | - | - | 2,815,230 | 103,979 | $0.2181 | - |
 | **Grok Voice Transcribe 2.0** | - | - | $0.3091 | 2,771,256 | 102,948 | $0.3038 | $0.6129 |
-| **TOTAL** | | | **-** | | | **$2.82** | **-** |
+| **Qwen3.8-Omni-Flash** | 87,881 | 135,856 | $0.0770 | 2,879,918 | 104,599 | $0.2736 | $0.3506 |
+| **Qwen3.8-Omni-Flash (no thinking)** | 83,001 | 17,132 | $0.0205 | 2,877,264 | 104,168 | $0.2596 | $0.2801 |
+| **TOTAL** | | | **-** | | | **$3.35** | **-** |
 
 ## Experiment Conditions
 
@@ -129,5 +156,7 @@ Discriminating samples: **120 / 122** · Proposition recall 86/122 · Propositio
 | **Apple SpeechTranscriber** | apple | `framework`: SpeechAnalyzer<br>`model`: SpeechTranscriber<br>`locale`: ja-JP<br>`preset`: transcription<br>`processing`: on-device<br>`hardware`: Apple M1 Pro, 32 GB RAM<br>`timing`: analyze+finalize (excludes helper launch, asset checks, and queue wait) |
 | **Apple DictationTranscriber** | apple | `framework`: SpeechAnalyzer<br>`model`: DictationTranscriber<br>`locale`: ja-JP<br>`preset`: longDictation<br>`processing`: on-device<br>`hardware`: Apple M1 Pro, 32 GB RAM<br>`timing`: analyze+finalize (excludes helper launch, asset checks, and queue wait) |
 | **Grok Voice Transcribe 2.0** | xai | `model`: grok-voice-transcribe-2.0<br>`endpoint`: https://api.x.ai/v1/stt<br>`language`: ja<br>`prompt`: (none) |
+| **Qwen3.8-Omni-Flash** | qwen | `model`: qwen3.8-omni-flash<br>`endpoint`: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions<br>`prompt`: Please transcribe the speech in this audio verbatim in Japanese. Do not add any preamble, explanation, or notes. Output only the transcribed text.<br>`modalities`: text<br>`reasoningEffort`: provider default<br>`temperature`: provider default<br>`maxOutputTokens`: provider default |
+| **Qwen3.8-Omni-Flash (no thinking)** | qwen | `model`: qwen3.8-omni-flash<br>`endpoint`: https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions<br>`prompt`: Please transcribe the speech in this audio verbatim in Japanese. Do not add any preamble, explanation, or notes. Output only the transcribed text.<br>`modalities`: text<br>`reasoningEffort`: none<br>`temperature`: provider default<br>`maxOutputTokens`: provider default |
 
-_Generated by `kikitori publish` from run `run_2026-09-21T09-00-00-000Z` on 2026-09-21, at github.com/ainoya/kikitori-bench @ `6217906+local changes`._
+_Generated by `kikitori publish` from run `run_2026-09-21T09-00-00-000Z` on 2026-09-22, at github.com/ainoya/kikitori-bench @ `5c86596+local changes`._
